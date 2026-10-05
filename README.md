@@ -54,7 +54,8 @@ ponderscope report --run runs/<id>       # regenerate Markdown/HTML from saved e
 ```
 src/ponderscope/    measurement harness
 docs/               RELATED_WORK, METHODOLOGY, EXPERIMENT_DESIGN, RESULTS, LIMITATIONS
-runs/<run-id>/      immutable evidence (manifest, environment, tasks, traces, analysis)
+references.bib      machine-readable verified bibliography
+runs/<run-id>/      immutable evidence (manifest, environment, tasks, traces, analysis, evidence seal)
 tests/              unit tests; a fake backend exists only inside the test suite
 ```
 

@@ -14,18 +14,30 @@ model. Reports identify the deployment as:
 
 ## Deployment identity
 
-Every execution condition is reduced to a canonical metadata mapping and hashed
-to a configuration id (`dep-<12hex>`). The mapping includes, where applicable:
+Identity is layered, so unrelated provenance can never silently change what is
+being measured:
 
-- upstream model repository and immutable revision
-- weight-file sha256 hashes and tokenizer/chat-template hashes
-- numerical precision and quantization method/parameters (bits, group size, mode)
-- inference runtime and version; backend; hardware; OS; Python version
-- decoding mode (greedy/sampled), sampler parameters, seed
-- context configuration and output/reasoning cap
+- `artifact_id` — repo, immutable revision, weight-file/tokenizer/template
+  hashes, precision, quantization scheme; **excludes** local path and labels.
+- `deployment_id` — artifact + runtime/version + backend + hardware + OS +
+  device; **excludes** decoding.
+- `condition_id` — decoding policy (greedy vs sampled; temperature, top-p,
+  top-k, min-p, budget, thinking context); **excludes** seed.
+- `trial_id` — task id + condition + seed + repeat.
 
-Canonicalization sorts keys, drops nulls/empties, rounds floats, and hashes the
-result. Reports compare configuration ids, never vague model names.
+A random seed is trial state, not a deployment property. A run may contain
+several decoding conditions and records one condition id per condition; it is
+never described by a single decoding-specific id. Canonicalization sorts keys,
+drops nulls/empties, rounds floats, and hashes the result.
+
+## Provenance caveat (audited, not asserted)
+
+`Qwen/Qwen3.5-0.8B` is a multimodal checkpoint. PonderScope does **not** merely
+assert that `strict=False` drops only vision-tower and MTP weights. A model-load
+audit reconstructs the sanitize step, compares source keys to the instantiated
+model's parameter keys against an explicit non-text allow-list, and hard-fails if
+any text weight is missing or unused. The result is recorded in the run
+manifest (`load_audit`).
 
 ## Backend contract
 
@@ -45,28 +57,34 @@ Capabilities are reported honestly. MLX-LM provides, and PonderScope captures:
 - `finish_reason` (`stop`/`length`/`error`) and EOS/think-end status
 
 Anything MLX-LM does not provide is marked UNSUPPORTED rather than approximated.
+The logprob vector from `generate_step` is the **pre-sampler model distribution**
+(after logits processors, before temperature/top-p/top-k filtering); top-k is
+documented and reported as such, never as the post-sampling distribution.
 
-### Provenance caveat (recorded, not hidden)
-
-`Qwen/Qwen3.5-0.8B` is a multimodal checkpoint. The text architecture drops the
-vision-tower and MTP weights during load (`strict=False`). This is recorded in
-the run manifest (`dropped_multimodal_and_mtp: true`). It does not change the
-text weights, but it is stated because provenance matters more than convenience.
+Capture levels: **minimal** (token ids + termination only; no full-vector cast,
+sync, digest, or per-token timing), **research** (chosen logprob, entropy, top-k,
+timing), and **digest** (research + full-distribution digest). Instrumentation
+overhead is qualified by warmup + alternating repeated runs of the three levels.
 
 ## Reasoning channels
 
-The chat template opens the thinking block in the prompt (`<think>\n`). The
-generated text is therefore reasoning followed by the model's learned closing
-delimiter `</think>` (token 248069), then the final answer. PonderScope parses:
+The chat template opens the thinking block in the prompt (`<think>\n`). Channels
+are split at **token boundaries**: reasoning tokens are those before the first
+native think-end token (248069); final tokens are after it. Raw decoded text,
+token-level boundaries, and a sanitized semantic final channel are kept distinct,
+and decoded special tokens (e.g. `<|im_end|>`) are stripped before scoring so an
+EOS marker can never become answer content. PonderScope records:
 
 - **natural termination** — EOS (`<|im_end|>`, token 248046) observed
-- **forced-finalization intervention** — prefix probe appending `</think>`
+- **forced-finalization intervention** — the reasoning prefix plus the validated
+  native closing sequence `\n</think>\n\n` (every injected token id recorded)
 - **capped / censored** — `max_tokens` reached before EOS (no final channel)
 
 Trajectory states: `initially_correct`, `wrong_to_correct`,
 `correct_to_wrong`, `multiple_flips`, `stable_correct`, `never_correct`. Both a
 primary label and independent flags are stored; nothing is collapsed into one
-composite score.
+composite score. Prefix position is reported both as a probe-array index and as
+an actual prefix-token count, plus a tested `stable_sufficient_prefix_tokens`.
 
 ## Metrics
 
@@ -81,23 +99,28 @@ Token-level, deterministic, no LLM judge:
 
 ## Prefix probes
 
-Sparse forced-finalization probes replay a saved reasoning prefix, append the
-model's own think-end token, and read the forced answer. **This concept already
-exists in prior literature; PonderScope uses it as a measurement primitive, not
-as its claimed novelty.** An oracle prefix is never presented as a deployable
-stopping method.
+Sparse forced-finalization probes replay a **reasoning-only** prefix, append the
+validated native closing sequence, and read the forced answer. The generated
+continuation is parsed as a forced answer continuation, never as a natural trace.
+No hand-written answer cue is injected. If the model-native closure cannot be
+positively identified and validated, probing **fails closed**
+(`UNSUPPORTED`) rather than substituting a cue. **This concept already exists in
+prior literature; PonderScope uses it as a measurement primitive, not as its
+claimed novelty.** An oracle prefix is never presented as a deployable stopping
+method.
 
 ## The within-configuration noise floor
 
-A defining feature. Before comparing deployments, identical conditions are
-repeated:
+A defining feature. Before comparing deployments, three **distinct** quantities
+are measured and never collapsed into one standard deviation:
 
-- **Greedy diagnostic:** same condition repeated; compare exact token ids and
-  (optionally) per-token distribution digests. If they diverge, record the first
-  divergence index.
-- **Seeded sampled condition:** a frozen sampling profile with several seeds;
-  repeat the same seed where supported. This separates deterministic-replay
-  failure, seed-driven variation, and task-driven variation.
+- **Greedy replay variation:** same deterministic condition, repeated; exact
+  token identity, first divergence, logprob-digest divergence, answer agreement,
+  latency variation.
+- **Same-seed sampled replay variation:** same sampler configuration and same
+  seed, re-executed; identity/divergence/answer/length/latency.
+- **Across-seed stochastic variation:** same policy, different seeds; answer
+  diversity and length/accuracy spread.
 
 Distributions are computed for accuracy, reasoning tokens, latency, repetition,
 answer flips, and termination failures. Deployment effects are only interpreted
@@ -105,10 +128,19 @@ relative to this floor.
 
 ## Comparison and statistics
 
-Paired bootstrap confidence intervals over matched `(task, condition)` pairs;
-each metric's delta is classified as `below_noise`, `comparable`, or
-`clearly_larger` relative to the measured within-condition scale. No causal
-language is used.
+The statistical unit is the **task**, not the generation. Repeated seeds/repeats
+from one task are not independent samples, so accuracy CIs and paired deltas use
+a **task-clustered** bootstrap that preserves within-task seed/repeat structure;
+the estimand is stated explicitly. Every metric's delta is classified
+`below_noise` / `comparable` / `clearly_larger` / `insufficient_data` using the
+combined within-deployment noise of **both** compared conditions, not one side.
+
+Before any metric is compared, a canonical configuration-difference report lists
+identical / changed / missing provenance fields, and the requested contrast is
+checked for confounds (task-population mismatch, multiple uncontrolled deployment
+variables, undeclared decoding differences, missing provenance). Confounded or
+under-specified comparisons are **refused** unless explicitly requested as
+exploratory, in which case they are labelled as such. No causal language is used.
 
 ## Policy-transfer contract (future scope, documented now)
 

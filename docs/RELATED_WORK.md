@@ -100,3 +100,53 @@ measurement, answer-stability stopping, prefix probing / forced answer
 elicitation, confidence-based early exit, quantization effects on reasoning, or
 deterministic-inference engineering. It reuses the prefix probe strictly as a
 measurement primitive.
+
+---
+
+## Addendum — Phase 1.1 literature verification (2026-10-05)
+
+Six works requested for the research audit were located and verified against
+primary sources. None could be positively identified only by an unverifiable
+name; those that could not be verified are omitted rather than invented. All
+six below were verified via arXiv / ACL Anthology / official code.
+Machine-readable entries are in `references.bib`.
+
+| work | id / venue | type | central question | deployment configs varied? | within-config noise floor? | overlap with PonderScope | remaining gap |
+|---|---|---|---|---|---|---|---|
+| Settle: Learning When to Stop Reasoning | arXiv:2609.38997 | preprint (cs.CL) | learn when to stop reasoning | N (single runtime) | N | learned stopping | no deployment variation, no noise floor |
+| TRACE: Efficient Test-Time Scaling via Temporal Reasoning Aggregation | arXiv:2604.17304 / Findings of ACL 2026 (`2026.findings-acl.651`) | peer-reviewed (Findings) | temporal aggregation of answer consistency + confidence trajectory to exit early | N | N | convergence-based stopping | no deployment variation |
+| LearnStop: When Does Learning to Stop Help? A Cost-Aware Study of Early Exits in Reasoning Models | arXiv:2606.30852 (v2) | preprint | when does a learned stopper beat scalar exits, incl. cost accounting | N (single runtime per setting) | ~ (paired bootstrap, calibration; not a deployment noise floor) | **closest to forced-prefix + learned stopping + cost** | fixed runtime/precision; no cross-deployment trajectory reproducibility or frozen-policy transfer |
+| Vosti: Specifying, Implementing, and Verifying Deterministic LLM Inference | arXiv:2609.38981 | preprint (cs.DC), code `QDelta/Vosti` | verify determinism for a fixed deployment | N (guarantee is *for* a fixed deployment) | Y (determinism proof, not reasoning dynamics) | deterministic-inference engineering | does not measure reasoning behaviour across deployments |
+| RATIO: Reasoning Analysis and Token-level Inference Optimization for Quantized Reasoning Models | arXiv:2609.39801 | preprint (cs.LG) | discover overthinking tokens under quantization and penalize them | ~ (full-precision vs quantized reference, single runtime) | N | quantization → overthinking | single runtime; mitigation, not measurement; no noise floor/transfer test |
+| CoDE-Stop: Early Stopping for Large Reasoning Models via Confidence Dynamics | arXiv:2604.04930 (v2) | preprint (cs.CL) | confidence-dynamics early stop | N | N | confidence-based early exit | no deployment variation |
+
+### Falsification check
+
+- **LearnStop (2606.30852)** is the strongest challenge to PonderScope's
+  novelty. It already (i) forces short answers from reasoning prefixes,
+  (ii) studies when learned stopping helps versus scalar exits, and (iii)
+  accounts for probe overhead (KV-fork vs black-box). It does **not**, however,
+  hold weights/revision fixed while varying precision, quantization, runtime, or
+  hardware, and it does not establish a **within-configuration noise floor on
+  reasoning dynamics** as a prerequisite to deployment comparison. PonderScope
+  must not claim novelty for forced-prefix probing, learned stopping, or cost
+  accounting; its defensible contribution is the deployment-conditioned
+  measurement instrument and frozen-policy transfer across deployments.
+- **Vosti (2609.38981)** shows determinism can be *guaranteed* for a fixed
+  deployment, which sharpens the question: PonderScope measures how behaviour
+  changes *between* deployments, not within one.
+- **RATIO (2609.39801)** and the CTIR line already establish quantization →
+  overthinking; PonderScope reuses that as motivation, not result.
+
+### Updated gap assessment
+
+After these additions the gap **narrows but holds**. No located work
+simultaneously (1) fixes weights and revision while varying the deployment
+configuration, (2) establishes a task-clustered within-configuration noise floor
+on reasoning dynamics separating replay failure from seed-driven and
+task-driven variation, (3) measures cross-deployment trajectory reproducibility,
+and (4) tests a frozen stopping policy's transfer from deployment A to
+deployment B. LearnStop covers (4)-adjacent cost/transfer within a runtime;
+Vosti covers determinism within a deployment; RATIO covers quantization effects.
+The combination across deployment configurations remains open, conditional on
+PonderScope's live gates actually working.

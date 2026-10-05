@@ -36,9 +36,12 @@ PonderScope is intentionally conservative about what its evidence supports.
 
 ## Statistics
 
-- Bootstrap confidence intervals over matched tasks are appropriate for the
-  paired comparisons here but do not account for multiple comparisons across
-  every reported metric.
+- Accuracy CIs and paired deltas are **task-clustered** bootstraps (the task is
+  the statistical unit); this avoids pseudo-replication from repeated seeds.
+- Comparisons are preceded by a configuration-difference / confound check and
+  are refused when the contrast is not clean, unless run as exploratory.
+- Bootstrap CIs do not account for multiple comparisons across every reported
+  metric.
 - With few tasks per family, seed-driven variance estimates are coarse.
 
 ## Not yet implemented / tested
