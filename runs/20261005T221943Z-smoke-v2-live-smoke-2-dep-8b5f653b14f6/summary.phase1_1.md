@@ -4,13 +4,11 @@ _Generated from saved evidence; no numbers are hand-entered._
 
 ## Deployment identity
 - description: `Qwen/Qwen3.5-0.8B@2fc06364715b (bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] greedy art=art-d4247b37d98a dep=dep-8b5f653b14f6 cond=cond-481d400047e2`
-- source artifact id: `art-d4247b37d98a`
-- weight variant id: `art-d4247b37d98a`
+- artifact id: `art-d4247b37d98a`
 - deployment id: `dep-8b5f653b14f6`
 - condition ids: `cond-481d400047e2, cond-19ba9bb0a86d`
 - model repo: `Qwen/Qwen3.5-0.8B`
 - revision: `2fc06364715b967f1860aea9cf38778875588b17`
-- representation: `None`
 - precision: `bfloat16`
 - quantization: `None` bits=None group=None
 - runtime: `mlx-lm 0.32.0` backend=`mlx-metal`
@@ -29,10 +27,10 @@ _Generated from saved evidence; no numbers are hand-entered._
 - spec: `{'name': 'smoke-v2', 'task_pack': 'tasks-v1', 'families': ['arith', 'path', 'order', 'logic', 'sm'], 'n_per_family': 1, 'task_seed': 0, 'split': 'dev', 'greedy_repeats': 2, 'sampled_seeds': [0, 1], 'sampled_repeats_per_seed': 2, 'max_tokens': 640, 'sampled_temperature': 0.6, 'sampled_top_p': 0.95, 'sampled_top_k': 20, 'sampled_min_p': 0.0, 'probe': True, 'n_probes': 4, 'probe_max_tokens': 64, 'capture_entropy': True, 'capture_top_k': 5, 'capture_logprob_digest': False, 'notes': 'Versioned tiny smoke after closure discovery (this model can need ~600 reasoning tokens before natural closure). 5 families x 1 task; 2 greedy repeats; 2 seeds x 2 repeats for same-seed replay and across-seed variation; forced probes. Budget 640 to bound runtime; censoring is recorded, not hidden.'}`
 
 ## Configurations
-| condition_id | mode | n | success_at_budget (95% CI) | completion_rate | censored_rate | conditional_acc_given_completed | reasoning tokens mean | tok/s |
-|---|---|---|---|---|---|---|---|---|
-| cond-19ba9bb0a86d | sampled | 20 | 0 [0, 0] | 0 | 1 | — | 640 | 52.37 |
-| cond-481d400047e2 | greedy | 10 | 0.2 [0, 0.6] | 0.2 | 0.8 | 1 | 615.2 | 53.52 |
+| condition_id | mode | n | accuracy (95% CI) | reasoning tokens mean | total tokens mean | wall ms mean | tok/s |
+|---|---|---|---|---|---|---|---|
+| cond-19ba9bb0a86d | sampled | 20 | 0 [0, 0] | 640 | 640 | 1.224e+04 | 52.37 |
+| cond-481d400047e2 | greedy | 10 | 0.2 [0, 0.6] | 615.2 | 616.8 | 1.152e+04 | 53.52 |
 
 ## Reasoning-length distribution
 
@@ -108,45 +106,29 @@ _Generated from saved evidence; no numbers are hand-entered._
 ### 2. Same-seed sampled replay (same seed + sampler, re-executed)
 - task/condition/seed groups: 10
 - token-identical rate: 1
-- ambiguous (divergent) seed groups: 0
-- answer-agreement rate (observed answers only): —
+- answer-agreement rate: 1
 - mean within-group reasoning-token std: 0
 
 ### 3. Across-seed stochastic variation (fixed sampler policy, different seeds)
 - task/condition groups: 5
-- mean distinct observed answers across seeds: —
-- mean observed-answer accuracy std across seeds: —
-- any ambiguous seeds (divergent same-seed repeats): False
-- note: final-answer diversity/accuracy is defined only over seeds with an observed answer; `—` means unobserved, not zero.
-
-### 4. Across-seed token variation (valid even when all answers are censored)
-- task/condition groups: 5
-- mean first token divergence across seeds: 10.8
+- mean distinct answers across seeds: 1
+- mean accuracy std across seeds: 0
 - mean reasoning-token std across seeds: 0
 
-## Censoring / termination (do not read a capped run as a wrong answer)
+## Censoring / termination problems
 
-- capped_length: 28
-- eos_observed: 2
-- missing_answer: 28
 - natural_eos: 2
-- status:censored: 28
-- status:correct: 2
+- capped_length: 28
 - think_end_reached: 2
-
-### Budget outcomes per condition
-| condition_id | success_at_budget | completion_rate | censored_rate | error_rate | unparseable_rate | cond_acc|completed |
-|---|---|---|---|---|---|---|
-| cond-19ba9bb0a86d | 0 | 0 | 1 | 0 | 0 | — |
-| cond-481d400047e2 | 0.2 | 0.2 | 0.8 | 0 | 0 | 1 |
+- missing_answer: 28
 
 ## Prefix probes / trajectory states
 
 - n probes: 25
-- stable-sufficient WITH observed natural final: 1
-- observed-probe stable (natural final unobserved or uncounted): 2
+- stable-sufficient prefixes observed: 1
+- multiple_flips: 1
 - never_correct: 3
-- wrong_to_correct: 2
+- wrong_to_correct: 1
 
 ## Limitations
 - Single model revision on a single machine; results do not generalize to other weights or hardware.

@@ -15,13 +15,11 @@ svg { display:block; margin: 0.5rem 0 1rem; background:#fafafa; }
 
 <h2>Deployment identity</h2>
 <li>description: `Qwen/Qwen3.5-0.8B@2fc06364715b (bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] greedy art=art-d4247b37d98a dep=dep-8b5f653b14f6 cond=cond-481d400047e2`</li>
-<li>source artifact id: `art-d4247b37d98a`</li>
-<li>weight variant id: `art-d4247b37d98a`</li>
+<li>artifact id: `art-d4247b37d98a`</li>
 <li>deployment id: `dep-8b5f653b14f6`</li>
 <li>condition ids: `cond-481d400047e2, cond-19ba9bb0a86d`</li>
 <li>model repo: `Qwen/Qwen3.5-0.8B`</li>
 <li>revision: `2fc06364715b967f1860aea9cf38778875588b17`</li>
-<li>representation: `None`</li>
 <li>precision: `bfloat16`</li>
 <li>quantization: `None` bits=None group=None</li>
 <li>runtime: `mlx-lm 0.32.0` backend=`mlx-metal`</li>
@@ -41,9 +39,9 @@ svg { display:block; margin: 0.5rem 0 1rem; background:#fafafa; }
 
 <h2>Configurations</h2>
 <table>
-<tr><th>condition_id</th><th>mode</th><th>n</th><th>success_at_budget (95% CI)</th><th>completion_rate</th><th>censored_rate</th><th>conditional_acc_given_completed</th><th>reasoning tokens mean</th><th>tok/s</th></tr>
-<tr><td>cond-19ba9bb0a86d</td><td>sampled</td><td>20</td><td>0 [0, 0]</td><td>0</td><td>1</td><td>—</td><td>640</td><td>52.37</td></tr>
-<tr><td>cond-481d400047e2</td><td>greedy</td><td>10</td><td>0.2 [0, 0.6]</td><td>0.2</td><td>0.8</td><td>1</td><td>615.2</td><td>53.52</td></tr>
+<tr><th>condition_id</th><th>mode</th><th>n</th><th>accuracy (95% CI)</th><th>reasoning tokens mean</th><th>total tokens mean</th><th>wall ms mean</th><th>tok/s</th></tr>
+<tr><td>cond-19ba9bb0a86d</td><td>sampled</td><td>20</td><td>0 [0, 0]</td><td>640</td><td>640</td><td>1.224e+04</td><td>52.37</td></tr>
+<tr><td>cond-481d400047e2</td><td>greedy</td><td>10</td><td>0.2 [0, 0.6]</td><td>615.2</td><td>616.8</td><td>1.152e+04</td><td>53.52</td></tr>
 </table>
 
 <h2>Reasoning-length distribution</h2>
@@ -120,46 +118,29 @@ svg { display:block; margin: 0.5rem 0 1rem; background:#fafafa; }
 <h3>2. Same-seed sampled replay (same seed + sampler, re-executed)</h3>
 <li>task/condition/seed groups: 10</li>
 <li>token-identical rate: 1</li>
-<li>ambiguous (divergent) seed groups: 0</li>
-<li>answer-agreement rate (observed answers only): —</li>
+<li>answer-agreement rate: 1</li>
 <li>mean within-group reasoning-token std: 0</li>
 
 <h3>3. Across-seed stochastic variation (fixed sampler policy, different seeds)</h3>
 <li>task/condition groups: 5</li>
-<li>mean distinct observed answers across seeds: —</li>
-<li>mean observed-answer accuracy std across seeds: —</li>
-<li>any ambiguous seeds (divergent same-seed repeats): False</li>
-<li>note: final-answer diversity/accuracy is defined only over seeds with an observed answer; `—` means unobserved, not zero.</li>
-
-<h3>4. Across-seed token variation (valid even when all answers are censored)</h3>
-<li>task/condition groups: 5</li>
-<li>mean first token divergence across seeds: 10.8</li>
+<li>mean distinct answers across seeds: 1</li>
+<li>mean accuracy std across seeds: 0</li>
 <li>mean reasoning-token std across seeds: 0</li>
 
-<h2>Censoring / termination (do not read a capped run as a wrong answer)</h2>
+<h2>Censoring / termination problems</h2>
 
-<li>capped_length: 28</li>
-<li>eos_observed: 2</li>
-<li>missing_answer: 28</li>
 <li>natural_eos: 2</li>
-<li>status:censored: 28</li>
-<li>status:correct: 2</li>
+<li>capped_length: 28</li>
 <li>think_end_reached: 2</li>
-
-<h3>Budget outcomes per condition</h3>
-<table>
-<tr><th>condition_id</th><th>success_at_budget</th><th>completion_rate</th><th>censored_rate</th><th>error_rate</th><th>unparseable_rate</th><th>cond_acc</th><th>completed</th></tr>
-<tr><td>cond-19ba9bb0a86d</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>—</td></tr>
-<tr><td>cond-481d400047e2</td><td>0.2</td><td>0.2</td><td>0.8</td><td>0</td><td>0</td><td>1</td></tr>
-</table>
+<li>missing_answer: 28</li>
 
 <h2>Prefix probes / trajectory states</h2>
 
 <li>n probes: 25</li>
-<li>stable-sufficient WITH observed natural final: 1</li>
-<li>observed-probe stable (natural final unobserved or uncounted): 2</li>
+<li>stable-sufficient prefixes observed: 1</li>
+<li>multiple_flips: 1</li>
 <li>never_correct: 3</li>
-<li>wrong_to_correct: 2</li>
+<li>wrong_to_correct: 1</li>
 
 <h2>Limitations</h2>
 <li>Single model revision on a single machine; results do not generalize to other weights or hardware.</li>
