@@ -5,6 +5,7 @@ This module only records evidence. It never analyses or interprets during a run.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -20,8 +21,6 @@ from .reasoning.parse import parse_trace, reasoning_prefix_ids
 from .reasoning.probes import run_prefix_probes
 from .reasoning.transitions import classify_transitions
 from .tasks import generate_pack, generate_pack_metadata, normalize, score
-
-BARE_BASELINE_NOTE = "bare baseline captures no per-token metrics"
 
 
 def build_capture(spec: ExperimentSpec, *, digest: bool | None = None) -> CaptureSpec:
@@ -120,7 +119,12 @@ def run_experiment(
     backend_name: str = "mlx",
     runs_dir: str | Path = "runs",
     run_suffix: str | None = None,
+    progress: Callable[[str], None] | None = None,
 ) -> RunResult:
+    def _progress(message: str) -> None:
+        if progress is not None:
+            progress(message)
+
     backend = get_backend(backend_name)
     declared = ModelIdentity(repo_id=model_repo, revision=model_revision, precision="unknown")
     loaded = backend.load(declared)
@@ -170,7 +174,9 @@ def run_experiment(
     traces_writer = store.open_traces()
     probes_writer = store.open_probes()
     try:
+        _progress(f"run {store.run_id}: {len(tasks)} tasks, {len(conditions)} conditions each")
         for task in tasks:
+            _progress(f"task {task.family}/{task.task_id[:8]} starting")
             prompt_ids = backend.tokenize_prompt(
                 [{"role": "user", "content": task.prompt}], enable_thinking=True
             )
@@ -245,6 +251,10 @@ def run_experiment(
                         f"probe {task.task_id}: primary={state.primary} flips={state.flips} "
                         f"stable_sufficient_prefix_tokens={state.stable_sufficient_prefix_tokens}"
                     )
+            _progress(
+                f"task {task.family}/{task.task_id[:8]} done "
+                f"({n_gen} generations, {n_probe} probes)"
+            )
         store.manifest["probe_supported"] = probe_supported
     except BaseException as exc:
         store.mark_failed(type(exc).__name__, str(exc), partial=True)

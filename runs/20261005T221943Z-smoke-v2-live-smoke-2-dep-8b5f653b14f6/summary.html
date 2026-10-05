@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>PonderScope report 20261005T221943Z-smoke-v2-live-smoke-2-dep-8b5f653b14f6</title>
+<style>
+body { font-family: -apple-system, system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color:#111; }
+h1,h2,h3 { font-weight: 600; }
+pre { background:#f6f8fa; padding: 0.75rem; overflow-x:auto; border-radius:6px; }
+code { background:#f0f0f0; padding:0 3px; border-radius:3px; }
+table { border-collapse: collapse; } td, th { border:1px solid #ccc; padding:4px 8px; font-size: 0.9rem; }
+svg { display:block; margin: 0.5rem 0 1rem; background:#fafafa; }
+</style></head><body>
+<h1>PonderScope report — 20261005T221943Z-smoke-v2-live-smoke-2-dep-8b5f653b14f6</h1>
+
+<p>_Generated from saved evidence; no numbers are hand-entered._</p>
+
+<h2>Deployment identity</h2>
+<li>description: `Qwen/Qwen3.5-0.8B@2fc06364715b (bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] greedy art=art-d4247b37d98a dep=dep-8b5f653b14f6 cond=cond-481d400047e2`</li>
+<li>artifact id: `art-d4247b37d98a`</li>
+<li>deployment id: `dep-8b5f653b14f6`</li>
+<li>condition ids: `cond-481d400047e2, cond-19ba9bb0a86d`</li>
+<li>model repo: `Qwen/Qwen3.5-0.8B`</li>
+<li>revision: `2fc06364715b967f1860aea9cf38778875588b17`</li>
+<li>precision: `bfloat16`</li>
+<li>quantization: `None` bits=None group=None</li>
+<li>runtime: `mlx-lm 0.32.0` backend=`mlx-metal`</li>
+<li>hardware: `Apple M3 Pro` os=`Darwin 27.2.0`</li>
+<li>created: `20261005T221943Z`</li>
+
+<h2>Machine / runtime environment</h2>
+<li>python: `3.12.12`</li>
+<li>platform: `macOS-27.2-arm64-arm-64bit`</li>
+<li>mlx device: `Device(gpu, 0)`</li>
+<li>memory bytes: `19327352832`</li>
+<li>packages: `{&#x27;mlx&#x27;: &#x27;0.32.3&#x27;, &#x27;mlx-lm&#x27;: &#x27;0.32.0&#x27;, &#x27;mlx-metal&#x27;: &#x27;0.32.3&#x27;, &#x27;numpy&#x27;: &#x27;2.5.3&#x27;, &#x27;transformers&#x27;: &#x27;5.18.0&#x27;, &#x27;tokenizers&#x27;: &#x27;0.23.2&#x27;, &#x27;huggingface-hub&#x27;: &#x27;1.33.0&#x27;, &#x27;safetensors&#x27;: &#x27;0.8.0&#x27;, &#x27;ponderscope&#x27;: &#x27;0.1.0&#x27;}`</li>
+
+<h2>Task population</h2>
+<li>n tasks: 5  n generations: 30</li>
+<li>spec: `{&#x27;name&#x27;: &#x27;smoke-v2&#x27;, &#x27;task_pack&#x27;: &#x27;tasks-v1&#x27;, &#x27;families&#x27;: [&#x27;arith&#x27;, &#x27;path&#x27;, &#x27;order&#x27;, &#x27;logic&#x27;, &#x27;sm&#x27;], &#x27;n_per_family&#x27;: 1, &#x27;task_seed&#x27;: 0, &#x27;split&#x27;: &#x27;dev&#x27;, &#x27;greedy_repeats&#x27;: 2, &#x27;sampled_seeds&#x27;: [0, 1], &#x27;sampled_repeats_per_seed&#x27;: 2, &#x27;max_tokens&#x27;: 640, &#x27;sampled_temperature&#x27;: 0.6, &#x27;sampled_top_p&#x27;: 0.95, &#x27;sampled_top_k&#x27;: 20, &#x27;sampled_min_p&#x27;: 0.0, &#x27;probe&#x27;: True, &#x27;n_probes&#x27;: 4, &#x27;probe_max_tokens&#x27;: 64, &#x27;capture_entropy&#x27;: True, &#x27;capture_top_k&#x27;: 5, &#x27;capture_logprob_digest&#x27;: False, &#x27;notes&#x27;: &#x27;Versioned tiny smoke after closure discovery (this model can need ~600 reasoning tokens before natural closure). 5 families x 1 task; 2 greedy repeats; 2 seeds x 2 repeats for same-seed replay and across-seed variation; forced probes. Budget 640 to bound runtime; censoring is recorded, not hidden.&#x27;}`</li>
+
+<h2>Configurations</h2>
+<table>
+<tr><th>condition_id</th><th>mode</th><th>n</th><th>accuracy (95% CI)</th><th>reasoning tokens mean</th><th>total tokens mean</th><th>wall ms mean</th><th>tok/s</th></tr>
+<tr><td>cond-19ba9bb0a86d</td><td>sampled</td><td>20</td><td>0 [0, 0]</td><td>640</td><td>640</td><td>1.224e+04</td><td>52.37</td></tr>
+<tr><td>cond-481d400047e2</td><td>greedy</td><td>10</td><td>0.2 [0, 0.6]</td><td>615.2</td><td>616.8</td><td>1.152e+04</td><td>53.52</td></tr>
+</table>
+
+<h2>Reasoning-length distribution</h2>
+
+<h3>cond-19ba9bb0a86d (sampled)</h3>
+
+<pre>
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640        20 ########################################
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+     640-640         0 
+</pre>
+<li>{&quot;n&quot;: 20, &quot;mean&quot;: 640.0, &quot;median&quot;: 640.0, &quot;std&quot;: 0.0, &quot;min&quot;: 640.0, &quot;max&quot;: 640.0, &quot;p10&quot;: 640.0, &quot;p90&quot;: 640.0}</li>
+
+<h3>cond-481d400047e2 (greedy)</h3>
+
+<pre>
+     516-522         2 ##########
+     522-528         0 
+     528-535         0 
+     535-541         0 
+     541-547         0 
+     547-553         0 
+     553-559         0 
+     559-566         0 
+     566-572         0 
+     572-578         0 
+     578-584         0 
+     584-590         0 
+     590-597         0 
+     597-603         0 
+     603-609         0 
+     609-615         0 
+     615-621         0 
+     621-628         0 
+     628-634         0 
+     634-640         8 ########################################
+</pre>
+<li>{&quot;n&quot;: 10, &quot;mean&quot;: 615.2, &quot;median&quot;: 640.0, &quot;std&quot;: 52.282990648117206, &quot;min&quot;: 516.0, &quot;max&quot;: 640.0, &quot;p10&quot;: 516.0, &quot;p90&quot;: 640.0}</li>
+
+<h2>Latency / throughput</h2>
+<li>cond-19ba9bb0a86d: wall_ms {&quot;n&quot;: 20, &quot;mean&quot;: 12238.489560299786, &quot;median&quot;: 12247.595270499005, &quot;std&quot;: 473.31239457298824, &quot;min&quot;: 11427.879292008583, &quot;max&quot;: 13087.461290997453, &quot;p10&quot;: 11660.88215859636, &quot;p90&quot;: 12813.71324169304}; tok/s {&quot;n&quot;: 20, &quot;mean&quot;: 52.368108161831046, &quot;median&quot;: 52.25650986738407, &quot;std&quot;: 2.017709414893342, &quot;min&quot;: 48.901768323871984, &quot;max&quot;: 56.00339167456436, &quot;p10&quot;: 49.94882775761828, &quot;p90&quot;: 54.88435563794892}; ttft_ms {&quot;n&quot;: 20, &quot;mean&quot;: 61.03124380024383, &quot;median&quot;: 61.185625003417954, &quot;std&quot;: 10.504013242454352, &quot;min&quot;: 43.4095420059748, &quot;max&quot;: 83.07583299756516, &quot;p10&quot;: 45.20523690589471, &quot;p90&quot;: 74.03664141020272}</li>
+<li>cond-481d400047e2: wall_ms {&quot;n&quot;: 10, &quot;mean&quot;: 11520.75980429654, &quot;median&quot;: 11528.075583992177, &quot;std&quot;: 591.4983146979507, &quot;min&quot;: 10183.167916999082, &quot;max&quot;: 12413.804124997114, &quot;p10&quot;: 11139.203341705434, &quot;p90&quot;: 12060.978699993575}; tok/s {&quot;n&quot;: 10, &quot;mean&quot;: 53.51991645360037, &quot;median&quot;: 54.28813784000415, &quot;std&quot;: 3.0236383223017738, &quot;min&quot;: 46.59670846717895, &quot;max&quot;: 56.5392380934145, &quot;p10&quot;: 50.971388756499515, &quot;p90&quot;: 56.235668205772065}; ttft_ms {&quot;n&quot;: 10, &quot;mean&quot;: 91.4242166953045, &quot;median&quot;: 62.19639549817657, &quot;std&quot;: 90.73969883058177, &quot;min&quot;: 46.267124998848885, &quot;max&quot;: 348.2941669935826, &quot;p10&quot;: 55.4929872014327, &quot;p90&quot;: 103.59504169464334}</li>
+
+<h2>Repetition</h2>
+<li>cond-19ba9bb0a86d: unique_token_ratio {&quot;n&quot;: 20, &quot;mean&quot;: 0.22296874999999994, &quot;median&quot;: 0.234375, &quot;std&quot;: 0.04498977634228633, &quot;min&quot;: 0.1546875, &quot;max&quot;: 0.2921875, &quot;p10&quot;: 0.16171875, &quot;p90&quot;: 0.27109375}; repeated_ngram_fraction_4 {&quot;n&quot;: 20, &quot;mean&quot;: 0.4337519623233909, &quot;median&quot;: 0.4277864992150706, &quot;std&quot;: 0.1362264360673718, &quot;min&quot;: 0.24175824175824176, &quot;max&quot;: 0.6828885400313972, &quot;p10&quot;: 0.2869701726844584, &quot;p90&quot;: 0.6249607535321823}; text_repeat_ratio {&quot;n&quot;: 20, &quot;mean&quot;: 0.04219602358382372, &quot;median&quot;: 0.024390243902439046, &quot;std&quot;: 0.049485659178519395, &quot;min&quot;: 0.0, &quot;max&quot;: 0.13793103448275867, &quot;p10&quot;: 0.0, &quot;p90&quot;: 0.0986987638256344}</li>
+<li>cond-481d400047e2: unique_token_ratio {&quot;n&quot;: 10, &quot;mean&quot;: 0.18239503816793892, &quot;median&quot;: 0.1625, &quot;std&quot;: 0.04423824401547891, &quot;min&quot;: 0.1421875, &quot;max&quot;: 0.25572519083969464, &quot;p10&quot;: 0.1421875, &quot;p90&quot;: 0.25572519083969464}; repeated_ngram_fraction_4 {&quot;n&quot;: 10, &quot;mean&quot;: 0.5829358467142947, &quot;median&quot;: 0.6232339089481946, &quot;std&quot;: 0.14942190047848047, &quot;min&quot;: 0.4065934065934066, &quot;max&quot;: 0.7551020408163265, &quot;p10&quot;: 0.4065934065934066, &quot;p90&quot;: 0.7551020408163265}; text_repeat_ratio {&quot;n&quot;: 10, &quot;mean&quot;: 0.14145842143031048, &quot;median&quot;: 0.10344827586206895, &quot;std&quot;: 0.1372507387453179, &quot;min&quot;: 0.021739130434782594, &quot;max&quot;: 0.37777777777777777, &quot;p10&quot;: 0.021739130434782594, &quot;p90&quot;: 0.37777777777777777}</li>
+
+<h2>Repeatability / noise floor</h2>
+
+<h3>1. Greedy replay (same deterministic condition, repeated)</h3>
+<li>task/condition pairs with repeats: 5</li>
+<li>token-identical replays: 5 (1)</li>
+<li>answer-agreement rate: 1</li>
+<li>mean within-task reasoning-token std: 0</li>
+<li>mean within-task wall-ms std: 226.7</li>
+
+<h3>2. Same-seed sampled replay (same seed + sampler, re-executed)</h3>
+<li>task/condition/seed groups: 10</li>
+<li>token-identical rate: 1</li>
+<li>answer-agreement rate: 1</li>
+<li>mean within-group reasoning-token std: 0</li>
+
+<h3>3. Across-seed stochastic variation (fixed sampler policy, different seeds)</h3>
+<li>task/condition groups: 5</li>
+<li>mean distinct answers across seeds: 1</li>
+<li>mean accuracy std across seeds: 0</li>
+<li>mean reasoning-token std across seeds: 0</li>
+
+<h2>Censoring / termination problems</h2>
+
+<li>natural_eos: 2</li>
+<li>capped_length: 28</li>
+<li>think_end_reached: 2</li>
+<li>missing_answer: 28</li>
+
+<h2>Prefix probes / trajectory states</h2>
+
+<li>n probes: 25</li>
+<li>stable-sufficient prefixes observed: 1</li>
+<li>multiple_flips: 1</li>
+<li>never_correct: 3</li>
+<li>wrong_to_correct: 1</li>
+
+<h2>Limitations</h2>
+<li>Single model revision on a single machine; results do not generalize to other weights or hardware.</li>
+<li>Greedy determinism is a same-process, same-machine replay test.</li>
+<li>Where the reasoning channel was never closed, the trajectory is censored, not a natural stop.</li>
+<li>No causal claims: deployment differences are associations under this protocol.</li>
+<hr>
+<h2>Plots derived from saved evidence</h2>
+<h3>cond-19ba9bb0a86d — reasoning tokens</h3><svg xmlns="http://www.w3.org/2000/svg" width="420" height="140" viewBox="0 0 420 140"><rect x="0.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="21.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="42.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="63.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="84.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="105.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="126.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="147.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="168.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="189.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="210.0" y="20.0" width="20.0" height="120.0" fill="#3b6"/><rect x="231.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="252.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="273.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="294.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="315.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="336.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="357.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="378.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="399.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><text x="4" y="12" font-size="11" fill="#333">min=640 max=640 mean=640.0</text></svg><h3>cond-481d400047e2 — reasoning tokens</h3><svg xmlns="http://www.w3.org/2000/svg" width="420" height="140" viewBox="0 0 420 140"><rect x="0.0" y="110.0" width="20.0" height="30.0" fill="#3b6"/><rect x="21.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="42.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="63.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="84.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="105.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="126.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="147.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="168.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="189.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="210.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="231.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="252.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="273.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="294.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="315.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="336.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="357.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="378.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="399.0" y="20.0" width="20.0" height="120.0" fill="#3b6"/><text x="4" y="12" font-size="11" fill="#333">min=516 max=640 mean=615.2</text></svg>
+</body></html>

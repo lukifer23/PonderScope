@@ -1,0 +1,19 @@
+{
+  "run_id": "20261005T221943Z-smoke-v2-live-smoke-2-dep-8b5f653b14f6",
+  "artifact_id": "art-d4247b37d98a",
+  "deployment_id": "dep-8b5f653b14f6",
+  "spec_hash": "7985c6cd3096f33b92acabf599c7c6c80ddf48f5190904586376519acaf2caf4",
+  "code": {
+    "version": "0.1.0",
+    "git_sha": "ad7866270640ede610f6e708d13165c4e12b8d05",
+    "git_dirty": true
+  },
+  "files": {
+    "environment.json": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+    "tasks.jsonl": "c20ee147f0fba0a9db3931965e63e8a5da9d46edef062164ebc586c6c51e4161",
+    "traces.jsonl": "c22d2aa139531052a03d84ded07a875ed15f7fad00baaba02b5dfbd85b28bd71",
+    "probes.jsonl": "8e0c242af0457d1db045eb2a1b7f7ed34e11852db0ed6b44b3d019741977f600"
+  },
+  "manifest_sha256": "15d7075b27acee233b83ee98d6a973acdc35dc50439389c57bb764b63ac7ea34",
+  "sealed_utc": "20261005T222607Z"
+}

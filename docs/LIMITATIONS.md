@@ -52,3 +52,19 @@ PonderScope is intentionally conservative about what its evidence supports.
 - Cross-runtime and cross-hardware comparisons (only one deployment is
   guaranteed in this pass).
 - Semantic reasoning-equivalence measures.
+
+## Measured on this deployment (2026-10-05)
+
+- **Natural closure is expensive.** On `Qwen/Qwen3.5-0.8B`@`2fc06364…`, the live
+  capability gate found natural closure after ~593–601 reasoning tokens on a
+  trivial arithmetic prompt. Budgets of 192–512 were fully censored.
+- **Difficulty is degenerate at this budget.** In the tiny smoke (budget 640),
+  only `arith` closed naturally; `path`, `order`, `logic`, and `sm` were capped
+  for both greedy and sampled decoding. `tasks-v1` difficulty must be versioned
+  before a full noise study (`RESULTS.md` records the details).
+- **Instrumentation is not free.** Digest-enabled capture cost roughly +25% of
+  decode throughput versus minimal capture; capture is therefore reported with
+  its measured overhead, never assumed low.
+- Greedy replay and same-seed sampled replay were exactly token-identical in the
+  smoke; across-seed variation is not yet interpretable because sampled runs were
+  censored.

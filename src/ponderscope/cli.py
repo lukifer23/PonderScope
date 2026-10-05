@@ -29,6 +29,11 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         print(json.dumps(report, indent=2, default=str))
     else:
         print(format_doctor(report))
+    if args.save:
+        from .evidence.store import atomic_write_json
+
+        atomic_write_json(Path(args.save), report)
+        print(f"saved capability/provenance report to {args.save}")
     return 0
 
 
@@ -93,6 +98,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         backend_name=args.backend,
         runs_dir=args.runs_dir,
         run_suffix=args.suffix,
+        progress=lambda message: print(message, file=sys.stderr, flush=True),
     )
     print(f"run {result.store.run_id}")
     print(f"  path: {result.store.path}")
@@ -187,6 +193,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--revision", default=REVISION_DEFAULT)
     p.add_argument("--live", action="store_true")
     p.add_argument("--overhead", action="store_true")
+    p.add_argument("--save", default=None)
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_doctor)
 

@@ -41,44 +41,10 @@ def run_doctor(
     report["deployment_description"] = deployment.describe()
 
     if live:
-        messages = [
-            {
-                "role": "user",
-                "content": "State the capital of France in one word after the tag 'Answer:'.",
-            }
-        ]
-        prompt_ids = backend.tokenize_prompt(messages, enable_thinking=True)
-        trace = backend.generate(
-            prompt_ids,
-            DecodingPolicy(mode="greedy", max_tokens=64),
-            capture=_default_capture(),
-        )
-        report["live"] = {
-            "prompt_tokens": trace.prompt_tokens,
-            "generated_tokens": trace.generated_tokens,
-            "finish_reason": trace.finish_reason,
-            "terminated_by_eos": trace.terminated_by_eos,
-            "think_end_reached": trace.think_end_reached,
-            "think_end_token_id": getattr(backend, "think_end_token_id", None),
-            "ttft_ms": trace.ttft_ms,
-            "tokens_per_sec": trace.tokens_per_sec,
-            "text_head": trace.text[:400],
-        }
-    if overhead:
-        from .experiment import measure_capture_overhead
+        from .capability import validate_live
 
-        messages = [{"role": "user", "content": "Continue counting: 1, 2, 3, 4, 5,"}]
-        prompt_ids = backend.tokenize_prompt(messages, enable_thinking=True)
-        report["overhead"] = measure_capture_overhead(
-            backend, prompt_ids, DecodingPolicy(mode="greedy", max_tokens=128)
-        )
+        report["capability"] = validate_live(backend, overhead=overhead)
     return report
-
-
-def _default_capture():
-    from .backends import CaptureSpec
-
-    return CaptureSpec(entropy=False, top_k=3, logprob_digest=False)
 
 
 def format_doctor(report: dict[str, Any]) -> str:
@@ -126,26 +92,47 @@ def format_doctor(report: dict[str, Any]) -> str:
     lines.append(f"  deployment id {report['deployment_id']}")
     lines.append(f"  condition id  {report['condition_id']}")
     lines.append(f"  description   {report['deployment_description']}")
-    if "live" in report:
-        live = report["live"]
-        lines.append("Live smoke (greedy, 64 tokens)")
+    if "capability" in report:
+        cap = report["capability"]
+        c = cap["capabilities"]
+        lines.append("Live capability proof")
+        lines.append(f"  prompt tail    {json.dumps(c['thinking_prompt_tail'])}")
+        lines.append(f"  think start    {c['think_start']['id']} {c['think_start']['decoded']!r}")
+        lines.append(f"  think end      {c['think_end']['id']} {c['think_end']['decoded']!r}")
+        lines.append(f"  eos            {c['eos']['ids']} {c['eos']['decoded']}")
+        cl = c["native_closure"]
         lines.append(
-            f"  finish        {live['finish_reason']} eos={live['terminated_by_eos']} "
-            f"think_end={live['think_end_reached']}"
+            f"  closure        supported={cl.get('supported')} ids={cl.get('ids')} "
+            f"decoded={cl.get('decoded')!r}"
         )
-        lines.append(f"  ttft_ms       {live['ttft_ms']}")
-        lines.append(f"  tokens/sec    {live['tokens_per_sec']}")
-        lines.append(f"  text          {json.dumps(live['text_head'])}")
-    if "overhead" in report:
-        o = report["overhead"]["modes"]
-        lines.append("Instrumentation overhead (capture levels, medians)")
-        for name in ("minimal", "research", "digest"):
-            m = o[name]
-            frac = m.get("decode_overhead_fraction")
-            frac_txt = f"{frac * 100:+.1f}%" if frac is not None else "n/a"
-            lines.append(
-                f"  {name:<9} ttft={m['ttft_ms_median']:.1f}ms wall={m['wall_ms_median']:.0f}ms "
-                f"end2end={m['output_tokens_per_sec_median']:.1f}tok/s "
-                f"decode={m['decode_tokens_per_sec_median']:.1f}tok/s overhead={frac_txt}"
-            )
+        nc = c["natural_closure"]
+        lines.append(
+            f"  natural close  supported={nc['supported']} "
+            f"tokens={nc.get('reasoning_tokens')} answer={nc.get('answer')!r}"
+        )
+        ff = c["forced_finalization"]
+        lines.append(
+            f"  forced probe   supported={ff.get('supported')} honored={ff.get('honored')}"
+        )
+        lines.append(
+            f"  greedy replay  identical={c['greedy']['replay_identical']} "
+            f"finish={c['greedy']['finish_reason']}"
+        )
+        td = c["token_distribution"]
+        lines.append(
+            f"  distribution   entropy={td.get('entropy_nats')} top_sorted={td.get('top_sorted_descending')} "
+            f"chosen_in_top={td.get('chosen_in_top')}"
+        )
+        lines.append(f"  same-seed      identical={c['same_seed_replay']['identical_token_ids']}")
+        if "instrumentation_overhead" in c:
+            o = c["instrumentation_overhead"]["modes"]
+            for name in ("minimal", "research", "digest"):
+                m = o[name]
+                frac = m.get("decode_overhead_fraction")
+                frac_txt = f"{frac * 100:+.1f}%" if frac is not None else "n/a"
+                lines.append(
+                    f"  overhead {name:<8} end2end={m['output_tokens_per_sec_median']:.1f}tok/s "
+                    f"decode={m['decode_tokens_per_sec_median']:.1f}tok/s overhead={frac_txt}"
+                )
+        lines.append(f"  UNSUPPORTED    {cap['unsupported'] or 'none'}")
     return "\n".join(lines)

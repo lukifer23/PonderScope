@@ -1,0 +1,22 @@
+{
+  "name": "smoke-v2",
+  "task_pack": "tasks-v1",
+  "families": ["arith", "path", "order", "logic", "sm"],
+  "n_per_family": 1,
+  "task_seed": 0,
+  "split": "dev",
+  "greedy_repeats": 2,
+  "sampled_seeds": [0, 1],
+  "sampled_repeats_per_seed": 2,
+  "max_tokens": 640,
+  "sampled_temperature": 0.6,
+  "sampled_top_p": 0.95,
+  "sampled_top_k": 20,
+  "probe": true,
+  "n_probes": 4,
+  "probe_max_tokens": 64,
+  "capture_entropy": true,
+  "capture_top_k": 5,
+  "capture_logprob_digest": false,
+  "notes": "Versioned tiny smoke after closure discovery (this model can need ~600 reasoning tokens before natural closure). 5 families x 1 task; 2 greedy repeats; 2 seeds x 2 repeats for same-seed replay and across-seed variation; forced probes. Budget 640 to bound runtime; censoring is recorded, not hidden."
+}

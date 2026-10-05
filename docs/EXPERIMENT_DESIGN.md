@@ -72,12 +72,26 @@ sizes are compared to the within-condition noise and classified
 
 ## Capture settings
 
-- Reasoning **entropy** and **top-5 logprobs** are on by default.
+- Capture has three explicit levels: **minimal** (token ids + termination only),
+  **research** (chosen logprob, entropy, top-k, per-token timing), and
+  **digest** (research + full-distribution digest).
+- Reasoning **entropy** and **top-5 logprobs** are on by default for research runs.
 - Full-distribution **digests** are opt-in (expensive) and used for the
   determinism diagnostic.
 - Full logprob vectors are never persisted; only scalars, top-k, and digests.
-- Instrumentation overhead is measured separately (capture on vs off) so the
-  observer does not silently distort the observed.
+- Instrumentation overhead is qualified by warmup + alternating repeated runs of
+  the three capture levels; measured overhead is reported rather than assumed.
+- The `generate_step` logprob vector is the pre-sampler model distribution; top-k
+  is reported as the model's most likely tokens, not the post-sampling set.
+
+## Stage 0b — closure discovery (added after the first live pass)
+
+Because a model may need hundreds of reasoning tokens before natural closure,
+Stage 0 first runs a bounded closure-discovery sweep (escalating budget) so the
+smoke budget is chosen from measurement, not assumption. The versioned tiny
+smoke (`specs/smoke-v2.json`) uses the measured budget and records censoring
+explicitly. If difficulty is degenerate (ceiling/floor/censored), version the
+task pack (`tasks-v2`) rather than silently editing `tasks-v1`.
 
 ## Reproducibility
 

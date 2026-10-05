@@ -21,8 +21,6 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 THINK_END_STR = "</think>"
-# Qwen3.x native think-end token id (fallback when a backend does not expose one).
-THINK_END_TOKEN_IDS = (248069,)
 _ANSWER_CUE = re.compile(r"answer\s*[:=]", re.IGNORECASE)
 _SPECIAL = re.compile(r"<\|[^|]*\|>|<think>|</think>")
 
