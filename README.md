@@ -23,14 +23,20 @@ The first priority is to build a trustworthy measurement instrument.
 ## Status
 
 Work in progress. **Phase 1.2 (censoring correctness, clean evidence, and
-termination calibration) is in progress on `main`.** Phase 1.1's live capability
+termination calibration) is complete on `main`.** Phase 1.1's live capability
 gates pass on `Qwen/Qwen3.5-0.8B`@`2fc06364715b967f1860aea9cf38778875588b17`
 (MLX-LM 0.32.0, Apple M3 Pro). Phase 1.2 corrected measurement semantics that
 treated a capped (censored) generation as an observed wrong answer, fixed the
 evidence-seal ordering, and split source-/weight-variant identity. See
-`docs/PHASE1_2_CORRECTION.md` and `docs/RESULTS.md`. Natural termination on
-trivial tasks is itself being measured rather than assumed to be a task-difficulty
-problem; no `tasks-v2` is created without evidence.
+`docs/PHASE1_2_REPORT.md` and `docs/PHASE1_2_CORRECTION.md`.
+
+Measured finding: under a generous uniform 2048-token cap, this deployment
+remains in the reasoning channel on 9/10 trivial calibration tasks **for both
+prompt policies**, and the censored traces loop (repeated-4-gram fraction
+0.61–0.90). Failure to terminate is therefore the phenomenon to measure, not a
+task-difficulty problem; **no `tasks-v2` is created**. Natural termination is
+classified as a **termination-stress** deployment, and a larger open reasoning
+model is recommended as the primary baseline before cross-deployment work.
 
 Terminology is used strictly: `IMPLEMENTED`, `LIVE VALIDATED`, `MEASURED`,
 `HYPOTHESIS`, `UNSUPPORTED`, `NOT YET TESTED`.
