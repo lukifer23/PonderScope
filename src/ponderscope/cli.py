@@ -124,15 +124,35 @@ def _cmd_analyze(args: argparse.Namespace) -> int:
 
 
 def _cmd_compare(args: argparse.Namespace) -> int:
+    import datetime as _dt
+
     from .analysis import compare_configs
     from .evidence.run import RunStore
+    from .evidence.store import atomic_write_json
 
     a = RunStore.load(args.a)
     b = RunStore.load(args.b)
-    comparison = compare_configs(a, b, mode=args.mode)
-    (a.path / "comparison.json").write_text(json.dumps(comparison, indent=2) + "\n")
+    comparison = compare_configs(
+        a,
+        b,
+        mode=args.mode,
+        allow_confounded=args.allow_confounded,
+        decoding_intentional=args.decoding_intentional,
+    )
+    ts = _dt.datetime.now(_dt.UTC).strftime("%Y%m%dT%H%M%SZ")
+    out_path = (
+        a.path / "comparisons" / f"{ts}-{a.deployment_id}-vs-{b.deployment_id}-{args.mode}.json"
+    )
+    atomic_write_json(out_path, comparison)
+    print(f"compared {a.deployment_id} vs {b.deployment_id} [{args.mode}]")
+    print(f"  written: {out_path}")
+    if comparison.get("refused"):
+        print(f"  REFUSED (confounded/under-specified): {comparison['validity']['reasons']}")
+        return 1
+    if comparison.get("exploratory"):
+        print("  EXPLORATORY / CONFOUNDED (override applied)")
     print(
-        f"compared {a.config_id} vs {b.config_id} [{args.mode}], matched={comparison['n_matched']}"
+        f"  matched trials={comparison['n_matched_trials']} tasks={comparison['n_matched_tasks']}"
     )
     for metric, m in comparison["metrics"].items():
         d = m["delta"]
@@ -214,6 +234,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--a", required=True)
     p.add_argument("--b", required=True)
     p.add_argument("--mode", default="greedy", choices=["greedy", "sampled"])
+    p.add_argument("--allow-confounded", action="store_true")
+    p.add_argument("--decoding-intentional", action="store_true")
     p.set_defaults(func=_cmd_compare)
 
     p = sub.add_parser("report", help="regenerate Markdown/HTML from saved evidence")

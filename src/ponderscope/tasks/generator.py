@@ -89,3 +89,29 @@ def generate_pack(
     # deterministic ordering
     tasks.sort(key=lambda t: (t.family, t.index))
     return tasks
+
+
+def generate_pack_metadata(
+    tasks: list[Task],
+    *,
+    families: list[str] | None,
+    n_per_family: int,
+    split: str,
+    seed: int,
+    pack: str,
+) -> dict:
+    """Provenance of exactly what was generated (not merely requested)."""
+    task_ids = sorted(t.task_id for t in tasks)
+    digest = hashlib.sha256("\n".join(task_ids).encode("utf-8")).hexdigest()
+    actual_families = sorted({t.family for t in tasks})
+    return {
+        "pack_version": PACK_VERSION,
+        "generator_version": GENERATOR_VERSION,
+        "requested_pack": pack,
+        "families": actual_families,
+        "n_per_family": n_per_family,
+        "split": split,
+        "seed": seed,
+        "n_tasks": len(tasks),
+        "task_ids_sha256": digest,
+    }

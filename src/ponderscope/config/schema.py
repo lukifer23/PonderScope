@@ -22,7 +22,6 @@ class ExperimentSpec:
 
     name: str
     task_pack: str
-    task_versions: dict[str, str] = field(default_factory=dict)
     families: list[str] = field(default_factory=list)
     n_per_family: int = 4
     task_seed: int = 0
@@ -34,6 +33,7 @@ class ExperimentSpec:
     sampled_temperature: float = 0.6
     sampled_top_p: float = 0.95
     sampled_top_k: int = 20
+    sampled_min_p: float = 0.0
     probe: bool = False
     n_probes: int = 4
     probe_max_tokens: int = 64
@@ -46,7 +46,6 @@ class ExperimentSpec:
         return {
             "name": self.name,
             "task_pack": self.task_pack,
-            "task_versions": self.task_versions,
             "families": self.families,
             "n_per_family": self.n_per_family,
             "task_seed": self.task_seed,
@@ -58,6 +57,7 @@ class ExperimentSpec:
             "sampled_temperature": self.sampled_temperature,
             "sampled_top_p": self.sampled_top_p,
             "sampled_top_k": self.sampled_top_k,
+            "sampled_min_p": self.sampled_min_p,
             "probe": self.probe,
             "n_probes": self.n_probes,
             "probe_max_tokens": self.probe_max_tokens,
@@ -66,6 +66,14 @@ class ExperimentSpec:
             "capture_logprob_digest": self.capture_logprob_digest,
             "notes": self.notes,
         }
+
+    def canonical_hash(self) -> str:
+        """Stable hash of the declared spec, for provenance."""
+        import hashlib
+
+        from .identity import canonical_json
+
+        return hashlib.sha256(canonical_json(self.to_dict()).encode("utf-8")).hexdigest()
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ExperimentSpec:

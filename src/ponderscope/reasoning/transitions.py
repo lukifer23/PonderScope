@@ -2,8 +2,9 @@
 
 Given correctness at a sequence of reasoning prefixes (from forced-finalization
 probes) and the natural final correctness, classify the trajectory. Labels are
-accompanied by independent boolean flags so no information is lost to a single
-composite score.
+accompanied by independent boolean flags and by *both* an array index and an
+actual prefix-token count, so trajectory-category labels are never conflated
+with sufficiency-point measurement.
 """
 
 from __future__ import annotations
@@ -25,7 +26,9 @@ STATES = (
 class TrajectoryState:
     primary: str
     flips: int
-    first_correct_prefix: int | None
+    first_correct_probe_index: int | None
+    first_correct_prefix_tokens: int | None
+    stable_sufficient_prefix_tokens: int | None
     final_correct: bool
     flags: dict[str, bool] = field(default_factory=dict)
 
@@ -39,10 +42,36 @@ def answer_flips(answers: list[str | None]) -> int:
     return sum(1 for a, b in zip(seq, seq[1:], strict=False) if a != b)
 
 
-def classify_transitions(final_correct: bool, prefix_correct: list[bool]) -> TrajectoryState:
+def stable_sufficient_index(prefix_correct: list[bool], final_correct: bool) -> int | None:
+    """Earliest tested prefix that is correct and stays correct through the end.
+
+    Requires the natural final answer to be correct as well, so a probe-that-looks
+    correct but whose trajectory ends wrong is not counted as sufficient.
+    """
+    if not final_correct:
+        return None
+    for i in range(len(prefix_correct)):
+        if prefix_correct[i] and all(prefix_correct[i:]):
+            return i
+    return None
+
+
+def classify_transitions(
+    final_correct: bool,
+    prefix_correct: list[bool],
+    prefix_token_lengths: list[int] | None = None,
+) -> TrajectoryState:
     full = list(prefix_correct) + [final_correct]
     flips = sum(1 for a, b in zip(full, full[1:], strict=False) if a != b)
-    first_correct = next((i for i, c in enumerate(prefix_correct) if c), None)
+    first_idx = next((i for i, c in enumerate(prefix_correct) if c), None)
+    suff_idx = stable_sufficient_index(prefix_correct, final_correct)
+
+    def tokens(idx: int | None) -> int | None:
+        if idx is None:
+            return None
+        if prefix_token_lengths is not None and idx < len(prefix_token_lengths):
+            return prefix_token_lengths[idx]
+        return idx
 
     flags = dict.fromkeys(STATES, False)
     flags["never_correct"] = not any(full)
@@ -73,22 +102,26 @@ def classify_transitions(final_correct: bool, prefix_correct: list[bool]) -> Tra
     return TrajectoryState(
         primary=primary,
         flips=flips,
-        first_correct_prefix=first_correct,
+        first_correct_probe_index=first_idx,
+        first_correct_prefix_tokens=tokens(first_idx),
+        stable_sufficient_prefix_tokens=tokens(suff_idx),
         final_correct=final_correct,
         flags=flags,
     )
 
 
-def prefix_lengths(n_generated: int, n_probes: int, min_prefix: int = 16) -> list[int]:
-    """Prefix lengths for forced-finalization probing, including the empty prefix.
+def prefix_lengths(n_reasoning: int, n_probes: int, min_prefix: int = 16) -> list[int]:
+    """Prefix token counts for forced-finalization probing.
 
-    The empty prefix (0) measures the answer with no reasoning at all.
+    Includes the empty prefix (0), which measures the answer with no reasoning
+    at all. Locations are bounded by the actual reasoning length, so no probe can
+    contain a final-answer token.
     """
     if n_probes <= 0:
         return []
-    max_prefix = max(0, n_generated - 1)
+    max_prefix = max(0, n_reasoning)
     lengths = [0]
-    if n_generated > min_prefix:
+    if n_reasoning > min_prefix:
         import numpy as np
 
         grid = np.linspace(min_prefix, max_prefix, num=n_probes)

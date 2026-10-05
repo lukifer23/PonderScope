@@ -1,9 +1,18 @@
-"""Canonical deployment identity.
+"""Layered deployment identity.
 
-A deployment is never identified by a model name alone. Every execution
-condition is reduced to a canonical metadata mapping, hashed to a stable
-configuration id. Reports compare deployment configurations, not vague model
-names.
+Scientific identity is deliberately layered so that unrelated provenance
+(human labels, local filesystem paths, sampling seeds, repeat indices) can never
+silently change what is being measured.
+
+    ArtifactIdentity   weights + tokenizer + quantization         -> artifact_id
+    DeploymentIdentity artifact + runtime + hardware + OS         -> deployment_id
+    ConditionIdentity  decoding policy (NO seed)                  -> condition_id
+    TrialIdentity      task + condition + seed + repeat           -> trial_id
+
+A random seed is trial state, not a deployment property. A run may contain
+several decoding conditions, so a run is never described by a single
+decoding-specific id; it records the artifact/deployment ids plus one
+condition id per condition.
 """
 
 from __future__ import annotations
@@ -17,7 +26,7 @@ from typing import Any
 
 # Bump when the identity schema changes in a way that should invalidate
 # cross-version configuration-id comparisons.
-IDENTITY_SCHEMA_VERSION = "ponderscope-identity/1"
+IDENTITY_SCHEMA_VERSION = "ponderscope-identity/2"
 
 
 def _sha256_text(text: str) -> str:
@@ -74,19 +83,26 @@ def canonical_json(metadata: dict[str, Any]) -> str:
     return json.dumps(_canonicalize(metadata), sort_keys=True, separators=(",", ":"))
 
 
-def configuration_id(metadata: dict[str, Any], length: int = 12) -> str:
-    """Stable short id derived from canonicalized deployment metadata."""
+def configuration_id(metadata: dict[str, Any], length: int = 12, prefix: str = "dep") -> str:
+    """Stable short id derived from canonicalized metadata.
+
+    The identity-schema version is part of the hash, so ids are never compared
+    across schema changes.
+    """
     digest = _sha256_text(IDENTITY_SCHEMA_VERSION + "\n" + canonical_json(metadata))
-    return f"dep-{digest[:length]}"
+    return f"{prefix}-{digest[:length]}"
 
 
 @dataclass(frozen=True)
-class ModelIdentity:
-    """Identity of the weights and tokenizer, independent of the runtime."""
+class ArtifactIdentity:
+    """Identity of the weights and tokenizer, independent of runtime and path.
+
+    ``local_path`` is retained for provenance but is deliberately excluded from
+    :attr:`artifact_id`: a cache path must never change artifact identity.
+    """
 
     repo_id: str
     revision: str
-    local_path: str | None = None
     weight_files: dict[str, str] = field(default_factory=dict)  # filename -> sha256
     tokenizer_files: dict[str, str] = field(default_factory=dict)
     chat_template_sha256: str | None = None
@@ -95,9 +111,25 @@ class ModelIdentity:
     quantization_bits: int | None = None
     quantization_group_size: int | None = None
     quantization_params: dict[str, Any] = field(default_factory=dict)
+    local_path: str | None = None  # provenance only; excluded from the hash
+    load_audit: dict[str, Any] = field(default_factory=dict)
+
+    def identity_dict(self) -> dict[str, Any]:
+        """Fields that define artifact identity (excludes path/label)."""
+        d = asdict(self)
+        d.pop("local_path", None)
+        return d
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+    @property
+    def artifact_id(self) -> str:
+        return configuration_id(self.identity_dict(), prefix="art")
+
+
+# Backwards-compatible name: the backend loads an artifact.
+ModelIdentity = ArtifactIdentity
 
 
 @dataclass(frozen=True)
@@ -119,7 +151,12 @@ class RuntimeIdentity:
 
 @dataclass(frozen=True)
 class DecodingPolicy:
-    """Decoding/sampling/context configuration."""
+    """Decoding/sampling/context configuration.
+
+    ``seed`` is trial state, not condition identity: it is excluded from
+    :attr:`condition_id`. Changing temperature/top-p/top-k/min-p/budget does
+    change condition identity.
+    """
 
     mode: str  # "greedy" | "sampled"
     max_tokens: int
@@ -131,15 +168,69 @@ class DecodingPolicy:
     stop_on_eos: bool = True
     context: dict[str, Any] = field(default_factory=dict)
 
+    def identity_dict(self) -> dict[str, Any]:
+        d = asdict(self)
+        d.pop("seed", None)
+        return d
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+    @property
+    def condition_id(self) -> str:
+        return configuration_id(self.identity_dict(), prefix="cond")
+
+
+@dataclass(frozen=True)
+class TrialIdentity:
+    """Identity of a single generation: task + condition + seed + repeat."""
+
+    task_id: str
+    condition: DecodingPolicy
+    seed: int | None
+    repeat: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "condition": self.condition.to_dict(),
+            "seed": self.seed,
+            "repeat": self.repeat,
+        }
+
+    @property
+    def trial_id(self) -> str:
+        return configuration_id(self.to_dict(), prefix="trial")
+
+
+@dataclass(frozen=True)
+class DeploymentIdentity:
+    """artifact + runtime/hardware. Decoding is deliberately excluded."""
+
+    artifact: ArtifactIdentity
+    runtime: RuntimeIdentity
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"artifact": self.artifact.to_dict(), "runtime": self.runtime.to_dict()}
+
+    @property
+    def deployment_id(self) -> str:
+        return configuration_id(
+            {"artifact": self.artifact.identity_dict(), "runtime": self.runtime.to_dict()},
+            prefix="dep",
+        )
 
 
 @dataclass(frozen=True)
 class Deployment:
-    """A complete deployment identity: model + runtime + decoding policy."""
+    """Convenience composite: artifact + runtime + a decoding condition.
 
-    model: ModelIdentity
+    Retained so callers can describe a concrete execution. It exposes the
+    layered ids explicitly; it no longer fabricates a single overloaded
+    ``config_id``.
+    """
+
+    model: ArtifactIdentity
     runtime: RuntimeIdentity
     decoding: DecodingPolicy
     label: str | None = None
@@ -155,8 +246,19 @@ class Deployment:
         }
 
     @property
-    def config_id(self) -> str:
-        return configuration_id(self.to_dict())
+    def artifact_id(self) -> str:
+        return self.model.artifact_id
+
+    @property
+    def deployment_id(self) -> str:
+        return self.identity().deployment_id
+
+    @property
+    def condition_id(self) -> str:
+        return self.decoding.condition_id
+
+    def identity(self) -> DeploymentIdentity:
+        return DeploymentIdentity(artifact=self.model, runtime=self.runtime)
 
     def describe(self) -> str:
         m = self.model
@@ -171,13 +273,14 @@ class Deployment:
             f"{m.repo_id}@{m.revision[:12]} ({m.precision}{quant}) "
             f"under {self.runtime.runtime} {self.runtime.runtime_version} "
             f"[{self.runtime.backend}, {self.runtime.hardware}] "
-            f"{self.decoding.mode} cfg={self.config_id}"
+            f"{self.decoding.mode} art={self.artifact_id} dep={self.deployment_id} "
+            f"cond={self.condition_id}"
         )
 
 
 def host_runtime_identity(
     runtime: str, runtime_version: str, backend: str, device: str | None = None
-):
+) -> RuntimeIdentity:
     """Capture the current host identity. Runtime fields are passed by the backend."""
     return RuntimeIdentity(
         runtime=runtime,

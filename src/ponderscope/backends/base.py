@@ -18,15 +18,43 @@ from ..config.identity import DecodingPolicy, ModelIdentity
 
 @dataclass(frozen=True)
 class CaptureSpec:
-    """What per-token evidence to capture. Expensive fields are opt-in."""
+    """What per-token evidence to capture. Expensive fields are opt-in.
+
+    - ``minimal`` mode: all fields off. Only emitted token ids and termination
+      can be observed; the full distribution is never cast, synchronised, or
+      digested, and no per-token timing is taken.
+    - ``research`` mode: entropy + top-k + chosen logprob + per-token timing.
+    - ``digest`` mode: research plus a digest of the full distribution.
+    """
 
     entropy: bool = True
     top_k: int = 5
     logprob_digest: bool = False  # digest of the full distribution; expensive
     per_token_timing: bool = True
+    chosen_logprob: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+    @classmethod
+    def minimal(cls) -> CaptureSpec:
+        return cls(
+            entropy=False,
+            top_k=0,
+            logprob_digest=False,
+            per_token_timing=False,
+            chosen_logprob=False,
+        )
+
+    @classmethod
+    def research(cls, top_k: int = 5, digest: bool = False) -> CaptureSpec:
+        return cls(
+            entropy=True,
+            top_k=top_k,
+            logprob_digest=digest,
+            per_token_timing=True,
+            chosen_logprob=True,
+        )
 
 
 @dataclass
@@ -45,6 +73,15 @@ class TokenStep:
         return {k: v for k, v in d.items() if v is not None and v != []}
 
 
+class PrefixProbeUnsupported(RuntimeError):
+    """Raised when forced-finalization probing cannot be performed honestly.
+
+    Prefix probing must fail closed: if the model-native think-end closure
+    cannot be positively identified and validated, no probe is attempted rather
+    than substituting a hand-written answer cue.
+    """
+
+
 @dataclass
 class Trace:
     """A complete record of one generation."""
@@ -55,10 +92,11 @@ class Trace:
     generated_tokens: int
     ttft_ms: float | None
     wall_ms: float
-    tokens_per_sec: float
+    tokens_per_sec: float  # end-to-end output tokens / total wall time
     finish_reason: str  # "stop" | "length" | "error"
     terminated_by_eos: bool
     capped: bool
+    decode_tokens_per_sec: float | None = None  # post-first-token throughput
     steps: list[TokenStep] = field(default_factory=list)
     error: str | None = None
     extra: dict[str, Any] = field(default_factory=dict)
@@ -76,6 +114,7 @@ class Trace:
             "ttft_ms": self.ttft_ms,
             "wall_ms": self.wall_ms,
             "tokens_per_sec": self.tokens_per_sec,
+            "decode_tokens_per_sec": self.decode_tokens_per_sec,
             "finish_reason": self.finish_reason,
             "terminated_by_eos": self.terminated_by_eos,
             "capped": self.capped,

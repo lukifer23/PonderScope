@@ -18,6 +18,7 @@ class FakeBackend:
     def __init__(self) -> None:
         self._loaded = False
         self._think_end_id = 99
+        self._eos_ids = {42}
 
     def capabilities(self) -> BackendCapabilities:
         return BackendCapabilities(
@@ -59,6 +60,18 @@ class FakeBackend:
     @property
     def think_end_token_id(self) -> int:
         return self._think_end_id
+
+    @property
+    def eos_token_ids(self) -> set[int]:
+        return set(self._eos_ids)
+
+    def native_closure_ids(self) -> list[int]:
+        return [self._think_end_id]
+
+    def reasoning_prefix(self, token_ids: list[int]) -> list[int]:
+        from ponderscope.reasoning.parse import reasoning_prefix_ids
+
+        return reasoning_prefix_ids(token_ids, self._think_end_id)
 
     def tokenize_prompt(self, messages: list[dict[str, str]], enable_thinking: bool) -> list[int]:
         content = messages[-1]["content"]
@@ -117,7 +130,14 @@ class FakeBackend:
             finish_reason="stop",
             terminated_by_eos=True,
             capped=False,
-            extra={"think_end_reached": True, "seed": decoding.seed},
+            extra={
+                "think_end_reached": True,
+                "seed": decoding.seed,
+                "probe": True,
+                "forced_close": True,
+                "forced_close_sequence": [self._think_end_id],
+                "reasoning_prefix_tokens": len(prefix_token_ids),
+            },
         )
 
     def decode(self, token_ids: list[int]) -> str:

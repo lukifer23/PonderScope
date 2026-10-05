@@ -59,7 +59,9 @@ def read_jsonl(path: Path) -> Iterator[dict[str, Any]]:
                 yield json.loads(line)
 
 
-def write_jsonl(path: Path, rows: Iterable[dict[str, Any]]) -> None:
+def write_jsonl(path: Path, rows: Iterable[dict[str, Any]], *, overwrite: bool = True) -> None:
+    if not overwrite and path.exists():
+        raise FileExistsError(f"refusing to overwrite immutable evidence: {path}")
     lines = "".join(json.dumps(row, sort_keys=False) + "\n" for row in rows)
     atomic_write_text(path, lines)
 
@@ -69,15 +71,21 @@ class JsonlWriter:
 
     One record is emitted per generation, not per token, so this does not sit in
     the decoding hot loop. Call :meth:`close` (or use as a context manager) to
-    flush and atomically publish the file.
+    flush and atomically publish the file. Raw evidence files are create-once:
+    opening a path that already exists raises rather than overwriting.
     """
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, *, create_once: bool = True) -> None:
         self.path = path
+        self.create_once = create_once
         self._tmp: Path | None = None
         self._fh: TextIO | None = None
 
     def open(self) -> JsonlWriter:
+        if self._fh is not None:
+            return self
+        if self.create_once and self.path.exists():
+            raise FileExistsError(f"refusing to overwrite immutable evidence: {self.path}")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         fd, tmp = tempfile.mkstemp(dir=str(self.path.parent), prefix=".tmp-", suffix=self.path.name)
         self._tmp = Path(tmp)

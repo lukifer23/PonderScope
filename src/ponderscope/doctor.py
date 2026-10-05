@@ -35,7 +35,9 @@ def run_doctor(
     decoding = DecodingPolicy(mode="greedy", max_tokens=64)
     deployment = Deployment(model=loaded, runtime=runtime, decoding=decoding, label="doctor")
     report["deployment"] = deployment.to_dict()
-    report["config_id"] = deployment.config_id
+    report["artifact_id"] = deployment.artifact_id
+    report["deployment_id"] = deployment.deployment_id
+    report["condition_id"] = deployment.condition_id
     report["deployment_description"] = deployment.describe()
 
     if live:
@@ -120,7 +122,9 @@ def format_doctor(report: dict[str, Any]) -> str:
     for name, digest in wf.items():
         lines.append(f"    {name}  sha256:{digest[:16]}…")
     lines.append("Deployment")
-    lines.append(f"  config id     {report['config_id']}")
+    lines.append(f"  artifact id   {report['artifact_id']}")
+    lines.append(f"  deployment id {report['deployment_id']}")
+    lines.append(f"  condition id  {report['condition_id']}")
     lines.append(f"  description   {report['deployment_description']}")
     if "live" in report:
         live = report["live"]
@@ -133,12 +137,15 @@ def format_doctor(report: dict[str, Any]) -> str:
         lines.append(f"  tokens/sec    {live['tokens_per_sec']}")
         lines.append(f"  text          {json.dumps(live['text_head'])}")
     if "overhead" in report:
-        o = report["overhead"]
-        frac = o["overhead_fraction"]
-        lines.append("Instrumentation overhead (capture on vs off)")
-        lines.append(f"  capture on    {o['capture_on_tps']:.1f} tok/s")
-        lines.append(f"  capture off   {o['capture_off_tps']:.1f} tok/s")
-        lines.append(
-            f"  overhead      {frac * 100:.1f}%" if frac is not None else "  overhead      n/a"
-        )
+        o = report["overhead"]["modes"]
+        lines.append("Instrumentation overhead (capture levels, medians)")
+        for name in ("minimal", "research", "digest"):
+            m = o[name]
+            frac = m.get("decode_overhead_fraction")
+            frac_txt = f"{frac * 100:+.1f}%" if frac is not None else "n/a"
+            lines.append(
+                f"  {name:<9} ttft={m['ttft_ms_median']:.1f}ms wall={m['wall_ms_median']:.0f}ms "
+                f"end2end={m['output_tokens_per_sec_median']:.1f}tok/s "
+                f"decode={m['decode_tokens_per_sec_median']:.1f}tok/s overhead={frac_txt}"
+            )
     return "\n".join(lines)

@@ -85,5 +85,5 @@ def test_prefix_lengths_monotonic():
     assert lengths[0] == 0
     assert lengths == sorted(lengths)
     assert len(set(lengths)) == len(lengths)
-    assert all(0 <= x <= 99 for x in lengths)
+    assert all(0 <= x <= 100 for x in lengths)
     assert prefix_lengths(10, 4) == [0]

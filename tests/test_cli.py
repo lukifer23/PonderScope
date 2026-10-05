@@ -48,7 +48,8 @@ def test_cli_analyze_report_compare(tmp_path, fake_backend, monkeypatch):
         main(["compare", "--a", str(a.store.path), "--b", str(b.store.path), "--mode", "greedy"])
         == 0
     )
-    assert (a.store.path / "comparison.json").exists()
+    comparisons = list((a.store.path / "comparisons").glob("*.json"))
+    assert len(comparisons) == 1
 
 
 def test_cli_analyze_latest(tmp_path, fake_backend, monkeypatch):

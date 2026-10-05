@@ -53,7 +53,8 @@ def test_manifest_serialization_roundtrip(tmp_path: Path):
     spec = ExperimentSpec(name="t2", task_pack="tasks-v1")
     store = RunStore.create(_deployment(), spec, runs_dir=tmp_path, created_utc="20260101T000001Z")
     loaded = RunStore.load(store.path)
-    assert loaded.manifest["config_id"] == store.config_id
+    assert loaded.deployment_id == store.deployment_id
+    assert loaded.artifact_id == store.artifact_id
     assert loaded.manifest["spec"]["name"] == "t2"
 
 

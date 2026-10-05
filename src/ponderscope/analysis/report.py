@@ -51,7 +51,7 @@ def _fmt(value: Any) -> str:
 
 def _config_table(analysis: dict[str, Any]) -> list[str]:
     lines = [
-        "| config_id | mode | n | accuracy (95% CI) | reasoning tokens mean | total tokens mean | wall ms mean | tok/s |",
+        "| condition_id | mode | n | accuracy (95% CI) | reasoning tokens mean | total tokens mean | wall ms mean | tok/s |",
         "|---|---|---|---|---|---|---|---|",
     ]
     for cid, c in analysis["configs"].items():
@@ -68,38 +68,43 @@ def _config_table(analysis: dict[str, Any]) -> list[str]:
 
 def _noise_section(analysis: dict[str, Any]) -> list[str]:
     nf = analysis["noise_floor"]
-    greedy = nf["greedy"]
-    sampled = nf["sampled"]
+    greedy = nf["greedy_replay"]
+    same_seed = nf["same_seed_replay"]
+    across = nf["across_seed"]
     lines = ["## Repeatability / noise floor", ""]
-    lines.append("### Greedy replay (same condition, repeated)")
-    lines.append(
-        f"- task/config pairs with repeats: {greedy['n_task_configs']}\n"
-        f"- token-identical replays: {greedy['token_identical_count']} "
-        f"({_fmt(greedy['token_identical_rate'])})"
-    )
-    if any(p["first_token_divergence"] is not None for p in greedy["per_task"]):
-        divs = [
-            p["first_token_divergence"]
-            for p in greedy["per_task"]
-            if p["first_token_divergence"] is not None
-        ]
-        lines.append(f"- first divergence indices: {sorted(set(divs))}")
+    lines.append("### 1. Greedy replay (same deterministic condition, repeated)")
+    if not greedy.get("available"):
+        lines.append("- no repeated greedy conditions in this run")
     else:
-        lines.append("- no token divergence observed in any repeated greedy replay")
+        lines.append(
+            f"- task/condition pairs with repeats: {greedy['n_task_conditions']}\n"
+            f"- token-identical replays: {greedy['token_identical_count']} "
+            f"({_fmt(greedy['token_identical_rate'])})\n"
+            f"- answer-agreement rate: {_fmt(greedy['answer_agreement_rate'])}\n"
+            f"- mean within-task reasoning-token std: {_fmt(greedy['mean_reasoning_token_std'])}\n"
+            f"- mean within-task wall-ms std: {_fmt(greedy['mean_wall_ms_std'])}"
+        )
     lines.append("")
-    lines.append("### Sampled runs")
-    if not sampled.get("available"):
-        lines.append("- no sampled conditions in this run")
+    lines.append("### 2. Same-seed sampled replay (same seed + sampler, re-executed)")
+    if not same_seed.get("available"):
+        lines.append("- no repeated same-seed sampled conditions in this run")
     else:
-        lines.append(f"- n sampled: {sampled['n']}")
         lines.append(
-            f"- mean accuracy std across repeated runs: {_fmt(sampled['accuracy_std_across_runs_mean'])}"
+            f"- task/condition/seed groups: {same_seed['n_task_condition_seeds']}\n"
+            f"- token-identical rate: {_fmt(same_seed['token_identical_rate'])}\n"
+            f"- answer-agreement rate: {_fmt(same_seed['answer_agreement_rate'])}\n"
+            f"- mean within-group reasoning-token std: {_fmt(same_seed['mean_reasoning_token_std'])}"
         )
+    lines.append("")
+    lines.append("### 3. Across-seed stochastic variation (fixed sampler policy, different seeds)")
+    if not across.get("available"):
+        lines.append("- fewer than two seeds per task/condition")
+    else:
         lines.append(
-            f"- mean reasoning-token std across repeated runs: {_fmt(sampled['reasoning_tokens_std_across_runs_mean'])}"
-        )
-        lines.append(
-            f"- consecutive answer flip rate: {_fmt(sampled['consecutive_answer_flip_rate'])}"
+            f"- task/condition groups: {across['n_task_conditions']}\n"
+            f"- mean distinct answers across seeds: {_fmt(across['mean_distinct_answers'])}\n"
+            f"- mean accuracy std across seeds: {_fmt(across['mean_accuracy_std_across_seeds'])}\n"
+            f"- mean reasoning-token std across seeds: {_fmt(across['mean_reasoning_tokens_std_across_seeds'])}"
         )
     lines.append("")
     return lines
@@ -134,6 +139,7 @@ def _probe_section(analysis: dict[str, Any]) -> list[str]:
         lines.append("")
         return lines
     lines.append(f"- n probes: {probes['n']}")
+    lines.append(f"- stable-sufficient prefixes observed: {probes.get('n_stable_sufficient', 0)}")
     for state, count in sorted(probes["trajectory_state_counts"].items()):
         lines.append(f"- {state}: {count}")
     lines.append("")
@@ -144,18 +150,36 @@ def _comparison_section(comparison: dict[str, Any]) -> list[str]:
     lines = ["## Deployment comparison", ""]
     lines.append(f"- A: {comparison['description_a']}")
     lines.append(f"- B: {comparison['description_b']}")
-    lines.append(f"- matched observations ({comparison['mode']}): {comparison['n_matched']}")
+    lines.append(f"- matched observations ({comparison['mode']}): {comparison['n_matched_trials']}")
+    validity = comparison.get("validity", {})
+    if comparison.get("refused"):
+        lines.append(
+            "- **REFUSED: requested contrast is confounded or under-specified. "
+            f"Reasons: {validity.get('reasons')}**"
+        )
+        lines.append("")
+        return lines
+    if comparison.get("exploratory"):
+        lines.append(
+            f"- **EXPLORATORY / CONFOUNDED (override applied). Reasons: {validity.get('reasons')}**"
+        )
     lines.append("")
-    lines.append("| metric | delta (A−B) | 95% CI | noise scale | classification |")
-    lines.append("|---|---|---|---|---|")
+    lines.append(
+        "| metric | delta (A−B) | 95% CI | noise A | noise B | combined | classification |"
+    )
+    lines.append("|---|---|---|---|---|---|---|")
     for metric, m in comparison["metrics"].items():
         d = m["delta"]
         if d.get("mean") is None:
-            lines.append(f"| {metric} | — | — | {_fmt(m['noise_scale'])} | insufficient_data |")
+            lines.append(
+                f"| {metric} | — | — | {_fmt(m['noise_scale_a'])} | {_fmt(m['noise_scale_b'])} "
+                f"| {_fmt(m['noise_scale'])} | insufficient_data |"
+            )
             continue
         lines.append(
             f"| {metric} | {_fmt(d['mean'])} | [{_fmt(d['lo'])}, {_fmt(d['hi'])}] | "
-            f"{_fmt(m['noise_scale'])} | {m['classification']} |"
+            f"{_fmt(m['noise_scale_a'])} | {_fmt(m['noise_scale_b'])} | {_fmt(m['noise_scale'])} | "
+            f"{m['classification']} |"
         )
     if "trajectory_states" in comparison:
         lines.append("")
@@ -169,9 +193,8 @@ def render_markdown(store: RunStore, analysis: dict[str, Any]) -> str:
     manifest = store.manifest
     env = json.loads((store.path / "environment.json").read_text())
     traces = store.read_traces()
-    deployment = manifest["deployment"]
-    model = deployment["model"]
-    runtime = deployment["runtime"]
+    model = manifest.get("artifact", {})
+    runtime = manifest.get("runtime", {})
 
     lines: list[str] = []
     lines.append(f"# PonderScope report — {manifest['run_id']}")
@@ -180,7 +203,10 @@ def render_markdown(store: RunStore, analysis: dict[str, Any]) -> str:
     lines.append("")
     lines.append("## Deployment identity")
     lines.append(f"- description: `{manifest.get('deployment_description')}`")
-    lines.append(f"- config id: `{manifest['config_id']}`")
+    lines.append(f"- artifact id: `{manifest.get('artifact_id')}`")
+    lines.append(f"- deployment id: `{manifest.get('deployment_id')}`")
+    conditions = manifest.get("conditions", [])
+    lines.append("- condition ids: `" + ", ".join(c["condition_id"] for c in conditions) + "`")
     lines.append(f"- model repo: `{model['repo_id']}`")
     lines.append(f"- revision: `{model['revision']}`")
     lines.append(f"- precision: `{model['precision']}`")
@@ -213,7 +239,7 @@ def render_markdown(store: RunStore, analysis: dict[str, Any]) -> str:
     lines.append("## Reasoning-length distribution")
     lines.append("")
     for cid, c in analysis["configs"].items():
-        vals = [r["reasoning_tokens"] for r in traces if r["config_id"] == cid]
+        vals = [r["reasoning_tokens"] for r in traces if r["condition_id"] == cid]
         lines.append(f"### {cid} ({c['mode']})")
         lines.append("")
         lines.append("```")
@@ -277,7 +303,7 @@ def render_html(store: RunStore, analysis: dict[str, Any]) -> str:
     traces = store.read_traces()
     charts = []
     for cid in analysis["configs"]:
-        vals = [r["reasoning_tokens"] for r in traces if r["config_id"] == cid]
+        vals = [r["reasoning_tokens"] for r in traces if r["condition_id"] == cid]
         charts.append(f"<h3>{html.escape(cid)} — reasoning tokens</h3>")
         charts.append(_svg_histogram(vals))
     body = _markdown_to_html(md)

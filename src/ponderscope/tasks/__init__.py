@@ -6,6 +6,7 @@ from .generator import (
     PACK_VERSION,
     SPLITS,
     generate_pack,
+    generate_pack_metadata,
     make_task,
     task_id_for,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "TaskError",
     "canonical_answer",
     "generate_pack",
+    "generate_pack_metadata",
     "make_family_task",
     "make_task",
     "normalize",

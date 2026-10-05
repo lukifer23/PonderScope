@@ -249,6 +249,14 @@ class MlxBackend:
     def think_end_token_id(self) -> int | None:
         return self._think_end_id
 
+    @property
+    def eos_token_ids(self) -> set[int]:
+        return set(self._eos_ids)
+
+    @property
+    def think_start_token_id(self) -> int | None:
+        return self._think_start_id
+
     def runtime_identity(self) -> RuntimeIdentity:
         import platform as _platform
         import sys as _sys
@@ -289,6 +297,41 @@ class MlxBackend:
         if self._tokenizer is None:
             raise RuntimeError("backend not loaded")
         return [int(t) for t in self._tokenizer.encode(text, add_special_tokens=False)]
+
+    def reasoning_prefix(self, token_ids: list[int]) -> list[int]:
+        """Token ids strictly before the first validated think-end boundary."""
+        from ..reasoning.parse import reasoning_prefix_ids
+
+        return reasoning_prefix_ids(token_ids, self._think_end_id)
+
+    def native_closure_ids(self) -> list[int]:
+        """The model-native closing sequence for the thinking channel.
+
+        The chat template renders the close as ``\\n</think>\\n\\n``; we tokenize
+        that literal sequence so the injected ids match the trained protocol
+        exactly, then verify the native think-end token is present and that the
+        sub-sequence round-trips through the tokenizer. Any failure is a hard
+        error: prefix probing fails closed rather than guessing a closure.
+        """
+        from .base import PrefixProbeUnsupported
+
+        if self._think_end_id is None:
+            raise PrefixProbeUnsupported(
+                "model exposes no think-end token; forced-finalization probing unsupported"
+            )
+        try:
+            closure = self.encode_text("\n</think>\n\n")
+        except Exception as exc:  # pragma: no cover - tokenizer failures
+            raise PrefixProbeUnsupported(f"could not tokenize native closure: {exc}") from exc
+        if self._think_end_id not in closure:
+            raise PrefixProbeUnsupported(
+                "native closure does not contain the think-end token; refusing to probe"
+            )
+        if self.decode(closure) != "\n</think>\n\n":
+            raise PrefixProbeUnsupported(
+                "native closure does not round-trip through the tokenizer; refusing to probe"
+            )
+        return closure
 
     # -- generation ----------------------------------------------------------
     def _prepare_sampler(self, decoding: DecodingPolicy) -> tuple[Any, int | None]:
@@ -370,6 +413,11 @@ class MlxBackend:
         terminated_by_eos = finish_reason == "stop"
         capped = finish_reason == "length"
         tps = (len(token_ids) / (wall_ms / 1000.0)) if wall_ms > 0 else 0.0
+        decode_tps: float | None = None
+        if ttft_ms is not None and wall_ms > ttft_ms and len(token_ids) > 1:
+            decode_seconds = (wall_ms - ttft_ms) / 1000.0
+            if decode_seconds > 0:
+                decode_tps = (len(token_ids) - 1) / decode_seconds
 
         return Trace(
             token_ids=token_ids,
@@ -382,6 +430,7 @@ class MlxBackend:
             finish_reason=finish_reason,
             terminated_by_eos=terminated_by_eos,
             capped=capped,
+            decode_tokens_per_sec=decode_tps,
             steps=steps,
             error=error,
             extra={
@@ -406,9 +455,19 @@ class MlxBackend:
         if capture.per_token_timing:
             step.t_ms = dt * 1000.0
 
+        need_distribution = capture.entropy or capture.top_k > 0 or capture.logprob_digest
+        if not need_distribution:
+            if capture.chosen_logprob:
+                # Sync only the chosen scalar; do not cast/copy the full vector.
+                chosen = logprobs[token_id]
+                mx.eval(chosen)
+                step.logprob = float(chosen)
+            return step
+
         lp32 = logprobs.astype(mx.float32)
         mx.eval(lp32)
-        step.logprob = float(lp32[token_id])
+        if capture.chosen_logprob:
+            step.logprob = float(lp32[token_id])
 
         if capture.entropy:
             ent = -(mx.exp(lp32) * lp32).sum()
@@ -416,15 +475,13 @@ class MlxBackend:
             step.entropy = float(ent)
 
         if capture.top_k and capture.top_k > 0:
-            k = min(capture.top_k, lp32.shape[-1])
-            top = mx.argpartition(-lp32, kth=k - 1)[-k:]
-            vals = lp32[top]
-            order = mx.argsort(-vals)
-            top = top[order]
-            vals = vals[order]
-            mx.eval(top, vals)
-            step.top_token_ids = [int(t) for t in top.tolist()]  # type: ignore[arg-type, union-attr]
-            step.top_logprobs = [float(v) for v in vals.tolist()]  # type: ignore[arg-type, union-attr]
+            import numpy as np
+
+            from .distribution import top_k_from_logprobs
+
+            ids, vals = top_k_from_logprobs(np.asarray(lp32, dtype=np.float32), capture.top_k)
+            step.top_token_ids = ids
+            step.top_logprobs = vals
 
         if capture.logprob_digest:
             import numpy as np
@@ -451,15 +508,23 @@ class MlxBackend:
     ) -> Trace:
         """Forced finalization from a saved reasoning prefix.
 
-        The prefix is replayed, then the model's natively learned think-end token
-        is appended followed by a fixed answer cue, forcing it out of the
-        reasoning channel and into an answer. Empirically (MEASURED) the raw
-        think-end token alone is not always honoured by this model, so the cue is
-        part of the intervention. This is a measurement primitive, not a
-        deployable stopping method.
+        The prefix must contain only reasoning tokens. The model-native closing
+        sequence (which contains the learned think-end token) is appended; the
+        *generated* continuation is therefore the forced final-answer channel
+        itself. No hand-written answer cue is ever injected. If the native
+        closure cannot be validated this raises ``PrefixProbeUnsupported``.
         """
-        if self._think_end_id is None:
-            raise RuntimeError("model has no think-end token; prefix probing unsupported")
-        cue = self.encode_text("\n\nAnswer:")
-        extra = list(prefix_token_ids) + [self._think_end_id] + cue
-        return self._run(prompt_token_ids, decoding, capture, extra_tokens=extra)
+        closure = self.native_closure_ids()
+        extra = list(prefix_token_ids) + closure
+        trace = self._run(prompt_token_ids, decoding, capture, extra_tokens=extra)
+        trace.extra.update(
+            {
+                "probe": True,
+                "forced_close": True,
+                "forced_close_sequence": closure,
+                "injected_tokens": len(extra),
+                "reasoning_prefix_tokens": len(prefix_token_ids),
+                "base_prompt_tokens": len(prompt_token_ids),
+            }
+        )
+        return trace

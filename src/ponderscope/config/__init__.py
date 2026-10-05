@@ -1,10 +1,13 @@
 """Configuration identity and schemas."""
 
 from .identity import (
+    ArtifactIdentity,
     DecodingPolicy,
     Deployment,
+    DeploymentIdentity,
     ModelIdentity,
     RuntimeIdentity,
+    TrialIdentity,
     canonical_json,
     configuration_id,
     host_runtime_identity,
@@ -14,11 +17,14 @@ from .identity import (
 from .schema import ExperimentSpec
 
 __all__ = [
+    "ArtifactIdentity",
     "DecodingPolicy",
     "Deployment",
+    "DeploymentIdentity",
     "ExperimentSpec",
     "ModelIdentity",
     "RuntimeIdentity",
+    "TrialIdentity",
     "canonical_json",
     "configuration_id",
     "host_runtime_identity",
