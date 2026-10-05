@@ -18,6 +18,7 @@ def run_doctor(
     revision: str = DEFAULT_REVISION,
     backend_name: str = "mlx",
     live: bool = False,
+    overhead: bool = False,
 ) -> dict[str, Any]:
     backend = get_backend(backend_name)
     caps = backend.capabilities()
@@ -61,6 +62,14 @@ def run_doctor(
             "tokens_per_sec": trace.tokens_per_sec,
             "text_head": trace.text[:400],
         }
+    if overhead:
+        from .experiment import measure_capture_overhead
+
+        messages = [{"role": "user", "content": "Continue counting: 1, 2, 3, 4, 5,"}]
+        prompt_ids = backend.tokenize_prompt(messages, enable_thinking=True)
+        report["overhead"] = measure_capture_overhead(
+            backend, prompt_ids, DecodingPolicy(mode="greedy", max_tokens=128)
+        )
     return report
 
 
@@ -123,4 +132,13 @@ def format_doctor(report: dict[str, Any]) -> str:
         lines.append(f"  ttft_ms       {live['ttft_ms']}")
         lines.append(f"  tokens/sec    {live['tokens_per_sec']}")
         lines.append(f"  text          {json.dumps(live['text_head'])}")
+    if "overhead" in report:
+        o = report["overhead"]
+        frac = o["overhead_fraction"]
+        lines.append("Instrumentation overhead (capture on vs off)")
+        lines.append(f"  capture on    {o['capture_on_tps']:.1f} tok/s")
+        lines.append(f"  capture off   {o['capture_off_tps']:.1f} tok/s")
+        lines.append(
+            f"  overhead      {frac * 100:.1f}%" if frac is not None else "  overhead      n/a"
+        )
     return "\n".join(lines)

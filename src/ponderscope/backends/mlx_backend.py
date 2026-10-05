@@ -285,6 +285,11 @@ class MlxBackend:
             raise RuntimeError("backend not loaded")
         return self._tokenizer.decode(token_ids)
 
+    def encode_text(self, text: str) -> list[int]:
+        if self._tokenizer is None:
+            raise RuntimeError("backend not loaded")
+        return [int(t) for t in self._tokenizer.encode(text, add_special_tokens=False)]
+
     # -- generation ----------------------------------------------------------
     def _prepare_sampler(self, decoding: DecodingPolicy) -> tuple[Any, int | None]:
         from mlx_lm.sample_utils import make_sampler
@@ -308,7 +313,7 @@ class MlxBackend:
         prompt_ids: list[int],
         decoding: DecodingPolicy,
         capture: CaptureSpec,
-        forced_prefix: list[int] | None = None,
+        extra_tokens: list[int] | None = None,
     ) -> Trace:
         from mlx_lm.generate import generate_step
 
@@ -320,10 +325,8 @@ class MlxBackend:
             mx.random.seed(seed)
 
         base = list(prompt_ids)
-        if forced_prefix:
-            base = base + list(forced_prefix)
-            if self._think_end_id is not None:
-                base = base + [self._think_end_id]
+        if extra_tokens:
+            base = base + list(extra_tokens)
 
         prompt = mx.array(base)
         max_tokens = decoding.max_tokens
@@ -385,7 +388,7 @@ class MlxBackend:
                 "think_end_reached": think_end_reached,
                 "think_end_token_id": self._think_end_id,
                 "base_prompt_tokens": len(prompt_ids),
-                "forced_prefix_tokens": len(forced_prefix) if forced_prefix else 0,
+                "extra_tokens": len(extra_tokens) if extra_tokens else 0,
                 "capture": capture.to_dict(),
                 "seed": seed,
             },
@@ -449,7 +452,14 @@ class MlxBackend:
         """Forced finalization from a saved reasoning prefix.
 
         The prefix is replayed, then the model's natively learned think-end token
-        is appended to force it out of the reasoning channel. This is a
-        measurement primitive, not a deployable stopping method.
+        is appended followed by a fixed answer cue, forcing it out of the
+        reasoning channel and into an answer. Empirically (MEASURED) the raw
+        think-end token alone is not always honoured by this model, so the cue is
+        part of the intervention. This is a measurement primitive, not a
+        deployable stopping method.
         """
-        return self._run(prompt_token_ids, decoding, capture, forced_prefix=prefix_token_ids)
+        if self._think_end_id is None:
+            raise RuntimeError("model has no think-end token; prefix probing unsupported")
+        cue = self.encode_text("\n\nAnswer:")
+        extra = list(prefix_token_ids) + [self._think_end_id] + cue
+        return self._run(prompt_token_ids, decoding, capture, extra_tokens=extra)

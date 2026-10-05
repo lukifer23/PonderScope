@@ -10,7 +10,7 @@ from typing import Any
 
 from ..config.identity import Deployment
 from ..config.schema import ExperimentSpec
-from .environment import capture_environment
+from .environment import capture_code_state, capture_environment
 from .store import (
     JsonlWriter,
     atomic_write_json,
@@ -85,6 +85,7 @@ class RunStore:
             "deployment": deployment.to_dict(),
             "deployment_description": deployment.describe(),
             "spec": spec.to_dict(),
+            "code": capture_code_state(),
             "status": {
                 "run": "IN_PROGRESS",
                 "observations": [],

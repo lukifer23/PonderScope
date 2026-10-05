@@ -80,16 +80,20 @@ def classify_transitions(final_correct: bool, prefix_correct: list[bool]) -> Tra
 
 
 def prefix_lengths(n_generated: int, n_probes: int, min_prefix: int = 16) -> list[int]:
-    """Evenly spaced prefix lengths for forced-finalization probing."""
-    if n_generated <= min_prefix or n_probes <= 0:
-        return []
-    import numpy as np
+    """Prefix lengths for forced-finalization probing, including the empty prefix.
 
-    max_prefix = n_generated - 1
-    lengths = np.linspace(min_prefix, max_prefix, num=n_probes)
-    seen: list[int] = []
-    for value in lengths:
-        length = int(round(float(value)))
-        if not seen or length != seen[-1]:
-            seen.append(length)
-    return seen
+    The empty prefix (0) measures the answer with no reasoning at all.
+    """
+    if n_probes <= 0:
+        return []
+    max_prefix = max(0, n_generated - 1)
+    lengths = [0]
+    if n_generated > min_prefix:
+        import numpy as np
+
+        grid = np.linspace(min_prefix, max_prefix, num=n_probes)
+        for value in grid:
+            length = int(round(float(value)))
+            if length not in lengths:
+                lengths.append(length)
+    return sorted(lengths)

@@ -82,6 +82,8 @@ def test_classify_never_correct():
 
 def test_prefix_lengths_monotonic():
     lengths = prefix_lengths(100, 4)
+    assert lengths[0] == 0
     assert lengths == sorted(lengths)
-    assert all(16 <= x <= 99 for x in lengths)
-    assert prefix_lengths(10, 4) == []
+    assert len(set(lengths)) == len(lengths)
+    assert all(0 <= x <= 99 for x in lengths)
+    assert prefix_lengths(10, 4) == [0]

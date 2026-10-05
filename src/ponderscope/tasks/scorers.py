@@ -28,10 +28,10 @@ def normalize(family: str, raw: str) -> str | None:
         return None
     raw = _answer_segment(raw)
     if family in ("arith", "path"):
-        matches = _INT_RE.findall(raw)
-        if not matches:
+        match = _INT_RE.search(raw)
+        if not match:
             return None
-        return str(int(matches[-1]))
+        return str(int(match.group()))
     if family == "order":
         words = [w.lower() for w in _ORDER_RE.findall(raw)]
         if not words:

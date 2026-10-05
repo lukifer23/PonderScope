@@ -67,6 +67,36 @@ def capture_environment() -> dict[str, Any]:
     return env
 
 
+def capture_code_state() -> dict[str, Any]:
+    """Version of the measurement code itself (PonderScope), for provenance."""
+    from .. import __version__
+
+    state: dict[str, Any] = {"version": __version__}
+    try:
+        repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        sha = subprocess.run(
+            ["git", "-C", repo, "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        if sha.returncode == 0:
+            state["git_sha"] = sha.stdout.strip()
+        dirty = subprocess.run(
+            ["git", "-C", repo, "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        if dirty.returncode == 0:
+            state["git_dirty"] = bool(dirty.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return state
+
+
 def _int_or_none(value: str | None) -> int | None:
     if value is None:
         return None

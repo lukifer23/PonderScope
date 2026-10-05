@@ -23,6 +23,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         revision=args.revision,
         backend_name=args.backend,
         live=args.live,
+        overhead=args.overhead,
     )
     if args.json:
         print(json.dumps(report, indent=2, default=str))
@@ -165,6 +166,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--model-repo", default=MODEL_REPO_DEFAULT)
     p.add_argument("--revision", default=REVISION_DEFAULT)
     p.add_argument("--live", action="store_true")
+    p.add_argument("--overhead", action="store_true")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_doctor)
 

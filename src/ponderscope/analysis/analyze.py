@@ -110,16 +110,15 @@ def greedy_determinism(records: list[dict[str, Any]]) -> dict[str, Any]:
                     break
         # per-token logprob digest divergence (if captured)
         digest_div = None
-        base_digests = [s.get("logprob_digest") for s in rs[0]["trace"]["steps"]]
-        if any(d is not None for d in base_digests):
-            for s in rs[1]["trace"]["steps"]:
-                for i, base_d in enumerate(base_digests):
-                    if s.get("logprob_digest") is None:
-                        continue
-                    if s["logprob_digest"] != base_d:
-                        digest_div = i
-                        break
-                if digest_div is not None:
+        base_steps = rs[0]["trace"]["steps"]
+        base_digests = [s.get("logprob_digest") for s in base_steps]
+        if any(d is not None for d in base_digests) and len(rs) > 1:
+            other_steps = rs[1]["trace"]["steps"]
+            for i in range(max(len(base_digests), len(other_steps))):
+                base_d = base_digests[i] if i < len(base_digests) else None
+                other_d = other_steps[i].get("logprob_digest") if i < len(other_steps) else None
+                if base_d != other_d:
+                    digest_div = i
                     break
         per_task.append(
             {

@@ -103,7 +103,6 @@ class FakeBackend:
         capture: CaptureSpec,
     ) -> Trace:
         # Answer correctness alternates with prefix length so transitions occur.
-        answer = str((len(prefix_token_ids) + sum(prompt_token_ids)) % 2 == 0).lower()
         answer = (len(prefix_token_ids) + sum(prompt_token_ids)) % 2
         token_ids = [self._think_end_id, 300, 301]
         text = "</think>\nAnswer: " + str(answer)

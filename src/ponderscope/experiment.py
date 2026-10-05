@@ -22,6 +22,37 @@ from .tasks import generate_pack, normalize, score
 BARE_BASELINE_NOTE = "bare baseline captures no per-token metrics"
 
 
+def measure_capture_overhead(
+    backend: Any,
+    prompt_token_ids: list[int],
+    decoding: DecodingPolicy,
+    *,
+    repeats: int = 3,
+) -> dict[str, Any]:
+    """Approximate instrumentation overhead: capture on vs capture off.
+
+    The observer should not meaningfully distort the observed. This measures the
+    cost of per-token entropy/top-k/digest capture by running the same prompt with
+    and without it.
+    """
+    on = CaptureSpec(entropy=True, top_k=5, logprob_digest=False, per_token_timing=True)
+    off = CaptureSpec(entropy=False, top_k=0, logprob_digest=False, per_token_timing=False)
+    on_tps: list[float] = []
+    off_tps: list[float] = []
+    for _ in range(repeats):
+        on_tps.append(backend.generate(prompt_token_ids, decoding, on).tokens_per_sec)
+        off_tps.append(backend.generate(prompt_token_ids, decoding, off).tokens_per_sec)
+    on_mean = sum(on_tps) / len(on_tps)
+    off_mean = sum(off_tps) / len(off_tps)
+    return {
+        "capture_on_tps": on_mean,
+        "capture_off_tps": off_mean,
+        "overhead_fraction": (off_mean - on_mean) / off_mean if off_mean else None,
+        "repeats": repeats,
+        "note": "Same prompt, same decoding; difference is per-token capture cost.",
+    }
+
+
 @dataclass
 class RunResult:
     store: RunStore
