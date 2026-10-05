@@ -1,12 +1,17 @@
 """Analyze immutable saved evidence. Never touches the model.
 
-Noise floor is measured as three distinct quantities:
-1. greedy replay variation (same deterministic condition, repeated);
-2. same-seed sampled replay variation (same sampler configuration and seed);
-3. across-seed stochastic variation.
+Three distinct measurement questions are kept separate:
 
-These are conceptually different and are never collapsed into one standard
-deviation. Statistical unit is the task.
+1. **Budget outcomes** — success_at_budget, completion_rate, censored_rate,
+   conditional accuracy among completed answer trials. A capped generation is a
+   budget failure, NOT an observed wrong answer.
+2. **Repeatability** — greedy replay, same-seed sampled replay (with ambiguity
+   detection), and token-level across-seed variation that stays valid while
+   generations are censored.
+3. **Transitions** — prefix states over observed forced probes only, with a
+   separate natural final status.
+
+Statistical unit is the task.
 """
 
 from __future__ import annotations
@@ -17,13 +22,52 @@ from typing import Any
 import numpy as np
 
 from ..evidence.run import RunStore
-from ..reasoning.transitions import classify_transitions
+from ..reasoning.transitions import (
+    classify_transitions,
+    natural_final_status_for_record,
+)
 from .stats import (
     cluster_bootstrap_ci,
     group_values_by_task,
     summarize,
     within_cluster_std,
 )
+
+NULLABLE_FLOAT = float | None
+
+
+def prefix_invariance(traces_by_cap: dict[int, list[int]]) -> dict[str, Any]:
+    """Check that shorter greedy generations are exact prefixes of longer ones.
+
+    If this holds, closure can be discovered with a single generous run and the
+    censoring a smaller cap would have caused derived without re-running it.
+    """
+    caps = sorted(traces_by_cap)
+    checks = []
+    ok = True
+    for short, long in zip(caps, caps[1:], strict=False):
+        a = traces_by_cap[short]
+        b = traces_by_cap[long]
+        is_prefix = len(a) <= len(b) and list(b[: len(a)]) == list(a)
+        checks.append(
+            {
+                "short_cap": short,
+                "long_cap": long,
+                "short_len": len(a),
+                "long_len": len(b),
+                "exact_prefix": is_prefix,
+            }
+        )
+        ok = ok and is_prefix
+    return {"caps": caps, "exact_prefix": ok, "checks": checks}
+
+
+def natural_final_status_of(record: dict[str, Any]) -> str:
+    """Return the saved status, deriving it for pre-Phase-1.2 evidence."""
+    status = record.get("natural_final_status")
+    if status:
+        return str(status)
+    return natural_final_status_for_record(record)
 
 
 def _accuracy_macro(records: list[dict[str, Any]]) -> float | None:
@@ -37,6 +81,7 @@ def _termination_counts(records: list[dict[str, Any]]) -> dict[str, int]:
     counts: Counter[str] = Counter()
     for r in records:
         term = r["termination"]
+        counts[f"status:{natural_final_status_of(r)}"] += 1
         if term["terminated_by_eos"]:
             counts["natural_eos"] += 1
         elif term["capped"]:
@@ -52,6 +97,58 @@ def _termination_counts(records: list[dict[str, Any]]) -> dict[str, int]:
     return dict(counts)
 
 
+def _budget_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Separate end-to-end success at budget from observed-answer accuracy."""
+    n = len(records)
+    if n == 0:
+        return {
+            "n_attempted": 0,
+            "n_completed": 0,
+            "n_answer_observed": 0,
+            "n_censored": 0,
+            "n_error": 0,
+            "n_unparseable": 0,
+            "success_at_budget": None,
+            "completion_rate": None,
+            "conditional_accuracy_given_completed": None,
+            "answer_observed_accuracy": None,
+            "censored_rate": None,
+            "error_rate": None,
+            "unparseable_rate": None,
+            "answer_observation_rate": None,
+        }
+    statuses = [natural_final_status_of(r) for r in records]
+    completed = [r for r in records if r["termination"]["terminated_by_eos"]]
+    completed_observed = [r for r in completed if r["answer_normalized"] is not None]
+    observed = [r for r in records if r["answer_normalized"] is not None]
+    correct = [r for r in records if r["correct"]]
+    n_censored = sum(1 for s in statuses if s == "censored")
+    n_error = sum(1 for s in statuses if s == "error")
+    n_unparseable = sum(1 for s in statuses if s == "unparseable")
+    return {
+        "n_attempted": n,
+        "n_completed": len(completed),
+        "n_answer_observed": len(observed),
+        "n_censored": n_censored,
+        "n_error": n_error,
+        "n_unparseable": n_unparseable,
+        "success_at_budget": len(correct) / n,
+        "completion_rate": len(completed) / n,
+        "conditional_accuracy_given_completed": (
+            sum(1 for r in completed_observed if r["correct"]) / len(completed_observed)
+            if completed_observed
+            else None
+        ),
+        "answer_observed_accuracy": (
+            sum(1 for r in observed if r["correct"]) / len(observed) if observed else None
+        ),
+        "censored_rate": n_censored / n,
+        "error_rate": n_error / n,
+        "unparseable_rate": n_unparseable / n,
+        "answer_observation_rate": len(observed) / n,
+    }
+
+
 def _config_summary(condition_id: str, records: list[dict[str, Any]]) -> dict[str, Any]:
     families: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for r in records:
@@ -64,9 +161,12 @@ def _config_summary(condition_id: str, records: list[dict[str, Any]]) -> dict[st
         "n": len(records),
         "n_tasks": len({r["task_id"] for r in records}),
         "deployment_description": _describe(records[0]["deployment"]),
-        "accuracy": acc_ci["mean"],
-        "accuracy_ci": (acc_ci["lo"], acc_ci["hi"]) if acc_ci["mean"] is not None else None,
-        "accuracy_ci_clusters": acc_ci,
+        "success_at_budget": acc_ci["mean"],
+        "success_at_budget_ci": (acc_ci["lo"], acc_ci["hi"])
+        if acc_ci["mean"] is not None
+        else None,
+        "success_at_budget_ci_clusters": acc_ci,
+        "outcomes": _budget_metrics(records),
         "reasoning_tokens": summarize([r["reasoning_tokens"] for r in records]),
         "answer_tokens": summarize([r["answer_tokens"] for r in records]),
         "total_tokens": summarize([r["total_tokens"] for r in records]),
@@ -84,7 +184,8 @@ def _config_summary(condition_id: str, records: list[dict[str, Any]]) -> dict[st
         "per_family": {
             fam: {
                 "n": len(rs),
-                "accuracy": _accuracy_macro(rs),
+                "success_at_budget": _accuracy_macro(rs),
+                "outcomes": _budget_metrics(rs),
                 "reasoning_tokens_mean": summarize([r["reasoning_tokens"] for r in rs])["mean"],
             }
             for fam, rs in sorted(families.items())
@@ -93,15 +194,19 @@ def _config_summary(condition_id: str, records: list[dict[str, Any]]) -> dict[st
 
 
 def _describe(deployment: dict[str, Any]) -> str:
-    model = deployment["model"]
-    runtime = deployment["runtime"]
-    decoding = deployment["decoding"]
+    model = deployment.get("weight_variant") or deployment.get("model", {})
+    source = model.get("source", model)
+    runtime = deployment.get("runtime", {})
+    decoding = deployment.get("decoding", {})
     quant = model.get("quantization") or "none"
+    repo_id = source.get("repo_id", "?")
+    revision = str(source.get("revision", ""))[:12]
     return (
-        f"{model['repo_id']}@{model['revision'][:12]} "
-        f"precision={model['precision']} quant={quant} "
-        f"| {runtime['runtime']} {runtime['runtime_version']} on {runtime['hardware']} "
-        f"| {decoding['mode']}"
+        f"{repo_id}@{revision} "
+        f"precision={model.get('precision')} quant={quant} "
+        f"| {runtime.get('runtime')} {runtime.get('runtime_version')} "
+        f"on {runtime.get('hardware')} "
+        f"| {decoding.get('mode')}"
     )
 
 
@@ -131,12 +236,21 @@ def _replay_stats(rs: list[dict[str, Any]]) -> dict[str, Any]:
                 digest_div = i
                 break
     answers = [r["answer_normalized"] for r in rs]
+    observed_answers = [a for a in answers if a is not None]
+    if not observed_answers:
+        answer_agreement: bool | None = None
+    elif any(a is None for a in answers):
+        answer_agreement = False  # some repeats never produced an answer
+    else:
+        answer_agreement = len(set(answers)) == 1
     return {
         "n_repeats": len(rs),
         "identical_tokens": identical,
+        "seed_ambiguous": not identical,
         "first_token_divergence": first_div,
         "first_logprob_digest_divergence": digest_div,
-        "answer_agreement": len(set(answers)) == 1,
+        "answer_agreement": answer_agreement,
+        "answer_observed": bool(observed_answers),
         "reasoning_token_std": float(np.std([r["reasoning_tokens"] for r in rs]))
         if len(rs) > 1
         else 0.0,
@@ -157,13 +271,14 @@ def greedy_replay_variation(records: list[dict[str, Any]]) -> dict[str, Any]:
         per_task.append({"condition_id": condition_id, "task_id": task_id, **_replay_stats(rs)})
     n = len(per_task)
     identical_n = sum(1 for p in per_task if p["identical_tokens"])
+    observed = [p for p in per_task if p["answer_observed"]]
     return {
         "available": bool(per_task),
         "n_task_conditions": n,
         "token_identical_count": identical_n,
         "token_identical_rate": (identical_n / n) if n else None,
-        "answer_agreement_rate": (sum(1 for p in per_task if p["answer_agreement"]) / n)
-        if n
+        "answer_agreement_rate": (sum(1 for p in observed if p["answer_agreement"]) / len(observed))
+        if observed
         else None,
         "mean_reasoning_token_std": float(np.mean([p["reasoning_token_std"] for p in per_task]))
         if n
@@ -189,6 +304,8 @@ def same_seed_replay_variation(records: list[dict[str, Any]]) -> dict[str, Any]:
             {"condition_id": condition_id, "task_id": task_id, "seed": seed, **_replay_stats(rs)}
         )
     n = len(per_task)
+    ambiguous = sum(1 for p in per_task if p["seed_ambiguous"])
+    observed = [p for p in per_task if p["answer_observed"]]
     return {
         "available": bool(per_task),
         "n_task_condition_seeds": n,
@@ -196,8 +313,9 @@ def same_seed_replay_variation(records: list[dict[str, Any]]) -> dict[str, Any]:
         "token_identical_rate": (sum(1 for p in per_task if p["identical_tokens"]) / n)
         if n
         else None,
-        "answer_agreement_rate": (sum(1 for p in per_task if p["answer_agreement"]) / n)
-        if n
+        "ambiguous_seed_count": ambiguous,
+        "answer_agreement_rate": (sum(1 for p in observed if p["answer_agreement"]) / len(observed))
+        if observed
         else None,
         "mean_reasoning_token_std": float(np.mean([p["reasoning_token_std"] for p in per_task]))
         if n
@@ -207,8 +325,78 @@ def same_seed_replay_variation(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def cross_seed_token_variation(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Token-level across-seed variation, valid even when answers are censored."""
+    groups: dict[tuple[str, str], dict[int, list[dict[str, Any]]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
+    for r in records:
+        if r["condition"]["mode"] == "sampled" and r["condition"].get("seed") is not None:
+            groups[(r["condition_id"], r["task_id"])][int(r["condition"]["seed"])].append(r)
+    per_task = []
+    for (condition_id, task_id), by_seed in sorted(groups.items()):
+        if len(by_seed) < 2:
+            continue
+        base_seq = None
+        first_div = None
+        for seed in sorted(by_seed):
+            seq = sorted(by_seed[seed], key=lambda r: r["condition"]["repeat"])[0]["trace"][
+                "token_ids"
+            ]
+            if base_seq is None:
+                base_seq = seq
+                continue
+            for i in range(max(len(base_seq), len(seq))):
+                a = base_seq[i] if i < len(base_seq) else None
+                b = seq[i] if i < len(seq) else None
+                if a != b:
+                    if first_div is None or i < first_div:
+                        first_div = i
+                    break
+        lengths = [float(np.mean([r["reasoning_tokens"] for r in rs])) for rs in by_seed.values()]
+        per_task.append(
+            {
+                "condition_id": condition_id,
+                "task_id": task_id,
+                "n_seeds": len(by_seed),
+                "first_token_divergence": first_div,
+                "reasoning_tokens_std_across_seeds": float(np.std(lengths))
+                if len(lengths) > 1
+                else 0.0,
+            }
+        )
+    n = len(per_task)
+    return {
+        "available": bool(per_task),
+        "n_task_conditions": n,
+        "mean_first_token_divergence": float(
+            np.mean(
+                [
+                    p["first_token_divergence"]
+                    for p in per_task
+                    if p["first_token_divergence"] is not None
+                ]
+            )
+        )
+        if any(p["first_token_divergence"] is not None for p in per_task)
+        else None,
+        "mean_reasoning_tokens_std_across_seeds": float(
+            np.mean([p["reasoning_tokens_std_across_seeds"] for p in per_task])
+        )
+        if n
+        else None,
+        "per_task": per_task,
+        "note": "Seed variation is observable at the token level even when all final answers are censored.",
+    }
+
+
 def across_seed_variation(records: list[dict[str, Any]]) -> dict[str, Any]:
-    """Different seeds under the same sampler policy (task-clustered)."""
+    """Different seeds under the same sampler policy (task-clustered).
+
+    Final-answer diversity/accuracy is reported only over seeds with an observed
+    answer. A seed whose repeats diverged is flagged ambiguous and its answer is
+    never silently taken from the first repeat.
+    """
     by_condition_task: dict[tuple[str, str], dict[int, list[dict[str, Any]]]] = defaultdict(
         lambda: defaultdict(list)
     )
@@ -217,50 +405,60 @@ def across_seed_variation(records: list[dict[str, Any]]) -> dict[str, Any]:
             by_condition_task[(r["condition_id"], r["task_id"])][
                 int(r["condition"]["seed"])
             ].append(r)
-    per_task = []
+    per_task: list[dict[str, Any]] = []
     for (condition_id, task_id), by_seed in sorted(by_condition_task.items()):
         if len(by_seed) < 2:
             continue
-        seed_answer = {seed: rs[0].get("answer_normalized") for seed, rs in sorted(by_seed.items())}
-        seed_correct = {
-            seed: float(np.mean([1.0 if r["correct"] else 0.0 for r in rs]))
-            for seed, rs in by_seed.items()
-        }
-        seed_reasoning = {
-            seed: float(np.mean([r["reasoning_tokens"] for r in rs]))
-            for seed, rs in by_seed.items()
-        }
-        answers = list(seed_answer.values())
+        seed_answer: dict[int, str | None] = {}
+        seed_correct: dict[int, float] = {}
+        ambiguous = 0
+        for seed, rs in by_seed.items():
+            rs = sorted(rs, key=lambda r: r["condition"]["repeat"])
+            identical = all(r["trace"]["token_ids"] == rs[0]["trace"]["token_ids"] for r in rs[1:])
+            if not identical:
+                ambiguous += 1
+                seed_answer[seed] = None  # never use rs[0] for an ambiguous seed
+                continue
+            seed_answer[seed] = rs[0].get("answer_normalized")
+            seed_correct[seed] = float(np.mean([1.0 if r["correct"] else 0.0 for r in rs]))
+        observed_answers = [a for a in seed_answer.values() if a is not None]
+        observed_correct = [seed_correct[s] for s, a in seed_answer.items() if a is not None]
         per_task.append(
             {
                 "condition_id": condition_id,
                 "task_id": task_id,
                 "n_seeds": len(by_seed),
-                "distinct_answers": len(set(answers)),
-                "accuracy_std_across_seeds": float(np.std(list(seed_correct.values()))),
-                "reasoning_tokens_std_across_seeds": float(np.std(list(seed_reasoning.values()))),
+                "n_seeds_with_observed_answer": len(observed_answers),
+                "n_ambiguous_seeds": ambiguous,
+                "distinct_answers": len(set(observed_answers)) if observed_answers else None,
+                "answer_observation_rate": len(observed_answers) / len(by_seed),
+                "accuracy_std_across_seeds": (
+                    float(np.std(observed_correct)) if len(observed_correct) > 1 else None
+                ),
             }
         )
     n = len(per_task)
     return {
         "available": bool(per_task),
         "n_task_conditions": n,
-        "mean_distinct_answers": float(np.mean([p["distinct_answers"] for p in per_task]))
-        if n
-        else None,
-        "mean_accuracy_std_across_seeds": float(
-            np.mean([p["accuracy_std_across_seeds"] for p in per_task])
-        )
-        if n
-        else None,
-        "mean_reasoning_tokens_std_across_seeds": float(
-            np.mean([p["reasoning_tokens_std_across_seeds"] for p in per_task])
-        )
-        if n
-        else None,
+        "mean_distinct_answers": _mean_or_none(
+            [p["distinct_answers"] for p in per_task if p["distinct_answers"] is not None]
+        ),
+        "mean_accuracy_std_across_seeds": _mean_or_none(
+            [
+                p["accuracy_std_across_seeds"]
+                for p in per_task
+                if p["accuracy_std_across_seeds"] is not None
+            ]
+        ),
+        "any_ambiguous_seeds": any(p["n_ambiguous_seeds"] > 0 for p in per_task),
         "per_task": per_task,
-        "note": "Different seeds under a fixed sampler policy; conceptually distinct from replay failure.",
+        "note": "Final-answer diversity is only defined over observed answers; None elsewhere.",
     }
+
+
+def _mean_or_none(values: list[float]) -> float | None:
+    return float(np.mean(values)) if values else None
 
 
 def noise_floor(traces: list[dict[str, Any]]) -> dict[str, Any]:
@@ -268,10 +466,11 @@ def noise_floor(traces: list[dict[str, Any]]) -> dict[str, Any]:
         "greedy_replay": greedy_replay_variation(traces),
         "same_seed_replay": same_seed_replay_variation(traces),
         "across_seed": across_seed_variation(traces),
+        "cross_seed_tokens": cross_seed_token_variation(traces),
     }
 
 
-def _noise_scale_for(records: list[dict[str, Any]], mode: str) -> float | None:
+def _noise_scale_for(records: list[dict[str, Any]], mode: str) -> NULLABLE_FLOAT:
     """Mean within-task std for repeated observations under a mode."""
     groups: dict[tuple[str, Any], list[float]] = defaultdict(list)
     for r in records:
@@ -297,39 +496,45 @@ def analyze_run(store: RunStore) -> dict[str, Any]:
     for p in probes:
         probes_by_task[p["task_id"]].append(p)
     n_stable_sufficient = 0
+    n_observed_stable = 0
     for task_id, ps in sorted(probes_by_task.items()):
         ps = sorted(ps, key=lambda p: p.get("reasoning_prefix_tokens", p.get("prefix_len", 0)))
-        greedy_correct = next(
-            (
-                r["correct"]
-                for r in traces
-                if r["task_id"] == task_id and r["condition"]["mode"] == "greedy"
-            ),
-            False,
+        greedy_record = next(
+            (r for r in traces if r["task_id"] == task_id and r["condition"]["mode"] == "greedy"),
+            None,
         )
+        natural_status = natural_final_status_of(greedy_record) if greedy_record else "censored"
         lengths = [p.get("reasoning_prefix_tokens", p.get("prefix_len", 0)) for p in ps]
         state = classify_transitions(
-            greedy_correct, [bool(p["correct"]) for p in ps], prefix_token_lengths=lengths
+            [bool(p["correct"]) for p in ps], natural_status, prefix_token_lengths=lengths
         )
-        trajectory_states[state.primary] += 1
-        if state.stable_sufficient_prefix_tokens is not None:
+        trajectory_states[state.prefix_state] += 1
+        if state.stable_sufficient_with_natural_final_tokens is not None:
             n_stable_sufficient += 1
+        if state.observed_probe_stable_from_tokens is not None:
+            n_observed_stable += 1
         probe_per_task.append(
             {
                 "task_id": task_id,
                 "family": ps[0]["family"],
-                "primary_state": state.primary,
-                "flips": state.flips,
+                "prefix_state": state.prefix_state,
+                "prefix_flips": state.prefix_flips,
+                "natural_final_status": state.natural_final_status,
+                "natural_final_correct": state.natural_final_correct,
                 "first_correct_probe_index": state.first_correct_probe_index,
                 "first_correct_prefix_tokens": state.first_correct_prefix_tokens,
-                "stable_sufficient_prefix_tokens": state.stable_sufficient_prefix_tokens,
-                "final_correct": state.final_correct,
+                "observed_probe_stable_from_tokens": state.observed_probe_stable_from_tokens,
+                "stable_sufficient_with_natural_final_tokens": (
+                    state.stable_sufficient_with_natural_final_tokens
+                ),
+                "harmful_overthinking_observed": state.harmful_overthinking_observed,
                 "prefix_correct": [bool(p["correct"]) for p in ps],
                 "prefix_token_lengths": lengths,
             }
         )
 
     analysis = {
+        "interpretation": "phase1.2",
         "run_id": store.run_id,
         "artifact_id": store.artifact_id,
         "deployment_id": store.deployment_id,
@@ -344,8 +549,9 @@ def analyze_run(store: RunStore) -> dict[str, Any]:
         "probes": {
             "n": len(probes),
             "supported": store.manifest.get("probe_supported"),
-            "n_stable_sufficient": n_stable_sufficient,
-            "trajectory_state_counts": dict(trajectory_states),
+            "n_stable_sufficient_with_natural_final": n_stable_sufficient,
+            "n_observed_probe_stable": n_observed_stable,
+            "prefix_state_counts": dict(trajectory_states),
             "per_task": probe_per_task,
         },
         "status": store.manifest.get("status", {}),

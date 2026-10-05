@@ -13,31 +13,37 @@ from .parse import (
 )
 from .probes import run_prefix_probes
 from .transitions import (
+    NATURAL_FINAL_STATUSES,
+    PREFIX_STATES,
     STATES,
     TrajectoryState,
-    answer_flips,
     classify_transitions,
+    natural_final_correctness,
+    natural_final_status_for_record,
+    natural_final_status_from_termination,
     prefix_lengths,
-    stable_sufficient_index,
 )
 
 __all__ = [
+    "NATURAL_FINAL_STATUSES",
+    "PREFIX_STATES",
     "STATES",
     "ParsedReasoning",
     "ParsedTrace",
     "RepetitionMetrics",
     "TraceMetrics",
     "TrajectoryState",
-    "answer_flips",
     "classify_transitions",
     "compute_repetition",
     "extract_answer",
+    "natural_final_correctness",
+    "natural_final_status_for_record",
+    "natural_final_status_from_termination",
     "parse_reasoning",
     "parse_trace",
     "prefix_lengths",
     "reasoning_prefix_ids",
     "run_prefix_probes",
     "split_channels",
-    "stable_sufficient_index",
     "strip_special_tokens",
 ]

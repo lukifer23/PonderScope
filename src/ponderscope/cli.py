@@ -48,6 +48,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         split=args.split,
         seed=args.seed,
         variant=args.variant,
+        prompt_policy=args.prompt_policy,
     )
     out = Path(args.out)
     write_jsonl(out, [t.to_dict() for t in tasks])
@@ -71,6 +72,7 @@ def _load_spec(args: argparse.Namespace) -> ExperimentSpec:
     return ExperimentSpec(
         name=args.name,
         task_pack=args.task_pack,
+        prompt_policy=args.prompt_policy,
         families=args.families or [],
         n_per_family=args.n_per_family,
         task_seed=args.task_seed,
@@ -98,6 +100,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         backend_name=args.backend,
         runs_dir=args.runs_dir,
         run_suffix=args.suffix,
+        allow_dirty=args.allow_dirty,
         progress=lambda message: print(message, file=sys.stderr, flush=True),
     )
     print(f"run {result.store.run_id}")
@@ -169,6 +172,36 @@ def _cmd_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_verify(args: argparse.Namespace) -> int:
+    from .evidence.run import RunStore, verify_run
+
+    store = RunStore.latest(args.runs_dir) if args.latest else RunStore.load(args.run)
+    report = verify_run(store.path)
+    if args.json:
+        print(json.dumps(report, indent=2))
+    else:
+        status = "PASS" if report["pass"] else "FAIL"
+        print(f"verify {report['run_id']}: {status}")
+        for check in report["checks"]:
+            mark = "ok" if check["ok"] else "MISMATCH"
+            print(f"  {check['file']:<22} {mark}")
+        for err in report["errors"]:
+            print(f"  error: {err}")
+    return 0 if report["pass"] else 1
+
+
+def _cmd_bundle(args: argparse.Namespace) -> int:
+    from .evidence.bundle import bundle_run
+    from .evidence.run import RunStore
+
+    store = RunStore.latest(args.runs_dir) if args.latest else RunStore.load(args.run)
+    result = bundle_run(store.path, args.output)
+    print(f"bundled {result['run_id']} -> {result['archive']}")
+    print(f"  sha256: {result['sha256']}")
+    print(f"  bytes:  {result['bytes']}  members: {len(result['members'])}")
+    return 0
+
+
 def _cmd_report(args: argparse.Namespace) -> int:
     from .analysis import generate_report
     from .evidence.run import RunStore
@@ -204,6 +237,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--split", default="dev")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--variant", default=None)
+    p.add_argument("--prompt-policy", default="pp-v1")
     p.add_argument("--out", default="tasks/tasks-v1.dev.jsonl")
     p.set_defaults(func=_cmd_generate)
 
@@ -211,6 +245,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--spec")
     p.add_argument("--name")
     p.add_argument("--task-pack", default="tasks-v1")
+    p.add_argument("--prompt-policy", default="pp-v1")
     p.add_argument("--families", nargs="*", default=None)
     p.add_argument("--n-per-family", type=int, default=4)
     p.add_argument("--task-seed", type=int, default=0)
@@ -227,6 +262,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--revision", default=REVISION_DEFAULT)
     p.add_argument("--runs-dir", default="runs")
     p.add_argument("--suffix", default=None)
+    p.add_argument("--allow-dirty", action="store_true")
     p.add_argument("--analyze", action=argparse.BooleanOptionalAction, default=True)
     p.set_defaults(func=_cmd_run)
 
@@ -250,6 +286,20 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--latest", action="store_true")
     p.add_argument("--runs-dir", default="runs")
     p.set_defaults(func=_cmd_report)
+
+    p = sub.add_parser("verify", help="verify a sealed run's raw evidence and manifest hash")
+    p.add_argument("--run")
+    p.add_argument("--latest", action="store_true")
+    p.add_argument("--runs-dir", default="runs")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_verify)
+
+    p = sub.add_parser("bundle", help="build a deterministic evidence archive for a sealed run")
+    p.add_argument("--run")
+    p.add_argument("--latest", action="store_true")
+    p.add_argument("--runs-dir", default="runs")
+    p.add_argument("--output", required=True)
+    p.set_defaults(func=_cmd_bundle)
 
     return parser
 

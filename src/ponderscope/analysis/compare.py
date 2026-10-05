@@ -37,6 +37,7 @@ _METRICS: dict[str, Callable[[dict[str, Any]], float]] = {
 _DEPLOYMENT_FIELDS = (
     "repo_id",
     "revision",
+    "representation",
     "precision",
     "quantization",
     "quantization_bits",
@@ -44,6 +45,8 @@ _DEPLOYMENT_FIELDS = (
     "weight_files",
     "tokenizer_files",
     "chat_template_sha256",
+    "variant_weight_files",
+    "conversion",
 )
 _RUNTIME_FIELDS = (
     "runtime",
@@ -71,7 +74,13 @@ def _index(traces: list[dict[str, Any]]) -> dict[tuple, dict[str, Any]]:
 
 
 def _model(run: RunStore) -> dict[str, Any]:
-    return run.manifest.get("artifact", run.manifest.get("deployment", {}).get("model", {}))
+    """Flatten source-artifact and weight-variant provenance for field checks."""
+    variant = run.manifest.get(
+        "weight_variant",
+        run.manifest.get("artifact", run.manifest.get("deployment", {}).get("model", {})),
+    )
+    source = run.manifest.get("source_artifact") or variant.get("source", {})
+    return {**source, **variant}
 
 
 def _runtime(run: RunStore) -> dict[str, Any]:
@@ -273,15 +282,18 @@ def _trajectory_state(run: RunStore, probe: dict[str, Any]) -> str:
     from ..reasoning.transitions import classify_transitions
 
     traces = run.read_traces()
-    final_correct = next(
+    greedy_record = next(
         (
-            r["correct"]
+            r
             for r in traces
             if r["task_id"] == probe["task_id"] and r["condition"]["mode"] == "greedy"
         ),
-        False,
+        None,
     )
+    from .analyze import natural_final_status_of
+
+    natural_status = natural_final_status_of(greedy_record) if greedy_record else "censored"
     lengths = [p.get("reasoning_prefix_tokens", p.get("prefix_len", 0)) for p in ps]
     return classify_transitions(
-        final_correct, [bool(p["correct"]) for p in ps], prefix_token_lengths=lengths
-    ).primary
+        [bool(p["correct"]) for p in ps], natural_status, prefix_token_lengths=lengths
+    ).prefix_state

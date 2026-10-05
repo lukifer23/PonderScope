@@ -1,18 +1,22 @@
 """Layered deployment identity.
 
 Scientific identity is deliberately layered so that unrelated provenance
-(human labels, local filesystem paths, sampling seeds, repeat indices) can never
-silently change what is being measured.
+(human labels, local filesystem paths, sampling seeds, repeat indices, and
+runtime load audits) can never silently change what is being measured:
 
-    ArtifactIdentity   weights + tokenizer + quantization         -> artifact_id
-    DeploymentIdentity artifact + runtime + hardware + OS         -> deployment_id
-    ConditionIdentity  decoding policy (NO seed)                  -> condition_id
-    TrialIdentity      task + condition + seed + repeat           -> trial_id
+    SourceArtifactIdentity  repo + immutable revision + source weight/tokenizer/
+                            template hashes                          -> src id
+    WeightVariantIdentity   an actual executable representation of a source
+                            artifact: original OR a derived quantized/converted
+                            variant, with explicit lineage            -> wvar id
+    DeploymentIdentity      weight variant + runtime + hardware + OS  -> dep id
+    ConditionIdentity       decoding policy (NO seed)                 -> cond id
+    TrialIdentity           task + condition + seed + repeat          -> trial id
 
-A random seed is trial state, not a deployment property. A run may contain
-several decoding conditions, so a run is never described by a single
-decoding-specific id; it records the artifact/deployment ids plus one
-condition id per condition.
+A backend-specific *load audit* is evidence about how a runtime interpreted an
+artifact; it is deliberately excluded from both the source and weight-variant
+identity, so the same weights can never receive two different artifact ids
+because a different backend audited them.
 """
 
 from __future__ import annotations
@@ -26,7 +30,7 @@ from typing import Any
 
 # Bump when the identity schema changes in a way that should invalidate
 # cross-version configuration-id comparisons.
-IDENTITY_SCHEMA_VERSION = "ponderscope-identity/2"
+IDENTITY_SCHEMA_VERSION = "ponderscope-identity/3"
 
 
 def _sha256_text(text: str) -> str:
@@ -94,42 +98,82 @@ def configuration_id(metadata: dict[str, Any], length: int = 12, prefix: str = "
 
 
 @dataclass(frozen=True)
-class ArtifactIdentity:
-    """Identity of the weights and tokenizer, independent of runtime and path.
+class SourceArtifactIdentity:
+    """Immutable upstream source: repo, revision, and source file hashes.
 
-    ``local_path`` is retained for provenance but is deliberately excluded from
-    :attr:`artifact_id`: a cache path must never change artifact identity.
+    Independent of runtime, path, quantization, and load audit.
     """
 
     repo_id: str
     revision: str
-    weight_files: dict[str, str] = field(default_factory=dict)  # filename -> sha256
+    weight_files: dict[str, str] = field(default_factory=dict)
     tokenizer_files: dict[str, str] = field(default_factory=dict)
     chat_template_sha256: str | None = None
-    precision: str = "unknown"  # e.g. bfloat16, float16, float32
-    quantization: str | None = None  # e.g. mlx-4bit
+
+    def identity_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @property
+    def source_artifact_id(self) -> str:
+        return configuration_id(self.identity_dict(), prefix="src")
+
+
+@dataclass(frozen=True)
+class WeightVariantIdentity:
+    """An actual executable weight representation.
+
+    For a native checkpoint ``representation == "original"`` and the variant
+    weight hashes equal the source hashes. For a converted/quantized variant
+    ``representation == "derived"``, ``variant_weight_files`` are the actual
+    files that load, and ``derived_from_source_artifact_id`` records lineage.
+    """
+
+    source: SourceArtifactIdentity
+    representation: str = "original"  # "original" | "derived"
+    variant_weight_files: dict[str, str] = field(default_factory=dict)
+    precision: str = "unknown"
+    quantization: str | None = None
     quantization_bits: int | None = None
     quantization_group_size: int | None = None
     quantization_params: dict[str, Any] = field(default_factory=dict)
+    conversion: dict[str, Any] = field(default_factory=dict)
     local_path: str | None = None  # provenance only; excluded from the hash
-    load_audit: dict[str, Any] = field(default_factory=dict)
+    load_audit: dict[str, Any] = field(default_factory=dict)  # excluded from the hash
+
+    @property
+    def repo_id(self) -> str:
+        return self.source.repo_id
+
+    @property
+    def revision(self) -> str:
+        return self.source.revision
+
+    @property
+    def derived_from_source_artifact_id(self) -> str | None:
+        return None if self.representation == "original" else self.source.source_artifact_id
 
     def identity_dict(self) -> dict[str, Any]:
-        """Fields that define artifact identity (excludes path/label)."""
+        """Fields that define weight-variant identity (excludes path/audit)."""
         d = asdict(self)
         d.pop("local_path", None)
+        d.pop("load_audit", None)
+        d["derived_from_source_artifact_id"] = self.derived_from_source_artifact_id
         return d
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @property
-    def artifact_id(self) -> str:
-        return configuration_id(self.identity_dict(), prefix="art")
+    def weight_variant_id(self) -> str:
+        return configuration_id(self.identity_dict(), prefix="wvar")
 
 
-# Backwards-compatible name: the backend loads an artifact.
-ModelIdentity = ArtifactIdentity
+# Backwards-compatible aliases: the loaded artifact is now a weight variant.
+ModelIdentity = WeightVariantIdentity
+ArtifactIdentity = WeightVariantIdentity
 
 
 @dataclass(frozen=True)
@@ -205,32 +249,27 @@ class TrialIdentity:
 
 @dataclass(frozen=True)
 class DeploymentIdentity:
-    """artifact + runtime/hardware. Decoding is deliberately excluded."""
+    """weight variant + runtime/hardware. Decoding is deliberately excluded."""
 
-    artifact: ArtifactIdentity
+    variant: WeightVariantIdentity
     runtime: RuntimeIdentity
 
     def to_dict(self) -> dict[str, Any]:
-        return {"artifact": self.artifact.to_dict(), "runtime": self.runtime.to_dict()}
+        return {"weight_variant": self.variant.to_dict(), "runtime": self.runtime.to_dict()}
 
     @property
     def deployment_id(self) -> str:
         return configuration_id(
-            {"artifact": self.artifact.identity_dict(), "runtime": self.runtime.to_dict()},
+            {"weight_variant": self.variant.identity_dict(), "runtime": self.runtime.to_dict()},
             prefix="dep",
         )
 
 
 @dataclass(frozen=True)
 class Deployment:
-    """Convenience composite: artifact + runtime + a decoding condition.
+    """Convenience composite: weight variant + runtime + a decoding condition."""
 
-    Retained so callers can describe a concrete execution. It exposes the
-    layered ids explicitly; it no longer fabricates a single overloaded
-    ``config_id``.
-    """
-
-    model: ArtifactIdentity
+    model: WeightVariantIdentity
     runtime: RuntimeIdentity
     decoding: DecodingPolicy
     label: str | None = None
@@ -246,8 +285,17 @@ class Deployment:
         }
 
     @property
+    def source_artifact_id(self) -> str:
+        return self.model.source.source_artifact_id
+
+    @property
+    def weight_variant_id(self) -> str:
+        return self.model.weight_variant_id
+
+    @property
     def artifact_id(self) -> str:
-        return self.model.artifact_id
+        # Backwards-compatible alias for the executable weight variant.
+        return self.weight_variant_id
 
     @property
     def deployment_id(self) -> str:
@@ -258,7 +306,7 @@ class Deployment:
         return self.decoding.condition_id
 
     def identity(self) -> DeploymentIdentity:
-        return DeploymentIdentity(artifact=self.model, runtime=self.runtime)
+        return DeploymentIdentity(variant=self.model, runtime=self.runtime)
 
     def describe(self) -> str:
         m = self.model
@@ -270,11 +318,11 @@ class Deployment:
             if m.quantization_group_size:
                 quant += f" g{m.quantization_group_size}"
         return (
-            f"{m.repo_id}@{m.revision[:12]} ({m.precision}{quant}) "
+            f"{m.repo_id}@{m.revision[:12]} ({m.representation}, {m.precision}{quant}) "
             f"under {self.runtime.runtime} {self.runtime.runtime_version} "
             f"[{self.runtime.backend}, {self.runtime.hardware}] "
-            f"{self.decoding.mode} art={self.artifact_id} dep={self.deployment_id} "
-            f"cond={self.condition_id}"
+            f"{self.decoding.mode} src={self.source_artifact_id} "
+            f"wvar={self.weight_variant_id} dep={self.deployment_id} cond={self.condition_id}"
         )
 
 

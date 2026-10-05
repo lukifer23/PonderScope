@@ -1,12 +1,21 @@
 """Versioned procedural task pack."""
 
-from .families import ALL_FAMILIES, DIFFICULTY_LEVELS, make_family_task
+from .families import (
+    ALL_FAMILIES,
+    DEFAULT_PROMPT_POLICY,
+    DIFFICULTY_LEVELS,
+    PROMPT_POLICIES,
+    make_family_task,
+)
 from .generator import (
     GENERATOR_VERSION,
+    PACK_REGISTRY,
     PACK_VERSION,
     SPLITS,
+    PackSpec,
     generate_pack,
     generate_pack_metadata,
+    get_pack,
     make_task,
     task_id_for,
 )
@@ -21,16 +30,21 @@ from .scorers import canonical_answer, normalize, score
 
 __all__ = [
     "ALL_FAMILIES",
+    "DEFAULT_PROMPT_POLICY",
     "DIFFICULTY_LEVELS",
     "GENERATOR_VERSION",
+    "PACK_REGISTRY",
     "PACK_VERSION",
+    "PROMPT_POLICIES",
     "SPLITS",
+    "PackSpec",
     "Task",
     "TaskError",
     "canonical_answer",
     "collision_audit",
     "generate_pack",
     "generate_pack_metadata",
+    "get_pack",
     "make_family_task",
     "make_task",
     "normalize",

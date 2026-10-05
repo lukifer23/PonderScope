@@ -8,7 +8,16 @@ from ponderscope.evidence.run import RunStore
 from ponderscope.experiment import run_experiment
 
 
-def _run(tmp_path: Path, fake_backend, monkeypatch, name="t", greedy=2, seeds=(0, 1), probe=True):
+def _run(
+    tmp_path: Path,
+    fake_backend,
+    monkeypatch,
+    name="t",
+    greedy=2,
+    seeds=(0, 1),
+    probe=True,
+    code_state=None,
+):
     monkeypatch.setattr("ponderscope.experiment.get_backend", lambda backend_name: fake_backend)
     spec = ExperimentSpec(
         name=name,
@@ -22,7 +31,11 @@ def _run(tmp_path: Path, fake_backend, monkeypatch, name="t", greedy=2, seeds=(0
         max_tokens=16,
     )
     return run_experiment(
-        spec, model_repo="fake/model", model_revision="deadbeef", runs_dir=tmp_path
+        spec,
+        model_repo="fake/model",
+        model_revision="deadbeef",
+        runs_dir=tmp_path,
+        code_state=code_state or {"version": "test", "git_sha": "0" * 40, "tracked_dirty": False},
     )
 
 
@@ -34,9 +47,10 @@ def test_run_records_expected_counts(tmp_path, fake_backend, monkeypatch):
     assert result.n_probes > 0
     # each record has full layered identity
     assert all(r["deployment_id"].startswith("dep-") for r in traces)
-    assert all(r["artifact_id"].startswith("art-") for r in traces)
+    assert all(r["weight_variant_id"].startswith("wvar-") for r in traces)
+    assert all(r["source_artifact_id"].startswith("src-") for r in traces)
     assert all(r["condition_id"].startswith("cond-") for r in traces)
-    assert all(r["deployment"]["model"]["revision"] == "deadbeef" for r in traces)
+    assert all(r["deployment"]["model"]["source"]["revision"] == "deadbeef" for r in traces)
 
 
 def test_analysis_and_noise_floor(tmp_path, fake_backend, monkeypatch):
@@ -65,8 +79,8 @@ def test_compare_refuses_multi_dimension_confound(tmp_path, fake_backend, monkey
     b = _run(tmp_path, fake_backend, monkeypatch, name="b")
     # Change both artifact revision and runtime hardware: an uncontrolled,
     # multi-dimension change that cannot be attributed to one deployment variable.
-    b.store.manifest["artifact"] = {
-        **b.store.manifest["artifact"],
+    b.store.manifest["source_artifact"] = {
+        **b.store.manifest["source_artifact"],
         "revision": "another-revision",
     }
     b.store.manifest["runtime"] = {
@@ -85,8 +99,8 @@ def test_compare_refuses_multi_dimension_confound(tmp_path, fake_backend, monkey
 def test_compare_allows_single_dimension_change(tmp_path, fake_backend, monkeypatch):
     a = _run(tmp_path, fake_backend, monkeypatch, name="a")
     b = _run(tmp_path, fake_backend, monkeypatch, name="b")
-    b.store.manifest["artifact"] = {
-        **b.store.manifest["artifact"],
+    b.store.manifest["source_artifact"] = {
+        **b.store.manifest["source_artifact"],
         "revision": "another-revision",
     }
     cmp = compare_configs(a.store, b.store, mode="greedy")
@@ -136,7 +150,13 @@ def test_failed_experiment_marks_partial(tmp_path, fake_backend, monkeypatch):
     import pytest
 
     with pytest.raises(RuntimeError):
-        run_experiment(spec, model_repo="fake/model", model_revision="deadbeef", runs_dir=tmp_path)
+        run_experiment(
+            spec,
+            model_repo="fake/model",
+            model_revision="deadbeef",
+            runs_dir=tmp_path,
+            code_state={"version": "test", "git_sha": "0" * 40, "tracked_dirty": False},
+        )
     runs = [p for p in tmp_path.iterdir() if (p / "manifest.json").exists()]
     assert len(runs) == 1
     store = RunStore.load(runs[0])

@@ -30,7 +30,11 @@ def _fake_run(tmp_path: Path, fake_backend, monkeypatch, name: str):
         max_tokens=16,
     )
     return run_experiment(
-        spec, model_repo="fake/model", model_revision="deadbeef", runs_dir=tmp_path
+        spec,
+        model_repo="fake/model",
+        model_revision="deadbeef",
+        runs_dir=tmp_path,
+        code_state={"version": "test", "git_sha": "0" * 40, "tracked_dirty": False},
     )
 
 

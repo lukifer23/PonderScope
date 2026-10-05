@@ -64,8 +64,17 @@ class RunStore:
         return self.manifest["run_id"]
 
     @property
+    def source_artifact_id(self) -> str:
+        return self.manifest.get("source_artifact_id") or self.manifest.get("artifact_id", "")
+
+    @property
+    def weight_variant_id(self) -> str:
+        return self.manifest.get("weight_variant_id") or self.manifest.get("artifact_id", "")
+
+    @property
     def artifact_id(self) -> str:
-        return self.manifest["artifact_id"]
+        # Backwards-compatible alias for the executable weight variant.
+        return self.weight_variant_id
 
     @property
     def deployment_id(self) -> str:
@@ -89,6 +98,8 @@ class RunStore:
         created_utc: str | None = None,
         run_suffix: str | None = None,
         conditions: list[DecodingPolicy] | None = None,
+        code_state: dict[str, Any] | None = None,
+        prompt_policy: str | None = None,
     ) -> RunStore:
         runs_dir = Path(runs_dir)
         created_utc = created_utc or _utc_now()
@@ -100,21 +111,27 @@ class RunStore:
         path.mkdir(parents=True)
         environment = capture_environment()
         conds = conditions if conditions is not None else condition_identities(spec)
-        manifest = {
+        manifest: dict[str, Any] = {
             "run_id": run_id,
             "created_utc": created_utc,
             "name": spec.name,
             "spec": spec.to_dict(),
             "spec_hash": spec.canonical_hash(),
+            "source_artifact": deployment.model.source.to_dict(),
+            "source_artifact_id": deployment.source_artifact_id,
+            "weight_variant": deployment.model.to_dict(),
+            "weight_variant_id": deployment.weight_variant_id,
+            # Backwards-compatible alias for the executable variant.
             "artifact": deployment.model.to_dict(),
             "artifact_id": deployment.artifact_id,
             "runtime": deployment.runtime.to_dict(),
             "deployment_id": deployment.deployment_id,
             "deployment_description": deployment.describe(),
             "conditions": [
-                {"condition_id": d.condition_id, "decoding": d.to_dict()} for d in conds
+                {"condition_id": d.condition_id, "decoding": d.identity_dict()} for d in conds
             ],
-            "code": capture_code_state(),
+            "code": code_state if code_state is not None else capture_code_state(),
+            "prompt_policy": prompt_policy,
             "timestamps": {"started_utc": created_utc, "completed_utc": None},
             "status": {"run": "IN_PROGRESS", "observations": [], "error": None},
         }
@@ -185,9 +202,23 @@ class RunStore:
 
     # -- sealing -------------------------------------------------------------
     def seal(self) -> dict[str, Any]:
-        """Hash all raw evidence and write a create-once evidence seal."""
+        """Finalize the manifest, then write a create-once evidence seal last.
+
+        Ordering invariant (Phase 1.2 fix): the manifest is fully finalized and
+        atomically written *before* it is hashed into ``evidence.json``. Once
+        ``evidence.json`` exists the manifest and all raw evidence are immutable,
+        and the seal's ``manifest_sha256`` matches the on-disk manifest.
+        """
         if self.is_sealed:
             raise FileExistsError(f"run {self.run_id} already sealed")
+        # 1. finalize all manifest content first.
+        sealed_utc = _utc_now()
+        self.manifest["status"]["run"] = "EVIDENCE_COMPLETE"
+        self.manifest["timestamps"]["completed_utc"] = sealed_utc
+        self.manifest["seal_schema"] = "ponderscope-seal/2"
+        # 2. atomically write the final manifest.
+        atomic_write_json(self.path / MANIFEST, self.manifest)
+        # 3. hash the FINAL manifest and all raw evidence.
         hashes: dict[str, str] = {}
         for name in RAW_FILES:
             p = self.path / name
@@ -202,17 +233,18 @@ class RunStore:
             "code": self.manifest.get("code"),
             "files": hashes,
             "manifest_sha256": sha256_file(str(manifest_path)) if manifest_path.exists() else None,
-            "sealed_utc": _utc_now(),
+            "sealed_utc": sealed_utc,
+            "seal_schema": "ponderscope-seal/2",
         }
+        # 4. write the seal LAST.
         atomic_write_json(self.path / EVIDENCE, seal)
-        self.manifest["status"]["run"] = "EVIDENCE_COMPLETE"
-        self.manifest["timestamps"]["completed_utc"] = seal["sealed_utc"]
-        # Seal last: manifest writes are refused once evidence.json exists.
-        atomic_write_json(self.path / MANIFEST, self.manifest)
         return seal
 
     def read_seal(self) -> dict[str, Any]:
         return read_json(self.path / EVIDENCE)
+
+    def verify(self) -> dict[str, Any]:
+        return verify_run(self.path)
 
     # -- derived artifacts (regenerable) -------------------------------------
     def write_analysis(self, analysis: dict[str, Any]) -> None:
@@ -235,6 +267,62 @@ class RunStore:
             "artifact_id": self.artifact_id,
             "deployment_id": self.deployment_id,
         }
+
+
+def verify_run(path: str | Path) -> dict[str, Any]:
+    """Recompute every raw evidence hash and the final manifest hash.
+
+    Read-only: this never writes or repairs evidence. Returns a PASS/FAIL report
+    with per-file detail. A run whose seal is missing, or whose manifest no
+    longer matches ``manifest_sha256``, FAILS.
+    """
+    path = Path(path)
+    errors: list[str] = []
+    checks: list[dict[str, Any]] = []
+    evidence_path = path / EVIDENCE
+    if not evidence_path.exists():
+        return {
+            "path": str(path),
+            "run_id": None,
+            "pass": False,
+            "errors": ["no evidence seal (evidence.json missing)"],
+            "checks": [],
+        }
+    seal = read_json(evidence_path)
+    for name in RAW_FILES:
+        p = path / name
+        expected = seal.get("files", {}).get(name)
+        actual = sha256_file(str(p)) if p.exists() else None
+        ok = expected is not None and actual == expected
+        checks.append({"file": name, "expected": expected, "actual": actual, "ok": ok})
+        if not ok:
+            errors.append(
+                f"{name}: hash mismatch or missing (expected={expected}, actual={actual})"
+            )
+    manifest_path = path / MANIFEST
+    manifest_actual = sha256_file(str(manifest_path)) if manifest_path.exists() else None
+    manifest_expected = seal.get("manifest_sha256")
+    manifest_ok = manifest_expected is not None and manifest_actual == manifest_expected
+    checks.append(
+        {
+            "file": MANIFEST,
+            "expected": manifest_expected,
+            "actual": manifest_actual,
+            "ok": manifest_ok,
+        }
+    )
+    if not manifest_ok:
+        errors.append(
+            "manifest.json: hash mismatch — seal does not cover the final manifest "
+            f"(expected={manifest_expected}, actual={manifest_actual})"
+        )
+    return {
+        "path": str(path),
+        "run_id": seal.get("run_id"),
+        "pass": not errors,
+        "errors": errors,
+        "checks": checks,
+    }
 
 
 def load_manifest_text(path: str | Path) -> str:

@@ -51,17 +51,19 @@ def _fmt(value: Any) -> str:
 
 def _config_table(analysis: dict[str, Any]) -> list[str]:
     lines = [
-        "| condition_id | mode | n | accuracy (95% CI) | reasoning tokens mean | total tokens mean | wall ms mean | tok/s |",
-        "|---|---|---|---|---|---|---|---|",
+        "| condition_id | mode | n | success_at_budget (95% CI) | completion_rate | censored_rate | conditional_acc_given_completed | reasoning tokens mean | tok/s |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for cid, c in analysis["configs"].items():
-        acc = c["accuracy"]
-        ci = c["accuracy_ci"]
+        acc = c["success_at_budget"]
+        ci = c["success_at_budget_ci"]
         ci_txt = f"{_fmt(acc)} [{_fmt(ci[0])}, {_fmt(ci[1])}]" if ci else _fmt(acc)
+        o = c["outcomes"]
         lines.append(
             f"| {cid} | {c['mode']} | {c['n']} | {ci_txt} | "
-            f"{_fmt(c['reasoning_tokens']['mean'])} | {_fmt(c['total_tokens']['mean'])} | "
-            f"{_fmt(c['wall_ms']['mean'])} | {_fmt(c['tokens_per_sec']['mean'])} |"
+            f"{_fmt(o['completion_rate'])} | {_fmt(o['censored_rate'])} | "
+            f"{_fmt(o['conditional_accuracy_given_completed'])} | "
+            f"{_fmt(c['reasoning_tokens']['mean'])} | {_fmt(c['tokens_per_sec']['mean'])} |"
         )
     return lines
 
@@ -92,7 +94,8 @@ def _noise_section(analysis: dict[str, Any]) -> list[str]:
         lines.append(
             f"- task/condition/seed groups: {same_seed['n_task_condition_seeds']}\n"
             f"- token-identical rate: {_fmt(same_seed['token_identical_rate'])}\n"
-            f"- answer-agreement rate: {_fmt(same_seed['answer_agreement_rate'])}\n"
+            f"- ambiguous (divergent) seed groups: {same_seed.get('ambiguous_seed_count', 0)}\n"
+            f"- answer-agreement rate (observed answers only): {_fmt(same_seed['answer_agreement_rate'])}\n"
             f"- mean within-group reasoning-token std: {_fmt(same_seed['mean_reasoning_token_std'])}"
         )
     lines.append("")
@@ -102,31 +105,52 @@ def _noise_section(analysis: dict[str, Any]) -> list[str]:
     else:
         lines.append(
             f"- task/condition groups: {across['n_task_conditions']}\n"
-            f"- mean distinct answers across seeds: {_fmt(across['mean_distinct_answers'])}\n"
-            f"- mean accuracy std across seeds: {_fmt(across['mean_accuracy_std_across_seeds'])}\n"
-            f"- mean reasoning-token std across seeds: {_fmt(across['mean_reasoning_tokens_std_across_seeds'])}"
+            f"- mean distinct observed answers across seeds: {_fmt(across['mean_distinct_answers'])}\n"
+            f"- mean observed-answer accuracy std across seeds: {_fmt(across['mean_accuracy_std_across_seeds'])}\n"
+            f"- any ambiguous seeds (divergent same-seed repeats): {across.get('any_ambiguous_seeds')}\n"
+            "- note: final-answer diversity/accuracy is defined only over seeds with an "
+            "observed answer; `—` means unobserved, not zero."
+        )
+    tokens = nf.get("cross_seed_tokens", {})
+    lines.append("")
+    lines.append("### 4. Across-seed token variation (valid even when all answers are censored)")
+    if not tokens.get("available"):
+        lines.append("- fewer than two seeds per task/condition")
+    else:
+        lines.append(
+            f"- task/condition groups: {tokens['n_task_conditions']}\n"
+            f"- mean first token divergence across seeds: {_fmt(tokens['mean_first_token_divergence'])}\n"
+            f"- mean reasoning-token std across seeds: {_fmt(tokens['mean_reasoning_tokens_std_across_seeds'])}"
         )
     lines.append("")
     return lines
 
 
 def _termination_section(analysis: dict[str, Any]) -> list[str]:
-    lines = ["## Censoring / termination problems", ""]
+    lines = ["## Censoring / termination (do not read a capped run as a wrong answer)", ""]
     counter: dict[str, int] = {}
     for c in analysis["configs"].values():
         for key, val in c["termination"].items():
             counter[key] = counter.get(key, 0) + val
     if not counter:
         lines.append("- no termination records")
-    for key in (
-        "natural_eos",
-        "capped_length",
-        "think_end_reached",
-        "missing_answer",
-        "error_or_other",
-    ):
-        if key in counter:
-            lines.append(f"- {key}: {counter[key]}")
+    for key in sorted(counter):
+        lines.append(f"- {key}: {counter[key]}")
+    lines.append("")
+    lines.append("### Budget outcomes per condition")
+    lines.append(
+        "| condition_id | success_at_budget | completion_rate | censored_rate | error_rate | "
+        "unparseable_rate | cond_acc|completed |"
+    )
+    lines.append("|---|---|---|---|---|---|---|")
+    for cid, c in analysis["configs"].items():
+        o = c["outcomes"]
+        lines.append(
+            f"| {cid} | {_fmt(o['success_at_budget'])} | {_fmt(o['completion_rate'])} | "
+            f"{_fmt(o['censored_rate'])} | {_fmt(o['error_rate'])} | "
+            f"{_fmt(o['unparseable_rate'])} | "
+            f"{_fmt(o['conditional_accuracy_given_completed'])} |"
+        )
     lines.append("")
     return lines
 
@@ -139,8 +163,15 @@ def _probe_section(analysis: dict[str, Any]) -> list[str]:
         lines.append("")
         return lines
     lines.append(f"- n probes: {probes['n']}")
-    lines.append(f"- stable-sufficient prefixes observed: {probes.get('n_stable_sufficient', 0)}")
-    for state, count in sorted(probes["trajectory_state_counts"].items()):
+    lines.append(
+        "- stable-sufficient WITH observed natural final: "
+        f"{probes.get('n_stable_sufficient_with_natural_final', 0)}"
+    )
+    lines.append(
+        "- observed-probe stable (natural final unobserved or uncounted): "
+        f"{probes.get('n_observed_probe_stable', 0)}"
+    )
+    for state, count in sorted(probes["prefix_state_counts"].items()):
         lines.append(f"- {state}: {count}")
     lines.append("")
     return lines
@@ -193,7 +224,7 @@ def render_markdown(store: RunStore, analysis: dict[str, Any]) -> str:
     manifest = store.manifest
     env = json.loads((store.path / "environment.json").read_text())
     traces = store.read_traces()
-    model = manifest.get("artifact", {})
+    model = manifest.get("weight_variant", manifest.get("artifact", {}))
     runtime = manifest.get("runtime", {})
 
     lines: list[str] = []
@@ -203,13 +234,22 @@ def render_markdown(store: RunStore, analysis: dict[str, Any]) -> str:
     lines.append("")
     lines.append("## Deployment identity")
     lines.append(f"- description: `{manifest.get('deployment_description')}`")
-    lines.append(f"- artifact id: `{manifest.get('artifact_id')}`")
+    lines.append(
+        f"- source artifact id: `{manifest.get('source_artifact_id', manifest.get('artifact_id'))}`"
+    )
+    lines.append(
+        f"- weight variant id: `{manifest.get('weight_variant_id', manifest.get('artifact_id'))}`"
+    )
     lines.append(f"- deployment id: `{manifest.get('deployment_id')}`")
+    if manifest.get("prompt_policy"):
+        lines.append(f"- prompt policy: `{manifest.get('prompt_policy')}`")
     conditions = manifest.get("conditions", [])
     lines.append("- condition ids: `" + ", ".join(c["condition_id"] for c in conditions) + "`")
-    lines.append(f"- model repo: `{model['repo_id']}`")
-    lines.append(f"- revision: `{model['revision']}`")
-    lines.append(f"- precision: `{model['precision']}`")
+    source = model.get("source", model)
+    lines.append(f"- model repo: `{source.get('repo_id')}`")
+    lines.append(f"- revision: `{source.get('revision')}`")
+    lines.append(f"- representation: `{model.get('representation')}`")
+    lines.append(f"- precision: `{model.get('precision')}`")
     lines.append(
         f"- quantization: `{model.get('quantization')}` bits={model.get('quantization_bits')} group={model.get('quantization_group_size')}"
     )

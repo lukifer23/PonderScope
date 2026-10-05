@@ -7,7 +7,13 @@ from typing import Any
 import pytest
 
 from ponderscope.backends.base import BackendCapabilities, CaptureSpec, TokenStep, Trace
-from ponderscope.config.identity import DecodingPolicy, ModelIdentity, RuntimeIdentity
+from ponderscope.config.identity import (
+    DecodingPolicy,
+    ModelIdentity,
+    RuntimeIdentity,
+    SourceArtifactIdentity,
+    WeightVariantIdentity,
+)
 
 
 class FakeBackend:
@@ -35,14 +41,21 @@ class FakeBackend:
             prefix_probe=True,
         )
 
-    def load(self, model_identity: ModelIdentity) -> ModelIdentity:
+    def load(
+        self, request: SourceArtifactIdentity, declared_precision: str = "unknown"
+    ) -> ModelIdentity:
         self._loaded = True
-        return ModelIdentity(
-            repo_id=model_identity.repo_id,
-            revision=model_identity.revision,
-            local_path="/fake",
+        source = SourceArtifactIdentity(
+            repo_id=request.repo_id,
+            revision=request.revision,
             weight_files={"fake.safetensors": "0" * 64},
             tokenizer_files={"tokenizer.json": "1" * 64},
+        )
+        return WeightVariantIdentity(
+            source=source,
+            representation="original",
+            variant_weight_files={"fake.safetensors": "0" * 64},
+            local_path="/fake",
             precision="float32",
             quantization=None,
         )
@@ -142,6 +155,19 @@ class FakeBackend:
 
     def decode(self, token_ids: list[int]) -> str:
         return " ".join(str(t) for t in token_ids)
+
+
+@pytest.fixture
+def clean_code_state() -> dict[str, Any]:
+    """A deterministic clean worktree state, independent of the real repo."""
+    return {
+        "version": "test",
+        "git_sha": "0" * 40,
+        "git_dirty": False,
+        "tracked_dirty": False,
+        "publication_grade": True,
+        "exploratory": False,
+    }
 
 
 @pytest.fixture

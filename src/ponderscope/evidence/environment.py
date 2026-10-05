@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.metadata
 import os
 import platform
@@ -67,33 +68,58 @@ def capture_environment() -> dict[str, Any]:
     return env
 
 
-def capture_code_state() -> dict[str, Any]:
-    """Version of the measurement code itself (PonderScope), for provenance."""
+def _git(repo: str, *args: str) -> subprocess.CompletedProcess[str] | None:
+    try:
+        return subprocess.run(
+            ["git", "-C", repo, *args],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def capture_code_state(include_diff_hash: bool = True) -> dict[str, Any]:
+    """Version and cleanliness of the measurement code itself, for provenance.
+
+    ``tracked_dirty`` is the official-run criterion: it ignores untracked
+    evidence output under ``runs/``/``scratch/`` (which any run necessarily
+    creates) and reports only tracked source modifications. ``git_dirty`` retains
+    the stricter "any porcelain output" meaning for transparency. When tracked
+    files are modified, a deterministic SHA-256 of ``git diff HEAD`` is recorded.
+    """
     from .. import __version__
 
     state: dict[str, Any] = {"version": __version__}
-    try:
-        repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-        sha = subprocess.run(
-            ["git", "-C", repo, "rev-parse", "HEAD"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
+    repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+    sha = _git(repo, "rev-parse", "HEAD")
+    if sha is not None and sha.returncode == 0:
+        state["git_sha"] = sha.stdout.strip()
+
+    porcelain = _git(repo, "status", "--porcelain")
+    if porcelain is not None and porcelain.returncode == 0:
+        entries = [line for line in porcelain.stdout.splitlines() if line.strip()]
+        state["git_dirty"] = bool(entries)
+        state["untracked_evidence_count"] = sum(
+            1
+            for line in entries
+            if line.startswith("?? ") and line[3:].split("/")[0] in {"runs", "scratch"}
         )
-        if sha.returncode == 0:
-            state["git_sha"] = sha.stdout.strip()
-        dirty = subprocess.run(
-            ["git", "-C", repo, "status", "--porcelain"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
-        )
-        if dirty.returncode == 0:
-            state["git_dirty"] = bool(dirty.stdout.strip())
-    except (OSError, subprocess.SubprocessError):
-        pass
+
+    tracked = _git(repo, "status", "--porcelain", "--untracked-files=no")
+    if tracked is not None and tracked.returncode == 0:
+        tracked_entries = [line for line in tracked.stdout.splitlines() if line.strip()]
+        state["tracked_dirty"] = bool(tracked_entries)
+        state["tracked_changes"] = tracked_entries[:50]
+
+    if include_diff_hash and state.get("tracked_dirty"):
+        diff = _git(repo, "diff", "HEAD")
+        if diff is not None and diff.returncode == 0:
+            state["working_tree_diff_sha256"] = hashlib.sha256(
+                diff.stdout.encode("utf-8")
+            ).hexdigest()
     return state
 
 

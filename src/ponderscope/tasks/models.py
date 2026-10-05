@@ -22,6 +22,7 @@ class Task:
     variant: str | None
     prompt: str
     answer: str  # canonical normalized answer
+    prompt_policy: str = "pp-v1"
     difficulty: dict[str, Any] = field(default_factory=dict)
     structural: dict[str, Any] = field(default_factory=dict)
 

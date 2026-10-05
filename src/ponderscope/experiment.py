@@ -10,16 +10,28 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from .backends import CaptureSpec, get_backend
 from .backends.base import PrefixProbeUnsupported
 from .config.conditions import condition_specs, decoding_for
-from .config.identity import DecodingPolicy, Deployment, ModelIdentity, TrialIdentity
+from .config.identity import (
+    DecodingPolicy,
+    Deployment,
+    SourceArtifactIdentity,
+    TrialIdentity,
+)
 from .config.schema import ExperimentSpec
+from .evidence.environment import capture_code_state
 from .evidence.run import RunStore
 from .reasoning.metrics import compute_repetition
 from .reasoning.parse import parse_trace, reasoning_prefix_ids
 from .reasoning.probes import run_prefix_probes
-from .reasoning.transitions import classify_transitions
+from .reasoning.transitions import (
+    classify_transitions,
+    natural_final_status_for_record,
+    natural_final_status_from_termination,
+)
 from .tasks import generate_pack, generate_pack_metadata, normalize, score
 
 
@@ -33,6 +45,56 @@ def build_capture(spec: ExperimentSpec, *, digest: bool | None = None) -> Captur
     )
 
 
+def verify_capture_equivalence(
+    backend: Any,
+    prompt_token_ids: list[int],
+    *,
+    max_tokens: int = 64,
+) -> dict[str, Any]:
+    """Check that capture level does not change the decoded token sequence.
+
+    Greedy and same-seed sampled decoding are deterministic; if the minimal and
+    research lanes ever diverge, that is an instrumentation effect and must be
+    reported, not silently averaged into performance.
+    """
+
+    def _first_divergence(a: list[int], b: list[int]) -> int | None:
+        for i in range(max(len(a), len(b))):
+            av = a[i] if i < len(a) else None
+            bv = b[i] if i < len(b) else None
+            if av != bv:
+                return i
+        return None
+
+    greedy = DecodingPolicy(mode="greedy", max_tokens=max_tokens)
+    sampled = DecodingPolicy(
+        mode="sampled",
+        max_tokens=max_tokens,
+        temperature=0.6,
+        top_p=0.95,
+        top_k=20,
+        seed=7,
+    )
+    result: dict[str, Any] = {}
+    for label, decoding in (("greedy", greedy), ("sampled_same_seed", sampled)):
+        minimal = backend.generate(prompt_token_ids, decoding, CaptureSpec.minimal())
+        research = backend.generate(
+            prompt_token_ids, decoding, CaptureSpec.research(top_k=5, digest=False)
+        )
+        result[label] = {
+            "identical": minimal.token_ids == research.token_ids,
+            "first_divergence": _first_divergence(minimal.token_ids, research.token_ids),
+            "minimal_tokens": len(minimal.token_ids),
+            "research_tokens": len(research.token_ids),
+        }
+    result["equivalent"] = all(v["identical"] for v in result.values() if isinstance(v, dict))
+    result["note"] = (
+        "Deterministic decoding must be token-identical across capture lanes; a "
+        "difference is an instrumentation effect."
+    )
+    return result
+
+
 def measure_capture_overhead(
     backend: Any,
     prompt_token_ids: list[int],
@@ -43,10 +105,13 @@ def measure_capture_overhead(
 ) -> dict[str, Any]:
     """Bounded qualification of instrumentation overhead.
 
-    Same prompt, same greedy condition, warmup, then alternating repeated runs of
-    three capture levels. Reports medians (and full samples) of TTFT, total wall
-    time, end-to-end output tokens/sec, and decode tokens/sec. Overhead is only
-    claimed as such where measured.
+    Same prompt, same greedy condition, separate warmup, then counterbalanced
+    repeated runs of three capture levels (order rotated each repetition so a
+    lane is not systematically penalised by later runs). Reports median, mean,
+    std, and IQR of TTFT, wall time, end-to-end tokens/sec, and decode
+    tokens/sec. The ``minimal`` lane is the primary performance measurement;
+    research/digest throughput is instrumentation-affected and never presented
+    as native deployment throughput.
     """
     import statistics
 
@@ -55,7 +120,9 @@ def measure_capture_overhead(
         "research": CaptureSpec.research(top_k=5, digest=False),
         "digest": CaptureSpec.research(top_k=5, digest=True),
     }
+    order = list(modes)
     samples: dict[str, list[dict[str, float | None]]] = {name: [] for name in modes}
+    run_order: list[str] = []
 
     def _one(capture: CaptureSpec) -> dict[str, float | None]:
         trace = backend.generate(prompt_token_ids, decoding, capture)
@@ -68,23 +135,40 @@ def measure_capture_overhead(
         }
 
     for _ in range(max(0, warmup)):
-        for capture in modes.values():
-            _one(capture)
-    for _ in range(max(1, repeats)):
-        for name, capture in modes.items():
-            samples[name].append(_one(capture))
+        for name in order:
+            _one(modes[name])
+    for r in range(max(1, repeats)):
+        rotated = order[r % len(order) :] + order[: r % len(order)]
+        for name in rotated:
+            run_order.append(name)
+            samples[name].append(_one(modes[name]))
 
-    def _median(values: list[float | None]) -> float | None:
+    def _stat(values: list[float | None], fn: Any) -> float | None:
         usable = [v for v in values if v is not None]
-        return float(statistics.median(usable)) if usable else None
+        return float(fn(usable)) if usable else None
+
+    def _iqr(values: list[float | None]) -> float | None:
+        usable = [v for v in values if v is not None]
+        if len(usable) < 2:
+            return None
+        q1, q3 = np.percentile(usable, [25, 75])
+        return float(q3 - q1)
 
     summary: dict[str, Any] = {}
     for name, rows in samples.items():
         summary[name] = {
-            "ttft_ms_median": _median([r["ttft_ms"] for r in rows]),
-            "wall_ms_median": _median([r["wall_ms"] for r in rows]),
-            "output_tokens_per_sec_median": _median([r["output_tokens_per_sec"] for r in rows]),
-            "decode_tokens_per_sec_median": _median([r["decode_tokens_per_sec"] for r in rows]),
+            "ttft_ms_median": _stat([r["ttft_ms"] for r in rows], statistics.median),
+            "wall_ms_median": _stat([r["wall_ms"] for r in rows], statistics.median),
+            "output_tokens_per_sec_median": _stat(
+                [r["output_tokens_per_sec"] for r in rows], statistics.median
+            ),
+            "output_tokens_per_sec_std": _stat(
+                [r["output_tokens_per_sec"] for r in rows], statistics.pstdev
+            ),
+            "decode_tokens_per_sec_median": _stat(
+                [r["decode_tokens_per_sec"] for r in rows], statistics.median
+            ),
+            "decode_tokens_per_sec_iqr": _iqr([r["decode_tokens_per_sec"] for r in rows]),
             "n": len(rows),
         }
     base_decode = summary["minimal"]["decode_tokens_per_sec_median"]
@@ -102,11 +186,14 @@ def measure_capture_overhead(
         "modes": summary,
         "repeats": repeats,
         "warmup": warmup,
+        "run_order": run_order,
         "samples": samples,
+        "primary_performance_lane": "minimal",
         "note": (
-            "Same prompt, same greedy condition, alternating runs. 'minimal' captures "
-            "token ids + termination only; 'research' adds entropy/top-k/chosen "
-            "logprob/timing; 'digest' adds full-distribution digests."
+            "Counterbalanced (rotated-order) repeated runs; separate warmup. 'minimal' "
+            "captures token ids + termination only; 'research' adds entropy/top-k/chosen "
+            "logprob/timing; 'digest' adds full-distribution digests. Use 'minimal' for "
+            "primary performance; other lanes are instrumentation-affected."
         ),
     }
 
@@ -120,14 +207,29 @@ def run_experiment(
     runs_dir: str | Path = "runs",
     run_suffix: str | None = None,
     progress: Callable[[str], None] | None = None,
+    allow_dirty: bool = False,
+    code_state: dict[str, Any] | None = None,
 ) -> RunResult:
     def _progress(message: str) -> None:
         if progress is not None:
             progress(message)
 
+    code_state = code_state if code_state is not None else capture_code_state()
+    tracked_dirty = bool(code_state.get("tracked_dirty", code_state.get("git_dirty", False)))
+    if tracked_dirty and not allow_dirty:
+        raise RuntimeError(
+            "refusing to run an official experiment from a dirty tracked worktree; "
+            "commit your changes or pass allow_dirty=True (records an exploratory run)"
+        )
+    code_state = {
+        **code_state,
+        "exploratory": tracked_dirty,
+        "publication_grade": not tracked_dirty,
+    }
+
     backend = get_backend(backend_name)
-    declared = ModelIdentity(repo_id=model_repo, revision=model_revision, precision="unknown")
-    loaded = backend.load(declared)
+    request = SourceArtifactIdentity(repo_id=model_repo, revision=model_revision)
+    loaded = backend.load(request)
     runtime = backend.runtime_identity()
 
     base_decoding = DecodingPolicy(
@@ -138,7 +240,14 @@ def run_experiment(
     )
     deployment0 = Deployment(model=loaded, runtime=runtime, decoding=base_decoding, label=spec.name)
 
-    store = RunStore.create(deployment0, spec, runs_dir=runs_dir, run_suffix=run_suffix)
+    store = RunStore.create(
+        deployment0,
+        spec,
+        runs_dir=runs_dir,
+        run_suffix=run_suffix,
+        code_state=code_state,
+        prompt_policy=spec.prompt_policy,
+    )
     store.add_observation(
         f"model loaded; precision={loaded.precision}; quantization={loaded.quantization}; "
         f"load_audit_ok={loaded.load_audit.get('ok')}"
@@ -151,6 +260,7 @@ def run_experiment(
         pack=spec.task_pack,
         split=spec.split,
         seed=spec.task_seed,
+        prompt_policy=spec.prompt_policy,
     )
     pack_meta = generate_pack_metadata(
         tasks,
@@ -159,6 +269,7 @@ def run_experiment(
         split=spec.split,
         seed=spec.task_seed,
         pack=spec.task_pack,
+        prompt_policy=spec.prompt_policy,
     )
     store.manifest["task_pack"] = pack_meta
     store.write_tasks([t.to_dict() for t in tasks])
@@ -181,7 +292,7 @@ def run_experiment(
                 [{"role": "user", "content": task.prompt}], enable_thinking=True
             )
             greedy_reasoning_prefix: list[int] | None = None
-            greedy_correct = False
+            greedy_record: dict[str, Any] | None = None
             for condition in conditions:
                 decoding = decoding_for(spec, condition)
                 trace = backend.generate(prompt_ids, decoding, capture)
@@ -208,7 +319,7 @@ def run_experiment(
                 n_gen += 1
                 if condition["mode"] == "greedy" and condition["repeat"] == 0:
                     greedy_reasoning_prefix = reasoning_prefix_ids(trace.token_ids, think_end_id)
-                    greedy_correct = bool(record["correct"])
+                    greedy_record = record
             if spec.probe and greedy_reasoning_prefix is not None:
                 probe_decoding = DecodingPolicy(
                     mode="greedy", max_tokens=spec.probe_max_tokens, stop_on_eos=True
@@ -230,9 +341,14 @@ def run_experiment(
                     store.add_observation(f"probe unsupported: {exc}")
                     results = []
                 if results:
+                    natural_status = (
+                        natural_final_status_for_record(greedy_record)
+                        if greedy_record is not None
+                        else "censored"
+                    )
                     state = classify_transitions(
-                        final_correct=greedy_correct,
-                        prefix_correct=[r["correct"] for r in results],
+                        [r["correct"] for r in results],
+                        natural_status,
                         prefix_token_lengths=[r["reasoning_prefix_tokens"] for r in results],
                     )
                     for result in results:
@@ -248,8 +364,14 @@ def run_experiment(
                         )
                         n_probe += 1
                     store.add_observation(
-                        f"probe {task.task_id}: primary={state.primary} flips={state.flips} "
-                        f"stable_sufficient_prefix_tokens={state.stable_sufficient_prefix_tokens}"
+                        f"probe {task.task_id}: prefix_state={state.prefix_state} "
+                        f"prefix_flips={state.prefix_flips} "
+                        f"natural_final_status={state.natural_final_status} "
+                        f"observed_probe_stable_from_tokens="
+                        f"{state.observed_probe_stable_from_tokens} "
+                        f"stable_sufficient_with_natural_final_tokens="
+                        f"{state.stable_sufficient_with_natural_final_tokens} "
+                        f"harmful_overthinking_observed={state.harmful_overthinking_observed}"
                     )
             _progress(
                 f"task {task.family}/{task.task_id[:8]} done "
@@ -295,10 +417,20 @@ def _make_record(
     error_type = None
     if trace.error:
         error_type = trace.error.split(":", 1)[0]
+    natural_final_status = natural_final_status_from_termination(
+        correct=correct,
+        answer_observed=parsed.answer_raw is not None,
+        think_end_reached=trace.think_end_reached,
+        capped=trace.capped,
+        finish_reason=trace.finish_reason,
+        error_type=error_type,
+    )
     return {
         "record_type": "generation",
         "run_id": store.run_id,
         "artifact_id": deployment.artifact_id,
+        "source_artifact_id": deployment.source_artifact_id,
+        "weight_variant_id": deployment.weight_variant_id,
         "deployment_id": deployment.deployment_id,
         "condition_id": decoding.condition_id,
         "trial_id": trial.trial_id,
@@ -315,6 +447,7 @@ def _make_record(
         "parse": parsed.to_dict(),
         "answer_normalized": answer_norm,
         "correct": correct,
+        "natural_final_status": natural_final_status,
         "reasoning_tokens": len(parsed.reasoning_token_ids),
         "answer_tokens": len(parsed.final_token_ids),
         "total_tokens": len(trace.token_ids),

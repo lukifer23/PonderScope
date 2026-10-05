@@ -16,6 +16,42 @@ from typing import Any
 
 DIFFICULTY_LEVELS = ("easy", "medium", "hard")
 
+# Versioned prompt policies. ``pp-v1`` is the frozen tasks-v1 wording; ``pp-v2``
+# is a minimal neutral instruction used only for calibration diagnostics. The
+# structural problem and exact answer are identical across policies.
+PROMPT_POLICIES = ("pp-v1", "pp-v2")
+DEFAULT_PROMPT_POLICY = "pp-v1"
+
+_INSTRUCTIONS: dict[str, dict[str, str]] = {
+    "pp-v1": {
+        "arith": "Reply with a single integer on the last line in the form 'Answer: <integer>'.",
+        "path": "Reply with a single integer on the last line in the form 'Answer: <integer>'.",
+        "order": (
+            "List the items in that order, separated by commas, on the last line in the "
+            "form 'Answer: item1, item2, ...'."
+        ),
+        "logic": (
+            "Give the value of {names} in that order, each as true or false, separated by "
+            "commas, on the last line in the form 'Answer: <value>, <value>, ...'."
+        ),
+        "sm": "Reply with the state name (for example 'Answer: <state name>') on the last line.",
+    },
+    "pp-v2": {
+        "arith": "Give only the final integer.",
+        "path": "Give only the minimum cost as an integer.",
+        "order": "List the items in that order, comma-separated.",
+        "logic": "Give the value of {names} in that order, comma-separated.",
+        "sm": "Give only the final state name.",
+    },
+}
+
+
+def _instruction(family: str, policy: str, **fmt: Any) -> str:
+    if policy not in PROMPT_POLICIES:
+        raise ValueError(f"unknown prompt policy: {policy!r}")
+    text = _INSTRUCTIONS[policy][family]
+    return text.format(**fmt) if fmt else text
+
 
 def _level(difficulty: str) -> int:
     return {"easy": 0, "medium": 1, "hard": 2}.get(difficulty, 1)
@@ -24,13 +60,15 @@ def _level(difficulty: str) -> int:
 # --------------------------------------------------------------------------- #
 # 1. Multi-step integer arithmetic
 # --------------------------------------------------------------------------- #
-def make_arith(rng: random.Random, difficulty: str) -> dict[str, Any]:
+def make_arith(
+    rng: random.Random, difficulty: str, prompt_policy: str = DEFAULT_PROMPT_POLICY
+) -> dict[str, Any]:
     ops = 2 + 2 * _level(difficulty)
     expr, value = _arith_expr(rng, ops)
     prompt = (
         "Compute the value of the following expression. "
-        "Reply with a single integer on the last line in the form 'Answer: <integer>'.\n\n"
-        f"{expr}"
+        + _instruction("arith", prompt_policy)
+        + f"\n\n{expr}"
     )
     return {
         "prompt": prompt,
@@ -61,7 +99,9 @@ def _arith_expr(rng: random.Random, ops: int) -> tuple[str, int]:
 # --------------------------------------------------------------------------- #
 # 2. Weighted shortest path
 # --------------------------------------------------------------------------- #
-def make_path(rng: random.Random, difficulty: str) -> dict[str, Any]:
+def make_path(
+    rng: random.Random, difficulty: str, prompt_policy: str = DEFAULT_PROMPT_POLICY
+) -> dict[str, Any]:
     lvl = _level(difficulty)
     n = 4 + lvl * 2
     labels = [chr(ord("A") + i) for i in range(n)]
@@ -87,8 +127,7 @@ def make_path(rng: random.Random, difficulty: str) -> dict[str, Any]:
     prompt = (
         "The following undirected graph has weighted edges. The cost of a path is "
         "the sum of its edge weights. What is the minimum cost from "
-        f"{src} to {dst}?\n\n{lines}\n\n"
-        "Reply with a single integer on the last line in the form 'Answer: <integer>'."
+        f"{src} to {dst}?\n\n{lines}\n\n" + _instruction("path", prompt_policy)
     )
     return {
         "prompt": prompt,
@@ -123,7 +162,9 @@ def _dijkstra(graph: dict[str, list[tuple[str, int]]], src: str) -> dict[str, in
 # --------------------------------------------------------------------------- #
 # 3. Constraint / ordering
 # --------------------------------------------------------------------------- #
-def make_order(rng: random.Random, difficulty: str) -> dict[str, Any]:
+def make_order(
+    rng: random.Random, difficulty: str, prompt_policy: str = DEFAULT_PROMPT_POLICY
+) -> dict[str, Any]:
     lvl = _level(difficulty)
     n = 3 + lvl
     words = rng.sample(["amber", "basil", "cedar", "dune", "ember", "frost", "gale", "haven"], n)
@@ -139,9 +180,9 @@ def make_order(rng: random.Random, difficulty: str) -> dict[str, Any]:
     lines = "\n".join(f"  {a} must come before {b}" for a, b in constraints)
     prompt = (
         "A set of ordering constraints is given. Exactly one ordering of the items "
-        "satisfies all constraints. List the items in that order, separated by "
-        "commas, on the last line in the form 'Answer: item1, item2, ...'.\n\n"
-        f"Items: {', '.join(words)}\nConstraints:\n{lines}"
+        "satisfies all constraints. "
+        + _instruction("order", prompt_policy)
+        + f"\n\nItems: {', '.join(words)}\nConstraints:\n{lines}"
     )
     return {
         "prompt": prompt,
@@ -159,7 +200,9 @@ def make_order(rng: random.Random, difficulty: str) -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 # 4. Boolean / logic
 # --------------------------------------------------------------------------- #
-def make_logic(rng: random.Random, difficulty: str) -> dict[str, Any]:
+def make_logic(
+    rng: random.Random, difficulty: str, prompt_policy: str = DEFAULT_PROMPT_POLICY
+) -> dict[str, Any]:
     lvl = _level(difficulty)
     n = 2 + lvl
     names = ["P", "Q", "R", "S"][:n]
@@ -178,11 +221,7 @@ def make_logic(rng: random.Random, difficulty: str) -> dict[str, Any]:
         "The following logical clauses must all be true, where a variable may be "
         "true or false and 'not X' means X is false. Exactly one assignment of the "
         "variables satisfies every clause.\n\n"
-        f"{lines}\n\n"
-        "Give the value of "
-        + ", ".join(names)
-        + " in that order, each as true or false, separated by commas, on the last "
-        "line in the form 'Answer: <value>, <value>, ...'."
+        f"{lines}\n\n" + _instruction("logic", prompt_policy, names=", ".join(names))
     )
     answer = ", ".join("true" if target[name] else "false" for name in names)
     return {
@@ -243,7 +282,9 @@ def _clause_true(clause: list[str], assignment: dict[str, bool]) -> bool:
 # --------------------------------------------------------------------------- #
 # 5. Deterministic state machine
 # --------------------------------------------------------------------------- #
-def make_sm(rng: random.Random, difficulty: str) -> dict[str, Any]:
+def make_sm(
+    rng: random.Random, difficulty: str, prompt_policy: str = DEFAULT_PROMPT_POLICY
+) -> dict[str, Any]:
     lvl = _level(difficulty)
     n_states = 3 + lvl
     length = 4 + 2 * lvl
@@ -262,8 +303,7 @@ def make_sm(rng: random.Random, difficulty: str) -> dict[str, Any]:
         "The following deterministic state machine starts in state "
         f"{start}. Process the input string {input_str} one symbol at a time, "
         "moving according to the transition table. What is the final state?\n\n"
-        f"{lines}\n\n"
-        "Reply with the state name (for example 'Answer: <state name>') on the last line."
+        f"{lines}\n\n" + _instruction("sm", prompt_policy)
     )
     return {
         "prompt": prompt,
@@ -280,7 +320,7 @@ def make_sm(rng: random.Random, difficulty: str) -> dict[str, Any]:
     }
 
 
-FAMILY_MAKERS: dict[str, Callable[[random.Random, str], dict[str, Any]]] = {
+FAMILY_MAKERS: dict[str, Callable[..., dict[str, Any]]] = {
     "arith": make_arith,
     "path": make_path,
     "order": make_order,
@@ -291,9 +331,16 @@ FAMILY_MAKERS: dict[str, Callable[[random.Random, str], dict[str, Any]]] = {
 ALL_FAMILIES: tuple[str, ...] = tuple(FAMILY_MAKERS)
 
 
-def make_family_task(family: str, rng: random.Random, difficulty: str) -> dict[str, Any]:
+def make_family_task(
+    family: str,
+    rng: random.Random,
+    difficulty: str,
+    prompt_policy: str = DEFAULT_PROMPT_POLICY,
+) -> dict[str, Any]:
     if family not in FAMILY_MAKERS:
         raise ValueError(f"unknown family: {family!r}")
     if difficulty not in DIFFICULTY_LEVELS:
         raise ValueError(f"unknown difficulty: {difficulty!r}")
-    return FAMILY_MAKERS[family](rng, difficulty)
+    if prompt_policy not in PROMPT_POLICIES:
+        raise ValueError(f"unknown prompt policy: {prompt_policy!r}")
+    return FAMILY_MAKERS[family](rng, difficulty, prompt_policy)

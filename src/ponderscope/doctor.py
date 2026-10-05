@@ -6,7 +6,7 @@ import json
 from typing import Any
 
 from .backends import get_backend
-from .config.identity import DecodingPolicy, Deployment, ModelIdentity
+from .config.identity import DecodingPolicy, Deployment, SourceArtifactIdentity
 from .evidence.environment import capture_environment
 
 DEFAULT_REPO = "Qwen/Qwen3.5-0.8B"
@@ -27,9 +27,11 @@ def run_doctor(
         "capabilities": caps.to_dict(),
     }
 
-    declared = ModelIdentity(repo_id=repo_id, revision=revision, precision="unknown")
-    loaded = backend.load(declared)
+    request = SourceArtifactIdentity(repo_id=repo_id, revision=revision)
+    loaded = backend.load(request)
     report["model"] = loaded.to_dict()
+    report["source_artifact_id"] = loaded.source.source_artifact_id
+    report["weight_variant_id"] = loaded.weight_variant_id
 
     runtime = backend.runtime_identity()
     decoding = DecodingPolicy(mode="greedy", max_tokens=64)
@@ -83,12 +85,14 @@ def format_doctor(report: dict[str, Any]) -> str:
         f"  quantization  {model['quantization']} "
         f"bits={model['quantization_bits']} group={model['quantization_group_size']}"
     )
-    wf = model["weight_files"]
+    wf = model.get("variant_weight_files") or model.get("source", {}).get("weight_files", {})
+    lines.append(f"  representation {model.get('representation')}")
     lines.append(f"  weight files  {len(wf)}")
     for name, digest in wf.items():
         lines.append(f"    {name}  sha256:{digest[:16]}…")
     lines.append("Deployment")
-    lines.append(f"  artifact id   {report['artifact_id']}")
+    lines.append(f"  source art id {report.get('source_artifact_id', report['artifact_id'])}")
+    lines.append(f"  weight var id {report.get('weight_variant_id', report['artifact_id'])}")
     lines.append(f"  deployment id {report['deployment_id']}")
     lines.append(f"  condition id  {report['condition_id']}")
     lines.append(f"  description   {report['deployment_description']}")
@@ -107,12 +111,17 @@ def format_doctor(report: dict[str, Any]) -> str:
         )
         nc = c["natural_closure"]
         lines.append(
-            f"  natural close  supported={nc['supported']} "
-            f"tokens={nc.get('reasoning_tokens')} answer={nc.get('answer')!r}"
+            f"  natural close  supported={nc['supported']} tokens={nc.get('reasoning_tokens')} "
+            f"answer={nc.get('answer')!r} think_end={nc.get('think_end_observed')} "
+            f"final_channel={nc.get('final_answer_channel_observed')} "
+            f"eos={nc.get('eos_observed')} parseable={nc.get('parseable_answer_observed')}"
         )
         ff = c["forced_finalization"]
         lines.append(
-            f"  forced probe   supported={ff.get('supported')} honored={ff.get('honored')}"
+            f"  forced probe   supported={ff.get('supported')} "
+            f"required_cuts={ff.get('n_required_cuts')} honored={ff.get('n_honored')} "
+            f"all_close={ff.get('all_forced_close')} all_final_mode="
+            f"{ff.get('all_entered_final_answer_mode')}"
         )
         lines.append(
             f"  greedy replay  identical={c['greedy']['replay_identical']} "
@@ -124,6 +133,12 @@ def format_doctor(report: dict[str, Any]) -> str:
             f"chosen_in_top={td.get('chosen_in_top')}"
         )
         lines.append(f"  same-seed      identical={c['same_seed_replay']['identical_token_ids']}")
+        if "capture_equivalence" in c:
+            ce = c["capture_equivalence"]
+            lines.append(
+                f"  capture-equiv  equivalent={ce['equivalent']} "
+                f"greedy={ce['greedy']['identical']} sampled={ce['sampled_same_seed']['identical']}"
+            )
         if "instrumentation_overhead" in c:
             o = c["instrumentation_overhead"]["modes"]
             for name in ("minimal", "research", "digest"):

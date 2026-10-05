@@ -5,15 +5,25 @@ from pathlib import Path
 
 import pytest
 
-from ponderscope.config.identity import DecodingPolicy, Deployment, ModelIdentity, RuntimeIdentity
+from ponderscope.config.identity import (
+    DecodingPolicy,
+    Deployment,
+    RuntimeIdentity,
+    SourceArtifactIdentity,
+    WeightVariantIdentity,
+)
 from ponderscope.config.schema import ExperimentSpec
-from ponderscope.evidence.run import RunStore
+from ponderscope.evidence.run import RunStore, verify_run
 from ponderscope.evidence.store import JsonlWriter, atomic_write_json, read_json
 
 
 def _deployment() -> Deployment:
     return Deployment(
-        model=ModelIdentity(repo_id="fake/model", revision="deadbeef", precision="float32"),
+        model=WeightVariantIdentity(
+            source=SourceArtifactIdentity(repo_id="fake/model", revision="deadbeef"),
+            representation="original",
+            precision="float32",
+        ),
         runtime=RuntimeIdentity(
             runtime="fake",
             runtime_version="0",
@@ -139,6 +149,58 @@ def test_sealed_manifest_cannot_be_mutated(tmp_path: Path):
     store.seal()
     with pytest.raises(RuntimeError):
         store.update_status("RUNNING")
+
+
+def _sealed_store(tmp_path: Path, name: str = "ver") -> RunStore:
+    spec = ExperimentSpec(name=name, task_pack="tasks-v1")
+    store = RunStore.create(
+        _deployment(), spec, runs_dir=tmp_path, created_utc=f"20260101T0001{name[:2]}"
+    )
+    store.write_tasks([{"task_id": "x"}])
+    with store.open_traces() as w:
+        w.append({"task_id": "x"})
+    with store.open_probes() as w:
+        w.append({"task_id": "x"})
+    store.seal()
+    return store
+
+
+def test_freshly_sealed_run_verifies_and_seal_matches_final_manifest(tmp_path: Path):
+    store = _sealed_store(tmp_path)
+    report = verify_run(store.path)
+    assert report["pass"] is True, report["errors"]
+    from ponderscope.config.identity import sha256_file
+
+    assert store.read_seal()["manifest_sha256"] == sha256_file(str(store.path / "manifest.json"))
+
+
+def test_manifest_mutation_fails_verify(tmp_path: Path):
+    store = _sealed_store(tmp_path)
+    manifest = read_json(store.path / "manifest.json")
+    manifest["status"]["run"] = "TAMPERED"
+    atomic_write_json(store.path / "manifest.json", manifest)
+    report = verify_run(store.path)
+    assert report["pass"] is False
+    assert any("manifest.json" in e for e in report["errors"])
+
+
+def test_raw_evidence_mutation_fails_verify(tmp_path: Path):
+    for target in ("tasks.jsonl", "traces.jsonl", "probes.jsonl"):
+        child = tmp_path / f"case-{target}"
+        child.mkdir()
+        store = _sealed_store(child)
+        p = store.path / target
+        p.write_text(p.read_text() + "\n")
+        report = verify_run(store.path)
+        assert report["pass"] is False, target
+        assert any(target in e for e in report["errors"])
+
+
+def test_manifest_condition_has_no_seed(tmp_path: Path):
+    spec = ExperimentSpec(name="cond", task_pack="tasks-v1", sampled_seeds=[0, 1], max_tokens=8)
+    store = RunStore.create(_deployment(), spec, runs_dir=tmp_path, created_utc="20260101T000900Z")
+    for cond in store.manifest["conditions"]:
+        assert "seed" not in cond["decoding"]
 
 
 def test_failed_run_lifecycle_preserves_partial_evidence(tmp_path: Path):

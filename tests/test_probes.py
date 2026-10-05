@@ -86,11 +86,20 @@ def test_run_prefix_probes_propagates_fail_closed():
 
 def test_stable_sufficient_prefix_tokens():
     lengths = [0, 10, 20, 30]
-    # correct at 10 and stays correct through the natural final -> sufficient at 10
-    state = classify_transitions(True, [False, True, True, True], prefix_token_lengths=lengths)
+    # correct at 10 and stays correct through an observed-correct natural final
+    state = classify_transitions([False, True, True, True], "correct", prefix_token_lengths=lengths)
     assert state.first_correct_probe_index == 1
     assert state.first_correct_prefix_tokens == 10
-    assert state.stable_sufficient_prefix_tokens == 10
-    # a late regression means it is not stable-sufficient at all
-    state2 = classify_transitions(False, [False, True, True, False], prefix_token_lengths=lengths)
-    assert state2.stable_sufficient_prefix_tokens is None
+    assert state.stable_sufficient_with_natural_final_tokens == 10
+    # a late regression, with an observed wrong final, is not stable-sufficient
+    state2 = classify_transitions(
+        [False, True, True, False], "incorrect", prefix_token_lengths=lengths
+    )
+    assert state2.stable_sufficient_with_natural_final_tokens is None
+    assert state2.harmful_overthinking_observed is True
+    # the same probe pattern with a censored final makes no natural claim
+    state3 = classify_transitions(
+        [False, True, True, False], "censored", prefix_token_lengths=lengths
+    )
+    assert state3.stable_sufficient_with_natural_final_tokens is None
+    assert state3.harmful_overthinking_observed is False

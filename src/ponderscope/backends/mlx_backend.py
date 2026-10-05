@@ -15,7 +15,14 @@ from typing import Any, cast
 
 import mlx.core as mx
 
-from ..config.identity import DecodingPolicy, ModelIdentity, RuntimeIdentity, sha256_file
+from ..config.identity import (
+    DecodingPolicy,
+    ModelIdentity,
+    RuntimeIdentity,
+    SourceArtifactIdentity,
+    WeightVariantIdentity,
+    sha256_file,
+)
 from .base import BackendCapabilities, CaptureSpec, TokenStep, Trace
 
 _WEIGHT_GLOBS = ("model*.safetensors",)
@@ -188,10 +195,12 @@ class MlxBackend:
         )
 
     # -- loading -------------------------------------------------------------
-    def load(self, model_identity: ModelIdentity) -> ModelIdentity:
+    def load(
+        self, request: SourceArtifactIdentity, declared_precision: str = "unknown"
+    ) -> WeightVariantIdentity:
         from mlx_lm.utils import load_model, load_tokenizer
 
-        snapshot = resolve_local_snapshot(model_identity.repo_id, model_identity.revision)
+        snapshot = resolve_local_snapshot(request.repo_id, request.revision)
 
         # strict=False because multimodal checkpoints carry vision-tower and MTP
         # weights that the text architecture intentionally drops. This is
@@ -210,19 +219,26 @@ class MlxBackend:
         load_audit = audit_model_load(model, snapshot)
         if not load_audit["ok"]:
             raise RuntimeError(
-                "model-load audit failed: unexpected missing/unused text weights "
-                f"(missing={load_audit['missing_text_params'][:5]}, "
-                f"unused={load_audit['unused_loaded_params'][:5]}, "
-                f"count_consistent={load_audit['text_key_count_consistent']})"
+                "model-load audit failed: unexpected text-weight loss "
+                f"(missing_from_sanitized={load_audit['missing_from_sanitized_params'][:5]}, "
+                f"unused_sanitized={load_audit['unused_sanitized_params'][:5]}, "
+                f"dropped_unexpected={load_audit['dropped_unexpected_keys'][:5]}, "
+                f"text_source_lost={load_audit['text_source_keys_lost'][:5]})"
             )
 
-        actual = ModelIdentity(
-            repo_id=model_identity.repo_id,
-            revision=model_identity.revision,
-            local_path=str(snapshot),
+        source = SourceArtifactIdentity(
+            repo_id=request.repo_id,
+            revision=request.revision,
             weight_files=weights,
             tokenizer_files=tokenizer_files,
             chat_template_sha256=chat_sha,
+        )
+        # Native checkpoint: the executable variant IS the source representation.
+        actual = WeightVariantIdentity(
+            source=source,
+            representation="original",
+            variant_weight_files=weights,
+            local_path=str(snapshot),
             precision=precision["dominant"],
             quantization=(f"mlx-{quantization['mode']}") if quantization.get("quantized") else None,
             quantization_bits=quantization.get("bits"),
@@ -231,12 +247,13 @@ class MlxBackend:
                 "detected": quantization,
                 "dtype_counts": precision["dtype_counts"],
             },
+            conversion={},
             load_audit=load_audit,
         )
 
-        if model_identity.precision not in ("unknown", actual.precision):
+        if declared_precision not in ("unknown", actual.precision):
             raise ValueError(
-                f"declared precision {model_identity.precision!r} != detected "
+                f"declared precision {declared_precision!r} != detected "
                 f"{actual.precision!r}; refusing to mislabel the deployment"
             )
 

@@ -22,6 +22,7 @@ class ExperimentSpec:
 
     name: str
     task_pack: str
+    prompt_policy: str = "pp-v1"
     families: list[str] = field(default_factory=list)
     n_per_family: int = 4
     task_seed: int = 0
@@ -46,6 +47,7 @@ class ExperimentSpec:
         return {
             "name": self.name,
             "task_pack": self.task_pack,
+            "prompt_policy": self.prompt_policy,
             "families": self.families,
             "n_per_family": self.n_per_family,
             "task_seed": self.task_seed,

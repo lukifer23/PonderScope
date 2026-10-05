@@ -11,7 +11,7 @@ from typing import Any
 
 from .backends.base import CaptureSpec, PrefixProbeUnsupported
 from .config.identity import DecodingPolicy
-from .experiment import measure_capture_overhead
+from .experiment import measure_capture_overhead, verify_capture_equivalence
 from .reasoning.parse import parse_trace
 
 # Bounded escalation for natural-closure discovery.
@@ -67,9 +67,16 @@ def validate_live(backend: Any, *, overhead: bool = True) -> dict[str, Any]:
     prompt_ids = backend.tokenize_prompt(messages, enable_thinking=True)
     caps["thinking_prompt_tail"] = backend.decode(prompt_ids[-8:])
 
-    # natural closure discovery
-    natural: dict[str, Any] = {"supported": False, "attempts": []}
-    closed_trace = None
+    # natural closure discovery: keep the four observables distinct.
+    natural: dict[str, Any] = {
+        "supported": False,
+        "attempts": [],
+        "think_end_observed": False,
+        "final_answer_channel_observed": False,
+        "eos_observed": False,
+        "parseable_answer_observed": False,
+    }
+    best_closed: Any = None
     for budget in CLOSURE_BUDGETS:
         trace = backend.generate(
             prompt_ids, DecodingPolicy(mode="greedy", max_tokens=budget), CaptureSpec.minimal()
@@ -77,37 +84,56 @@ def validate_live(backend: Any, *, overhead: bool = True) -> dict[str, Any]:
         parsed = parse_trace(
             trace.text, trace.token_ids, think_end_id=think_end_id, eos_ids=eos_ids
         )
+        answer_observed = parsed.answer_raw is not None
         natural["attempts"].append(
             {
                 "max_tokens": budget,
                 "finish_reason": trace.finish_reason,
                 "generated_tokens": trace.generated_tokens,
                 "think_end_reached": trace.think_end_reached,
+                "final_answer_channel_observed": bool(parsed.closed and parsed.final_semantic),
                 "closed": parsed.closed,
+                "eos_observed": parsed.eos_observed,
                 "answer": parsed.answer_raw,
             }
         )
         if parsed.closed:
+            if best_closed is None:
+                best_closed = parsed
+            natural["think_end_observed"] = True
+            natural["final_answer_channel_observed"] = natural[
+                "final_answer_channel_observed"
+            ] or bool(parsed.final_semantic)
+            natural["eos_observed"] = natural["eos_observed"] or parsed.eos_observed
+            natural["parseable_answer_observed"] = (
+                natural["parseable_answer_observed"] or answer_observed
+            )
             natural.update(
                 {
-                    "supported": True,
                     "max_tokens": budget,
                     "reasoning_tokens": len(parsed.reasoning_token_ids),
                     "answer": parsed.answer_raw,
-                    "eos_observed": parsed.eos_observed,
                 }
             )
-            closed_trace = parsed
-            break
+            # Stop once the full natural contract (think-end + answer + EOS) is seen.
+            if answer_observed and parsed.eos_observed:
+                break
+    natural["supported"] = bool(
+        natural["think_end_observed"]
+        and natural["final_answer_channel_observed"]
+        and natural["parseable_answer_observed"]
+    )
     if not natural["supported"]:
         unsupported.append("natural_closure")
     caps["natural_closure"] = natural
 
-    # forced finalization: requires a validated closure AND a reasoning prefix
+    # forced finalization: requires a validated closure AND a reasoning prefix.
+    # Pass rule: EVERY required cut must inject the validated closure, produce no
+    # error, enter final-answer continuation mode, and terminate by EOS promptly.
     forced: dict[str, Any] = {"supported": False}
     if closure.get("supported"):
-        if closed_trace is not None:
-            reasoning = closed_trace.reasoning_token_ids
+        if best_closed is not None:
+            reasoning = best_closed.reasoning_token_ids
         else:
             # censored reasoning is still a valid reasoning prefix to probe
             trace = backend.generate(
@@ -118,7 +144,6 @@ def validate_live(backend: Any, *, overhead: bool = True) -> dict[str, Any]:
             reasoning = backend.reasoning_prefix(trace.token_ids)
         cuts = sorted({0, min(16, len(reasoning)), min(64, len(reasoning)), len(reasoning)})
         probes = []
-        honored = False
         for cut in cuts:
             tr = backend.probe(
                 prompt_ids,
@@ -127,27 +152,49 @@ def validate_live(backend: Any, *, overhead: bool = True) -> dict[str, Any]:
                 CaptureSpec.minimal(),
             )
             eos = any(t in eos_ids for t in tr.token_ids)
-            first = _first_line(tr.text)
+            forced_close = bool(tr.extra.get("forced_close"))
+            entered_final_mode = tr.generated_tokens > 0
+            terminated_cleanly = tr.finish_reason == "stop" and eos and tr.generated_tokens < 32
             probes.append(
                 {
                     "cut": cut,
-                    "forced_close": bool(tr.extra.get("forced_close")),
+                    "forced_close": forced_close,
+                    "entered_final_answer_mode": entered_final_mode,
+                    "error": tr.error,
                     "generated_tokens": tr.generated_tokens,
                     "finish_reason": tr.finish_reason,
                     "eos_observed": eos,
-                    "first_line": first[:160],
+                    "terminated_cleanly": terminated_cleanly,
+                    "first_line": _first_line(tr.text)[:160],
                 }
             )
-            # honored if the continuation terminates promptly and cleanly
-            if tr.finish_reason == "stop" and eos and tr.generated_tokens < 32:
-                honored = True
+        no_probe_error = all(p["error"] is None for p in probes)
+        all_forced_close = all(p["forced_close"] for p in probes)
+        all_entered = all(p["entered_final_answer_mode"] for p in probes)
+        all_required_honored = all(p["terminated_cleanly"] for p in probes)
+        supported = bool(
+            closure.get("roundtrip_ok")
+            and probes
+            and no_probe_error
+            and all_forced_close
+            and all_entered
+            and all_required_honored
+        )
         forced = {
-            "supported": honored,
-            "honored": honored,
+            "supported": supported,
+            "no_probe_error": no_probe_error,
+            "all_forced_close": all_forced_close,
+            "all_entered_final_answer_mode": all_entered,
+            "all_required_cuts_honored": all_required_honored,
+            "n_required_cuts": len(cuts),
+            "n_honored": sum(1 for p in probes if p["terminated_cleanly"]),
             "probes": probes,
-            "note": "native closure appended; no answer cue injected",
+            "note": (
+                "native closure appended to every required cut; no answer cue injected; "
+                "pass requires every cut to terminate cleanly"
+            ),
         }
-        if not honored:
+        if not supported:
             unsupported.append("forced_finalization")
     else:
         forced = {"supported": False, "reason": "native closure not validated"}
@@ -205,12 +252,16 @@ def validate_live(backend: Any, *, overhead: bool = True) -> dict[str, Any]:
         }
     caps["token_distribution"] = dist
 
+    caps["capture_equivalence"] = verify_capture_equivalence(backend, prompt_ids, max_tokens=48)
+    if not caps["capture_equivalence"]["equivalent"]:
+        unsupported.append("capture_equivalence")
+
     if overhead:
         caps["instrumentation_overhead"] = measure_capture_overhead(
             backend,
             prompt_ids,
             DecodingPolicy(mode="greedy", max_tokens=48),
-            repeats=3,
+            repeats=5,
             warmup=1,
         )
 

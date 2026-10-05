@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
-from ..config.identity import DecodingPolicy, ModelIdentity
+from ..config.identity import DecodingPolicy, SourceArtifactIdentity, WeightVariantIdentity
 
 
 @dataclass(frozen=True)
@@ -149,7 +149,9 @@ class Backend(Protocol):
 
     def capabilities(self) -> BackendCapabilities: ...
 
-    def load(self, model_identity: ModelIdentity) -> ModelIdentity: ...
+    def load(
+        self, request: SourceArtifactIdentity, declared_precision: str = "unknown"
+    ) -> WeightVariantIdentity: ...
 
     def runtime_identity(self) -> Any: ...
 
