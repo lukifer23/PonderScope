@@ -81,3 +81,75 @@ def test_latest_returns_most_recent(tmp_path: Path):
     s2 = RunStore.create(_deployment(), spec, runs_dir=tmp_path, created_utc="20260102T000000Z")
     assert RunStore.latest(tmp_path).run_id == s2.run_id
     assert s1.run_id != s2.run_id
+
+
+def test_jsonl_writer_no_overwrite(tmp_path: Path):
+    p = tmp_path / "t.jsonl"
+    with JsonlWriter(p) as w:
+        w.append({"a": 1})
+    with pytest.raises(FileExistsError):
+        JsonlWriter(p).open()
+
+
+def test_jsonl_writer_open_is_idempotent(tmp_path: Path):
+    p = tmp_path / "t.jsonl"
+    w = JsonlWriter(p)
+    w.open()
+    w.open()  # must not create a second temp file / fd
+    w.append({"a": 1})
+    w.close()
+    assert p.read_text().strip().splitlines() == ['{"a": 1}']
+
+
+def test_task_file_is_create_once(tmp_path: Path):
+    spec = ExperimentSpec(name="t4", task_pack="tasks-v1")
+    store = RunStore.create(_deployment(), spec, runs_dir=tmp_path, created_utc="20260101T000003Z")
+    store.write_tasks([{"task_id": "x"}])
+    with pytest.raises(FileExistsError):
+        store.write_tasks([{"task_id": "x"}])
+
+
+def test_seal_hashes_raw_evidence_and_is_create_once(tmp_path: Path):
+    spec = ExperimentSpec(name="seal", task_pack="tasks-v1")
+    store = RunStore.create(_deployment(), spec, runs_dir=tmp_path, created_utc="20260101T000004Z")
+    store.write_tasks([{"task_id": "x"}])
+    with store.open_traces() as w:
+        w.append({"task_id": "x"})
+    with store.open_probes() as w:
+        w.append({"task_id": "x"})
+    assert store.is_sealed is False
+    seal = store.seal()
+    assert store.is_sealed is True
+    assert store.manifest["status"]["run"] == "EVIDENCE_COMPLETE"
+    assert "tasks.jsonl" in seal["files"]
+    assert "traces.jsonl" in seal["files"]
+    assert set(seal["files"]) >= {"environment.json", "tasks.jsonl", "traces.jsonl", "probes.jsonl"}
+    with pytest.raises(FileExistsError):
+        store.seal()
+
+
+def test_sealed_manifest_cannot_be_mutated(tmp_path: Path):
+    spec = ExperimentSpec(name="seal2", task_pack="tasks-v1")
+    store = RunStore.create(_deployment(), spec, runs_dir=tmp_path, created_utc="20260101T000005Z")
+    store.write_tasks([{"task_id": "x"}])
+    with store.open_traces() as w:
+        w.append({"task_id": "x"})
+    with store.open_probes() as w:
+        w.append({"task_id": "x"})
+    store.seal()
+    with pytest.raises(RuntimeError):
+        store.update_status("RUNNING")
+
+
+def test_failed_run_lifecycle_preserves_partial_evidence(tmp_path: Path):
+    spec = ExperimentSpec(name="fail", task_pack="tasks-v1")
+    store = RunStore.create(_deployment(), spec, runs_dir=tmp_path, created_utc="20260101T000006Z")
+    store.write_tasks([{"task_id": "x"}])
+    with store.open_traces() as w:
+        w.append({"task_id": "x"})
+    store.mark_failed("RuntimeError", "backend crashed", partial=True)
+    assert store.manifest["status"]["run"] == "PARTIAL"
+    assert store.manifest["status"]["error"]["message"] == "backend crashed"
+    assert store.manifest["timestamps"]["completed_utc"] is not None
+    assert store.is_sealed is False  # never labelled EVIDENCE_COMPLETE
+    assert store.read_tasks() == [{"task_id": "x"}]  # partial evidence preserved

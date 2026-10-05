@@ -64,6 +64,9 @@ def make_task(
         structural=data["structural"],
     )
     validate_task(task)
+    from .invariants import verify_invariants
+
+    verify_invariants(task)
     return task
 
 

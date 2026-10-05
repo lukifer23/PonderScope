@@ -10,6 +10,12 @@ from .generator import (
     make_task,
     task_id_for,
 )
+from .invariants import (
+    collision_audit,
+    signature_hash,
+    structural_signature,
+    verify_invariants,
+)
 from .models import Task, TaskError, validate_task
 from .scorers import canonical_answer, normalize, score
 
@@ -22,12 +28,16 @@ __all__ = [
     "Task",
     "TaskError",
     "canonical_answer",
+    "collision_audit",
     "generate_pack",
     "generate_pack_metadata",
     "make_family_task",
     "make_task",
     "normalize",
     "score",
+    "signature_hash",
+    "structural_signature",
     "task_id_for",
     "validate_task",
+    "verify_invariants",
 ]

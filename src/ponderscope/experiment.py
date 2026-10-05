@@ -246,6 +246,9 @@ def run_experiment(
                         f"stable_sufficient_prefix_tokens={state.stable_sufficient_prefix_tokens}"
                     )
         store.manifest["probe_supported"] = probe_supported
+    except BaseException as exc:
+        store.mark_failed(type(exc).__name__, str(exc), partial=True)
+        raise
     finally:
         traces_writer.close()
         probes_writer.close()

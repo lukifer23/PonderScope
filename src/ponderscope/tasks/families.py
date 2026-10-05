@@ -165,9 +165,13 @@ def make_logic(rng: random.Random, difficulty: str) -> dict[str, Any]:
     names = ["P", "Q", "R", "S"][:n]
     target = {name: rng.choice([True, False]) for name in names}
     clauses = _logic_clauses(rng, names, target, n + 2 + lvl)
-    for _ in range(200):
-        if _unique_solution(clauses, names, target):
-            break
+    # REQUIRE a unique satisfying assignment. Add clauses until uniqueness holds;
+    # fail loudly rather than emitting "exactly one assignment" without proof.
+    attempts = 0
+    while not _unique_solution(clauses, names, target):
+        attempts += 1
+        if attempts > 500:
+            raise ValueError("could not generate a uniquely satisfiable logic task")
         clauses.extend(_logic_clauses(rng, names, target, 1))
     lines = "\n".join("  (" + " or ".join(lit) + ")" for lit in clauses)
     prompt = (

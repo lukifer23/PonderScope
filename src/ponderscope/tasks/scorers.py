@@ -10,7 +10,9 @@ from __future__ import annotations
 import re
 
 _INT_RE = re.compile(r"-?\d+")
-_SM_RE = re.compile(r"\bs?(\d+)\b")
+# A state name must be written as `sN` (optionally "state sN"); a bare integer
+# is NOT silently promoted to a state name.
+_SM_RE = re.compile(r"\b(?:state\s*)?s\s*(\d+)\b", re.IGNORECASE)
 _BOOL_RE = re.compile(r"\b(true|false)\b", re.IGNORECASE)
 _ORDER_RE = re.compile(r"[A-Za-z]+")
 _ANSWER_CUE = re.compile(r"answer\s*[:=]", re.IGNORECASE)

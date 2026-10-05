@@ -205,6 +205,17 @@ class MlxBackend:
         chat_template = snapshot / "chat_template.jinja"
         chat_sha = sha256_file(str(chat_template)) if chat_template.exists() else None
 
+        from .audit import audit_model_load
+
+        load_audit = audit_model_load(model, snapshot)
+        if not load_audit["ok"]:
+            raise RuntimeError(
+                "model-load audit failed: unexpected missing/unused text weights "
+                f"(missing={load_audit['missing_text_params'][:5]}, "
+                f"unused={load_audit['unused_loaded_params'][:5]}, "
+                f"count_consistent={load_audit['text_key_count_consistent']})"
+            )
+
         actual = ModelIdentity(
             repo_id=model_identity.repo_id,
             revision=model_identity.revision,
@@ -219,9 +230,8 @@ class MlxBackend:
             quantization_params={
                 "detected": quantization,
                 "dtype_counts": precision["dtype_counts"],
-                "load_strict": False,
-                "dropped_multimodal_and_mtp": True,
             },
+            load_audit=load_audit,
         )
 
         if model_identity.precision not in ("unknown", actual.precision):

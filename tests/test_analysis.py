@@ -4,6 +4,7 @@ from pathlib import Path
 
 from ponderscope.analysis import analyze_run, compare_configs, generate_report
 from ponderscope.config.schema import ExperimentSpec
+from ponderscope.evidence.run import RunStore
 from ponderscope.experiment import run_experiment
 
 
@@ -103,3 +104,42 @@ def test_report_written(tmp_path, fake_backend, monkeypatch):
     assert "Deployment identity" in md
     assert "Repeatability / noise floor" in md
     assert "<html" in html_text
+
+
+def test_run_records_task_pack_provenance_and_seals(tmp_path, fake_backend, monkeypatch):
+    result = _run(tmp_path, fake_backend, monkeypatch)
+    manifest = result.store.manifest
+    assert manifest["task_pack"]["requested_pack"] == "tasks-v1"
+    assert manifest["task_pack"]["n_tasks"] == len(result.store.read_tasks())
+    assert manifest["spec_hash"]
+    assert result.store.is_sealed
+    assert manifest["status"]["run"] == "EVIDENCE_COMPLETE"
+    seal = result.store.read_seal()
+    assert "traces.jsonl" in seal["files"]
+
+
+def test_failed_experiment_marks_partial(tmp_path, fake_backend, monkeypatch):
+    monkeypatch.setattr("ponderscope.experiment.get_backend", lambda backend_name: fake_backend)
+    calls = {"n": 0}
+    original = fake_backend.generate
+
+    def flaky(*args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] >= 2:
+            raise RuntimeError("boom")
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(fake_backend, "generate", flaky)
+    spec = ExperimentSpec(
+        name="fail", task_pack="tasks-v1", families=["arith"], n_per_family=3, max_tokens=16
+    )
+    import pytest
+
+    with pytest.raises(RuntimeError):
+        run_experiment(spec, model_repo="fake/model", model_revision="deadbeef", runs_dir=tmp_path)
+    runs = [p for p in tmp_path.iterdir() if (p / "manifest.json").exists()]
+    assert len(runs) == 1
+    store = RunStore.load(runs[0])
+    assert store.manifest["status"]["run"] == "PARTIAL"
+    assert store.manifest["status"]["error"]["type"] == "RuntimeError"
+    assert not store.is_sealed

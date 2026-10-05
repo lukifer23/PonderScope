@@ -6,12 +6,15 @@ from ponderscope.tasks import (
     ALL_FAMILIES,
     Task,
     TaskError,
+    collision_audit,
     generate_pack,
     make_task,
     normalize,
     score,
+    signature_hash,
     task_id_for,
     validate_task,
+    verify_invariants,
 )
 
 
@@ -83,3 +86,39 @@ def test_normalize_order_and_logic():
     assert normalize("logic", "Answer: True, False") == "true, false"
     assert normalize("sm", "Answer: s12") == "s12"
     assert normalize("arith", "the answer is 42") == "42"
+
+
+def test_sm_bare_integer_is_not_promoted_to_state():
+    # A bare integer must never silently become `sN`.
+    assert normalize("sm", "Answer: 3") is None
+    assert normalize("sm", "the final state is s3") == "s3"
+    assert score("sm", "Answer: 3", "s3") is False
+    assert score("sm", "Answer: s3", "s3") is True
+
+
+def test_all_generated_tasks_pass_independent_invariants():
+    for task in generate_pack(n_per_family=4, seed=0):
+        verify_invariants(task)  # must not raise
+
+
+def test_tampered_answer_fails_invariants():
+    base = make_task("arith", 0)
+    tampered = Task(**{**base.to_dict(), "answer": str(int(base.answer) + 1)})
+    with pytest.raises(TaskError):
+        verify_invariants(tampered)
+
+
+def test_structural_collision_audit():
+    pools = {
+        "dev": generate_pack(n_per_family=3, split="dev", seed=0),
+        "test": generate_pack(n_per_family=3, split="test", seed=0),
+    }
+    audit = collision_audit(pools)
+    assert audit["n_unique_structures"] > 0
+    assert "cross_pool_collisions" in audit
+    # identical structures generated twice must be detected
+    duplicate = make_task("arith", 0)
+    dup_audit = collision_audit({"a": [duplicate], "b": [make_task("arith", 0)]})
+    assert dup_audit["clean"] is False
+    assert dup_audit["cross_pool_collisions"]
+    assert signature_hash(duplicate) == signature_hash(make_task("arith", 0))
