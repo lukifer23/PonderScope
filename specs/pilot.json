@@ -1,0 +1,22 @@
+{
+  "name": "pilot",
+  "task_pack": "tasks-v1",
+  "families": ["arith", "path", "order", "logic", "sm"],
+  "n_per_family": 8,
+  "task_seed": 0,
+  "split": "dev",
+  "greedy_repeats": 3,
+  "sampled_seeds": [0, 1, 2],
+  "sampled_repeats_per_seed": 2,
+  "max_tokens": 256,
+  "sampled_temperature": 0.6,
+  "sampled_top_p": 0.95,
+  "sampled_top_k": 20,
+  "probe": true,
+  "n_probes": 4,
+  "probe_max_tokens": 64,
+  "capture_entropy": true,
+  "capture_top_k": 5,
+  "capture_logprob_digest": false,
+  "notes": "Bounded pilot across all five families."
+}

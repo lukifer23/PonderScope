@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Model weights and caches must NEVER be tracked.
+*.safetensors
+*.safetensors.index.json
+*.gguf
+*.npz
+*.bin
+*.pt
+*.pth
+models/
+.cache/
+huggingface/
+
+# Raw evidence: traces can be large and are reproducible from manifests.
+runs/**/traces.jsonl
+runs/**/traces.jsonl.gz
+runs/**/probes.jsonl
+runs/**/_tmp/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local scratch
+scratch/
+tmp/
