@@ -22,9 +22,13 @@ The first priority is to build a trustworthy measurement instrument.
 
 ## Status
 
-Work in progress. Nothing in this repository is a result until it is recorded
-in `docs/RESULTS.md` from saved raw evidence. See `docs/LIMITATIONS.md` for what
-is measured, what is unsupported, and what is not yet tested.
+Work in progress. **Phase 1.1 (measurement correctness + live capability proof)
+is complete on `main`.** Live capability gates pass on
+`Qwen/Qwen3.5-0.8B`@`2fc06364715b967f1860aea9cf38778875588b17` (MLX-LM 0.32.0,
+Apple M3 Pro); see `docs/RESULTS.md` for the sealed smoke evidence and the
+**CONDITIONAL GO** decision. The `tasks-v1` pack is currently degenerate at this
+budget (4/5 families censored), so the full noise study waits on a versioned
+task pack.
 
 Terminology is used strictly: `IMPLEMENTED`, `LIVE VALIDATED`, `MEASURED`,
 `HYPOTHESIS`, `UNSUPPORTED`, `NOT YET TESTED`.
