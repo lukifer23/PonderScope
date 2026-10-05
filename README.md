@@ -22,13 +22,15 @@ The first priority is to build a trustworthy measurement instrument.
 
 ## Status
 
-Work in progress. **Phase 1.1 (measurement correctness + live capability proof)
-is complete on `main`.** Live capability gates pass on
-`Qwen/Qwen3.5-0.8B`@`2fc06364715b967f1860aea9cf38778875588b17` (MLX-LM 0.32.0,
-Apple M3 Pro); see `docs/RESULTS.md` for the sealed smoke evidence and the
-**CONDITIONAL GO** decision. The `tasks-v1` pack is currently degenerate at this
-budget (4/5 families censored), so the full noise study waits on a versioned
-task pack.
+Work in progress. **Phase 1.2 (censoring correctness, clean evidence, and
+termination calibration) is in progress on `main`.** Phase 1.1's live capability
+gates pass on `Qwen/Qwen3.5-0.8B`@`2fc06364715b967f1860aea9cf38778875588b17`
+(MLX-LM 0.32.0, Apple M3 Pro). Phase 1.2 corrected measurement semantics that
+treated a capped (censored) generation as an observed wrong answer, fixed the
+evidence-seal ordering, and split source-/weight-variant identity. See
+`docs/PHASE1_2_CORRECTION.md` and `docs/RESULTS.md`. Natural termination on
+trivial tasks is itself being measured rather than assumed to be a task-difficulty
+problem; no `tasks-v2` is created without evidence.
 
 Terminology is used strictly: `IMPLEMENTED`, `LIVE VALIDATED`, `MEASURED`,
 `HYPOTHESIS`, `UNSUPPORTED`, `NOT YET TESTED`.
@@ -49,6 +51,8 @@ ponderscope doctor                       # environment / runtime / model capabil
 ponderscope generate --pack tasks-v1     # generate and validate a task pack
 ponderscope run --spec specs/<spec>.json # run a declared deployment/task experiment
 ponderscope analyze --run runs/<id>      # analyze immutable saved evidence
+ponderscope verify --run runs/<id>       # verify raw evidence + final manifest seal
+ponderscope bundle --run runs/<id> --output <archive.tar.gz>
 ponderscope compare --a runs/<id> --b runs/<id>
 ponderscope report --run runs/<id>       # regenerate Markdown/HTML from saved evidence
 ```

@@ -32,35 +32,74 @@
 
 - generations: 30; probes: 25
 
-| condition | mode | n | accuracy (95% CI) | termination |
-|---|---|---|---|---|
-| cond-19ba9bb0a86d | sampled | 20 | 0.0 (0.00–0.00) | {'capped_length': 20, 'missing_answer': 20} |
-| cond-481d400047e2 | greedy | 10 | 0.2 (0.00–0.60) | {'natural_eos': 2, 'eos_observed': 2, 'think_end_reached': 2, 'capped_length': 8, 'missing_answer': 8} |
+_Phase 1.2 correction: budget outcomes, censoring, and trajectory states below
+were regenerated from the immutable raw traces. The Phase 1.1 interpretation was
+wrong (see `PHASE1_2_CORRECTION.md`)._
+
+| condition | mode | n | success_at_budget | completion_rate | censored_rate | cond_acc\|completed |
+|---|---|---|---|---|---|---|
+| cond-19ba9bb0a86d | sampled | 20 | 0.0 | 0.0 | 1.0 | — (no completed answers) |
+| cond-481d400047e2 | greedy | 10 | 0.2 | 0.2 | 0.8 | 1.0 |
 
 ### Repeatability / noise floor
 - greedy replay: token-identical 5/5 (1.0), answer agreement 1.0
-- same-seed sampled replay: token-identical rate 1.0, answer agreement 1.0
-- across-seed: mean distinct answers 1.0, mean accuracy std across seeds 0.0
+- same-seed sampled replay: token-identical rate 1.0, ambiguous seeds 0
+- across-seed: distinct **observed** answers `—` (unobserved), observed-answer
+  accuracy std `—` (insufficient); token-level first divergence across seeds is
+  still observable (mean 10.8 tokens)
 
-### Prefix probes / trajectory states
-- probes supported: `True`; stable-sufficient prefixes: 1
-- state counts: {'never_correct': 3, 'wrong_to_correct': 1, 'multiple_flips': 1}
+### Prefix probes / trajectory states (corrected)
+- probes supported: `True`
+- stable-sufficient WITH observed natural final: 1
+- observed-probe stable (natural final unobserved or uncounted): 2
+- state counts: {'never_correct': 3, 'wrong_to_correct': 2}
 
-- `sm`: never_correct (flips=0, first correct at token None, stable sufficient None, final correct False)
-- `path`: never_correct (flips=0, first correct at token None, stable sufficient None, final correct False)
-- `logic`: never_correct (flips=0, first correct at token None, stable sufficient None, final correct False)
-- `arith`: wrong_to_correct (flips=1, first correct at token 183, stable sufficient 183, final correct True)
-- `order`: multiple_flips (flips=2, first correct at token 224, stable sufficient None, final correct False)
+- `sm`: never_correct (flips=0, observed-probe stable None, natural final `censored`)
+- `path`: never_correct (flips=0, observed-probe stable None, natural final `censored`)
+- `logic`: never_correct (flips=0, observed-probe stable None, natural final `censored`)
+- `arith`: wrong_to_correct (flips=1, first correct at token 183, natural-final
+  sufficient 183, natural final `correct`)
+- `order`: wrong_to_correct (flips=1, first correct at token 224, observed-probe
+  stable from 224, natural-final sufficient `None`, natural final `censored`)
 
-## Interpretation (manual)
+## Interpretation (manual, Phase 1.2)
 
-- The instrument is functioning: probes operate on reasoning-only prefixes, the native closure is honored, and no final-answer/EOS token entered a probe prefix (all probe prefix lengths ≤ the natural reasoning length).
-- **Greedy replay is deterministic** on this exact MLX deployment, and **same-seed sampled replay is identical**; across-seed variation is not yet interpretable because sampled generations were censored at the budget.
-- **Difficulty is degenerate for this model/budget.** Only the arithmetic task closed naturally (greedy, ~516 reasoning tokens, correct); the other four families were censored at 640 tokens for both greedy and sampled. This is a property of the model (Qwen3.5-0.8B) and budget, not a harness defect.
-- Because natural termination is rare at this budget, sampling policies that depend on closure cannot yet be compared; the prefix probes nonetheless show the arithmetic answer is recoverable from a mid-reasoning prefix (forced answer 84 from token 183 onward).
+- The instrument is functioning: probes operate on reasoning-only prefixes, the
+  native closure is honored, and no final-answer/EOS token entered a probe
+  prefix.
+- **Greedy replay is deterministic** on this exact MLX deployment, and
+  **same-seed sampled replay is identical**. Across-seed final-answer variation
+  is **unobserved** because every sampled generation was censored at 640; token
+  trajectories nonetheless differ across seeds.
+- **Do not call a capped run wrong.** Under this deployment and budget, 8/10
+  greedy and 20/20 sampled generations remained in the reasoning channel at the
+  640-token observation horizon. `success_at_budget` is 0.2 for greedy and 0.0
+  for sampled; `conditional_accuracy_given_completed` is 1.0 for greedy and
+  undefined when nothing completed.
+- Only the arithmetic task closed naturally (greedy, ~516 reasoning tokens,
+  correct). The other four families were censored at 640 for both greedy and
+  sampled. This is a property of this deployment and budget, not yet shown to be
+  task complexity — see the Phase 1.2 termination calibration.
+- The prefix probes show the arithmetic answer is recoverable from a
+  mid-reasoning prefix (forced answer 84 from token 183 onward), while `order`
+  was forced-correct from token 224 even though its natural generation never
+  closed.
 
 ## GO / NO-GO
 
-**CONDITIONAL GO.** Software correctness and live capability gates pass, and the instrument is trustworthy enough to proceed. However, the task difficulty must be versioned/adjusted before a full noise study: the current `tasks-v1` pack is censored for 4/5 families at this budget/model. Do not run the large pilot until difficulty and budget are set so that natural termination occurs regularly.
+> **Phase 1.1 statement below is historical and was superseded by Phase 1.2.**
+> The Phase 1.1 claim that "the task difficulty must be versioned" was made
+> before the censoring bug was understood. Phase 1.2 does **not** manufacture an
+> easier `tasks-v2`; it treats failure to terminate as a phenomenon to measure.
+> See `PHASE1_2_CORRECTION.md` and the Phase 1.2 report for the current decision.
 
-**Recommended next experiment (one):** version the task pack to `tasks-v2` with a calibrated easy/medium tier (and/or a per-family budget derived from a closure-discovery sweep) such that greedy natural-closure rate exceeds ~80% across all five families, then rerun this exact tiny smoke unchanged to confirm the same determinism, probe, and sealing contracts under non-degenerate difficulty.
+**CONDITIONAL GO (Phase 1.1, historical).** Software correctness and live
+capability gates pass, and the instrument is trustworthy enough to proceed.
+However, the task difficulty must be versioned/adjusted before a full noise
+study: the current `tasks-v1` pack is censored for 4/5 families at this
+budget/model. Do not run the large pilot until difficulty and budget are set so
+that natural termination occurs regularly.
+
+**Recommended next experiment (Phase 1.1, historical):** version the task pack
+to `tasks-v2`. **Phase 1.2 replaces this recommendation with a termination
+calibration experiment** (see `EXPERIMENT_DESIGN.md` and the Phase 1.2 report).

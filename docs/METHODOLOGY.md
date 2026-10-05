@@ -17,13 +17,21 @@ model. Reports identify the deployment as:
 Identity is layered, so unrelated provenance can never silently change what is
 being measured:
 
-- `artifact_id` — repo, immutable revision, weight-file/tokenizer/template
-  hashes, precision, quantization scheme; **excludes** local path and labels.
-- `deployment_id` — artifact + runtime/version + backend + hardware + OS +
+- `source_artifact_id` — upstream repo, immutable revision, source
+  weight/tokenizer/chat-template hashes. **Excludes** path, audit, quantization.
+- `weight_variant_id` — an actual executable representation: `original` or
+  `derived` (quantized/converted), with `variant_weight_files`,
+  precision/quantization, conversion tool/version/params, and explicit lineage
+  `derived_from_source_artifact_id`. **Excludes** local path and `load_audit`.
+- `deployment_id` — weight variant + runtime/version + backend + hardware + OS +
   device; **excludes** decoding.
 - `condition_id` — decoding policy (greedy vs sampled; temperature, top-p,
   top-k, min-p, budget, thinking context); **excludes** seed.
 - `trial_id` — task id + condition + seed + repeat.
+
+A backend-specific load audit is evidence about how a runtime interpreted an
+artifact, not part of the artifact; it can never change `source_artifact_id` or
+`weight_variant_id`.
 
 A random seed is trial state, not a deployment property. A run may contain
 several decoding conditions and records one condition id per condition; it is
@@ -63,8 +71,23 @@ documented and reported as such, never as the post-sampling distribution.
 
 Capture levels: **minimal** (token ids + termination only; no full-vector cast,
 sync, digest, or per-token timing), **research** (chosen logprob, entropy, top-k,
-timing), and **digest** (research + full-distribution digest). Instrumentation
-overhead is qualified by warmup + alternating repeated runs of the three levels.
+timing), and **digest** (research + full-distribution digest). The **minimal**
+lane is the primary performance measurement; research/digest throughput is
+instrumentation-affected and never presented as native deployment throughput.
+Deterministic greedy and same-seed sampled decoding must be token-identical
+across capture lanes; any divergence is reported as an instrumentation effect.
+Overhead is qualified by separate warmup and counterbalanced (rotated-order)
+repeated runs; median and spread are reported.
+
+## Evidence sealing
+
+`seal()` fully finalizes the manifest, writes it atomically, then hashes the
+final manifest and all raw evidence, and writes `evidence.json` **last**. Once the
+seal exists, the manifest and raw evidence are immutable. `ponderscope verify`
+recomputes every raw hash and the final manifest hash and reports PASS/FAIL
+without modifying anything. Official runs refuse a dirty tracked worktree unless
+`--allow-dirty` is given, which records an exploratory, non-publication-grade run
+with a deterministic hash of the working-tree diff.
 
 ## Reasoning channels
 
@@ -80,11 +103,24 @@ EOS marker can never become answer content. PonderScope records:
   native closing sequence `\n</think>\n\n` (every injected token id recorded)
 - **capped / censored** — `max_tokens` reached before EOS (no final channel)
 
-Trajectory states: `initially_correct`, `wrong_to_correct`,
-`correct_to_wrong`, `multiple_flips`, `stable_correct`, `never_correct`. Both a
-primary label and independent flags are stored; nothing is collapsed into one
-composite score. Prefix position is reported both as a probe-array index and as
-an actual prefix-token count, plus a tested `stable_sufficient_prefix_tokens`.
+Prefix states (over **observed** forced probes only): `initially_correct`,
+`wrong_to_correct`, `correct_to_wrong`, `multiple_flips`, `stable_correct`,
+`never_correct`. The natural final outcome is a separate category: `correct`,
+`incorrect`, `censored` (no final channel observed), `unparseable`, or `error`.
+
+A censored trajectory has unknown final correctness: it contributes no
+correctness transition and cannot be evidence of harmful overthinking. Two
+sufficiency concepts are reported separately: `observed_probe_stable_from_tokens`
+(earliest probe correct through the last observed probe) and
+`stable_sufficient_with_natural_final_tokens` (additionally requires an observed
+correct final). `harmful_overthinking_observed` is only True when an **observed**
+final is wrong after an earlier correct probe.
+
+Budget outcomes are separate metrics: `success_at_budget`,
+`completion_rate`, `conditional_accuracy_given_completed`, `censored_rate`,
+`error_rate`, `unparseable_rate`. A capped run is a budget failure, never an
+observed wrong answer, and `conditional_accuracy_given_completed` is `None` when
+nothing completed.
 
 ## Metrics
 

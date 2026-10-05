@@ -93,6 +93,33 @@ smoke (`specs/smoke-v2.json`) uses the measured budget and records censoring
 explicitly. If difficulty is degenerate (ceiling/floor/censored), version the
 task pack (`tasks-v2`) rather than silently editing `tasks-v1`.
 
+## Stage 0c — termination calibration (Phase 1.2)
+
+Before changing task difficulty, determine **why** natural termination is late on
+trivial tasks. The calibration experiment uses the `calibration` split only, a
+generous bounded horizon (initially 2048 tokens), greedy + minimal capture, and
+2–3 tasks per family. It measures natural think-end/EOS rate, reasoning tokens
+to closure, censoring rate, repetition, and forced-prefix correctness at fixed
+checkpoints. Cap-prefix invariance is qualified first (256/512/1024/2048); if
+shorter runs are exact prefixes of the longer run, closure and lower-cap
+censoring can be derived from one long run.
+
+A prompt-policy A/B (`pp-v1` explicit answer cue vs `pp-v2` minimal neutral
+instruction) uses matched structures and exact scoring with no LLM judge. If
+wording materially causes long reasoning, a versioned `tasks-v2` is justified;
+if not, the finding stands that this deployment naturally deliberates for
+hundreds/thousands of tokens on trivial tasks. Curating tasks to hit an arbitrary
+closure rate is explicitly not done.
+
+## Task-pack registry and prompt policy
+
+`tasks-v1` is defined by an explicit registry entry (generator version, default
+prompt policy, structural parameters, provenance) and is frozen: its task ids
+and prompts are byte-reproducible. An unknown pack version fails closed rather
+than silently reusing another pack's generator semantics. Prompt policy is a
+separate, versioned presentation dimension; it changes wording only, never the
+structural task identity or the exact answer.
+
 ## Reproducibility
 
 Raw evidence is immutable under `runs/<run-id>/`. `analyze`, `compare`, and

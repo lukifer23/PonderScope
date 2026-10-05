@@ -53,18 +53,24 @@ PonderScope is intentionally conservative about what its evidence supports.
   guaranteed in this pass).
 - Semantic reasoning-equivalence measures.
 
-## Measured on this deployment (2026-10-05)
+## Measured on this deployment (2026-10-05; amended Phase 1.2)
 
 - **Natural closure is expensive.** On `Qwen/Qwen3.5-0.8B`@`2fc06364…`, the live
   capability gate found natural closure after ~593–601 reasoning tokens on a
   trivial arithmetic prompt. Budgets of 192–512 were fully censored.
-- **Difficulty is degenerate at this budget.** In the tiny smoke (budget 640),
-  only `arith` closed naturally; `path`, `order`, `logic`, and `sm` were capped
-  for both greedy and sampled decoding. `tasks-v1` difficulty must be versioned
-  before a full noise study (`RESULTS.md` records the details).
-- **Instrumentation is not free.** Digest-enabled capture cost roughly +25% of
-  decode throughput versus minimal capture; capture is therefore reported with
-  its measured overhead, never assumed low.
+- **Censoring is not incorrectness.** Under the 640-token budget, 8/10 greedy and
+  20/20 sampled generations remained in the reasoning channel. `success_at_budget`
+  was 0.2 (greedy) and 0.0 (sampled); among greedy runs that actually completed,
+  conditional accuracy was 1.0. A capped trajectory is never scored as a wrong
+  answer (`PHASE1_2_CORRECTION.md`).
+- **Instrumentation is not free.** Research capture cost ~23% and digest capture
+  ~25% of decode throughput versus minimal capture. The minimal lane is the
+  primary performance measurement; research/digest throughput is never presented
+  as native deployment throughput.
 - Greedy replay and same-seed sampled replay were exactly token-identical in the
-  smoke; across-seed variation is not yet interpretable because sampled runs were
-  censored.
+  smoke. Across-seed **final-answer** variation is unobserved because sampled runs
+  were censored; token-level variation remains measurable.
+- **Sealing defect (Phase 1.1, fixed in Phase 1.2).** The old `seal()` hashed the
+  manifest before its final status/timestamp mutation, so the sealed smoke fails
+  final-manifest verification. New runs verify PASS; the old run is preserved as
+  historical.
