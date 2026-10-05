@@ -1,0 +1,564 @@
+{
+  "environment": {
+    "python_version": "3.12.12",
+    "python_executable": "/Users/admin/Downloads/CodeProjects/PonderScope/.venv/bin/python3",
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "processor": "arm",
+    "os": "Darwin 27.2.0",
+    "cpu_brand": "Apple M3 Pro",
+    "physical_memory_bytes": 19327352832,
+    "packages": {
+      "mlx": "0.32.3",
+      "mlx-lm": "0.32.0",
+      "mlx-metal": "0.32.3",
+      "numpy": "2.5.3",
+      "transformers": "5.18.0",
+      "tokenizers": "0.23.2",
+      "huggingface-hub": "1.33.0",
+      "safetensors": "0.8.0",
+      "ponderscope": "0.1.0"
+    },
+    "mlx_default_device": "Device(gpu, 0)",
+    "mlx_version": "0.32.3",
+    "cwd": "/Users/admin/Downloads/CodeProjects/PonderScope"
+  },
+  "capabilities": {
+    "name": "mlx",
+    "runtime": "mlx-lm",
+    "runtime_version": "0.32.0",
+    "greedy": true,
+    "seeded_sampling": true,
+    "logprobs": true,
+    "entropy": true,
+    "full_logprob_digest": true,
+    "per_token_timing": true,
+    "ttft": true,
+    "prefix_probe": true,
+    "notes": [
+      "Per-token metrics (entropy, top-k, digest) are computed from the full normalized logprob vector returned by mlx_lm.generate_step.",
+      "Per-token timing includes measurement overhead; a bare baseline is measured separately to quantify instrumentation cost."
+    ]
+  },
+  "model": {
+    "source": {
+      "repo_id": "Qwen/Qwen3.5-0.8B",
+      "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+      "weight_files": {
+        "model.safetensors-00001-of-00001.safetensors": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696"
+      },
+      "tokenizer_files": {
+        "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+        "tokenizer_config.json": "49e2b6e395f959f077f1e992b338919c0d4a9732fc6e613995e06557f843500c",
+        "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003",
+        "merges.txt": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d",
+        "chat_template.jinja": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80"
+      },
+      "chat_template_sha256": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80"
+    },
+    "representation": "original",
+    "variant_weight_files": {
+      "model.safetensors-00001-of-00001.safetensors": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696"
+    },
+    "precision": "bfloat16",
+    "quantization": null,
+    "quantization_bits": null,
+    "quantization_group_size": null,
+    "quantization_params": {
+      "detected": {
+        "quantized": false
+      },
+      "dtype_counts": {
+        "bfloat16": 284,
+        "float32": 36
+      }
+    },
+    "conversion": {},
+    "local_path": "/Users/admin/.cache/huggingface/hub/models--Qwen--Qwen3.5-0.8B/snapshots/2fc06364715b967f1860aea9cf38778875588b17",
+    "load_audit": {
+      "ok": true,
+      "allowlist": [
+        "model.visual.",
+        "model.visual",
+        "vision_tower",
+        "mtp."
+      ],
+      "n_source_keys": 488,
+      "n_text_source_keys": 320,
+      "n_non_text_source_keys": 168,
+      "n_sanitized_keys": 320,
+      "n_loaded_params": 320,
+      "n_dropped_by_sanitize": 488,
+      "n_dropped_allowed_non_text": 168,
+      "n_renamed_or_dropped_text": 320,
+      "n_dropped_unexpected": 0,
+      "n_text_source_lost": 0,
+      "dropped_key_categories": {
+        "model": 473,
+        "mtp": 15
+      },
+      "missing_from_sanitized_params": [],
+      "unused_sanitized_params": [],
+      "dropped_unexpected_keys": [],
+      "text_source_keys_lost": [],
+      "renames_or_drops_accounted_by_count": true,
+      "text_key_count_consistent": true,
+      "load_strict": false
+    }
+  },
+  "source_artifact_id": "src-52161236e42a",
+  "weight_variant_id": "wvar-46d3e044d08b",
+  "deployment": {
+    "identity_schema": "ponderscope-identity/3",
+    "label": "doctor",
+    "model": {
+      "source": {
+        "repo_id": "Qwen/Qwen3.5-0.8B",
+        "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+        "weight_files": {
+          "model.safetensors-00001-of-00001.safetensors": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696"
+        },
+        "tokenizer_files": {
+          "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+          "tokenizer_config.json": "49e2b6e395f959f077f1e992b338919c0d4a9732fc6e613995e06557f843500c",
+          "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003",
+          "merges.txt": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d",
+          "chat_template.jinja": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80"
+        },
+        "chat_template_sha256": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80"
+      },
+      "representation": "original",
+      "variant_weight_files": {
+        "model.safetensors-00001-of-00001.safetensors": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696"
+      },
+      "precision": "bfloat16",
+      "quantization": null,
+      "quantization_bits": null,
+      "quantization_group_size": null,
+      "quantization_params": {
+        "detected": {
+          "quantized": false
+        },
+        "dtype_counts": {
+          "bfloat16": 284,
+          "float32": 36
+        }
+      },
+      "conversion": {},
+      "local_path": "/Users/admin/.cache/huggingface/hub/models--Qwen--Qwen3.5-0.8B/snapshots/2fc06364715b967f1860aea9cf38778875588b17",
+      "load_audit": {
+        "ok": true,
+        "allowlist": [
+          "model.visual.",
+          "model.visual",
+          "vision_tower",
+          "mtp."
+        ],
+        "n_source_keys": 488,
+        "n_text_source_keys": 320,
+        "n_non_text_source_keys": 168,
+        "n_sanitized_keys": 320,
+        "n_loaded_params": 320,
+        "n_dropped_by_sanitize": 488,
+        "n_dropped_allowed_non_text": 168,
+        "n_renamed_or_dropped_text": 320,
+        "n_dropped_unexpected": 0,
+        "n_text_source_lost": 0,
+        "dropped_key_categories": {
+          "model": 473,
+          "mtp": 15
+        },
+        "missing_from_sanitized_params": [],
+        "unused_sanitized_params": [],
+        "dropped_unexpected_keys": [],
+        "text_source_keys_lost": [],
+        "renames_or_drops_accounted_by_count": true,
+        "text_key_count_consistent": true,
+        "load_strict": false
+      }
+    },
+    "runtime": {
+      "runtime": "mlx-lm",
+      "runtime_version": "0.32.0",
+      "backend": "mlx-metal",
+      "hardware": "Apple M3 Pro",
+      "os": "Darwin 27.2.0",
+      "python_version": "3.12.12",
+      "device": "Device(gpu, 0)",
+      "extra": {}
+    },
+    "decoding": {
+      "mode": "greedy",
+      "max_tokens": 64,
+      "temperature": null,
+      "top_p": null,
+      "top_k": null,
+      "min_p": null,
+      "seed": null,
+      "stop_on_eos": true,
+      "context": {}
+    }
+  },
+  "artifact_id": "wvar-46d3e044d08b",
+  "deployment_id": "dep-d7a370157187",
+  "condition_id": "cond-5bd6bcd30ccc",
+  "deployment_description": "Qwen/Qwen3.5-0.8B@2fc06364715b (original, bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] greedy src=src-52161236e42a wvar=wvar-46d3e044d08b dep=dep-d7a370157187 cond=cond-5bd6bcd30ccc",
+  "capability": {
+    "capabilities": {
+      "think_start": {
+        "id": 248068,
+        "decoded": "<think>"
+      },
+      "think_end": {
+        "id": 248069,
+        "decoded": "</think>"
+      },
+      "eos": {
+        "ids": [
+          248046
+        ],
+        "decoded": [
+          "<|im_end|>"
+        ]
+      },
+      "native_closure": {
+        "supported": true,
+        "ids": [
+          198,
+          248069,
+          271
+        ],
+        "decoded": "\n</think>\n\n",
+        "contains_think_end": true,
+        "roundtrip_ok": true
+      },
+      "thinking_prompt_tail": ">'.<|im_end|>\n<|im_start|>assistant\n<think>\n",
+      "natural_closure": {
+        "supported": true,
+        "attempts": [
+          {
+            "max_tokens": 256,
+            "finish_reason": "length",
+            "generated_tokens": 256,
+            "think_end_reached": false,
+            "final_answer_channel_observed": false,
+            "closed": false,
+            "eos_observed": false,
+            "answer": null
+          },
+          {
+            "max_tokens": 512,
+            "finish_reason": "length",
+            "generated_tokens": 512,
+            "think_end_reached": false,
+            "final_answer_channel_observed": false,
+            "closed": false,
+            "eos_observed": false,
+            "answer": null
+          },
+          {
+            "max_tokens": 1024,
+            "finish_reason": "stop",
+            "generated_tokens": 601,
+            "think_end_reached": true,
+            "final_answer_channel_observed": true,
+            "closed": true,
+            "eos_observed": true,
+            "answer": "12"
+          }
+        ],
+        "think_end_observed": true,
+        "final_answer_channel_observed": true,
+        "eos_observed": true,
+        "parseable_answer_observed": true,
+        "max_tokens": 1024,
+        "reasoning_tokens": 593,
+        "answer": "12"
+      },
+      "forced_finalization": {
+        "supported": true,
+        "no_probe_error": true,
+        "all_forced_close": true,
+        "all_entered_final_answer_mode": true,
+        "all_required_cuts_honored": true,
+        "n_required_cuts": 4,
+        "n_honored": 4,
+        "probes": [
+          {
+            "cut": 0,
+            "forced_close": true,
+            "entered_final_answer_mode": true,
+            "error": null,
+            "generated_tokens": 15,
+            "finish_reason": "stop",
+            "eos_observed": true,
+            "terminated_cleanly": true,
+            "first_line": "5 + 7 = 12"
+          },
+          {
+            "cut": 16,
+            "forced_close": true,
+            "entered_final_answer_mode": true,
+            "error": null,
+            "generated_tokens": 15,
+            "finish_reason": "stop",
+            "eos_observed": true,
+            "terminated_cleanly": true,
+            "first_line": "5 + 7 = 12"
+          },
+          {
+            "cut": 64,
+            "forced_close": true,
+            "entered_final_answer_mode": true,
+            "error": null,
+            "generated_tokens": 15,
+            "finish_reason": "stop",
+            "eos_observed": true,
+            "terminated_cleanly": true,
+            "first_line": "5 + 7 = 12"
+          },
+          {
+            "cut": 593,
+            "forced_close": true,
+            "entered_final_answer_mode": true,
+            "error": null,
+            "generated_tokens": 6,
+            "finish_reason": "stop",
+            "eos_observed": true,
+            "terminated_cleanly": true,
+            "first_line": "Answer: 12<|im_end|>"
+          }
+        ],
+        "note": "native closure appended to every required cut; no answer cue injected; pass requires every cut to terminate cleanly"
+      },
+      "seeded_sampling": {
+        "supported": true,
+        "seed": 123,
+        "generated_tokens": 64
+      },
+      "same_seed_replay": {
+        "supported": true,
+        "identical_token_ids": true
+      },
+      "across_seed_variation": {
+        "differ": true
+      },
+      "greedy": {
+        "supported": true,
+        "replay_identical": true,
+        "finish_reason": "length"
+      },
+      "token_distribution": {
+        "supported": true,
+        "chosen_logprob": 0.0,
+        "entropy_nats": 0.0048478213138878345,
+        "top_token_ids": [
+          90700,
+          760,
+          31248,
+          40,
+          248069
+        ],
+        "top_logprobs": [
+          0.0,
+          -8.375,
+          -9.875,
+          -10.25,
+          -10.625
+        ],
+        "top_sorted_descending": true,
+        "chosen_in_top": true,
+        "distribution_note": "pre-sampler model distribution from generate_step"
+      },
+      "capture_equivalence": {
+        "greedy": {
+          "identical": true,
+          "first_divergence": null,
+          "minimal_tokens": 48,
+          "research_tokens": 48
+        },
+        "sampled_same_seed": {
+          "identical": true,
+          "first_divergence": null,
+          "minimal_tokens": 48,
+          "research_tokens": 48
+        },
+        "equivalent": true,
+        "note": "Deterministic decoding must be token-identical across capture lanes; a difference is an instrumentation effect."
+      },
+      "instrumentation_overhead": {
+        "modes": {
+          "minimal": {
+            "ttft_ms_median": 41.36541699699592,
+            "wall_ms_median": 684.5133750030072,
+            "output_tokens_per_sec_median": 70.12280804562675,
+            "output_tokens_per_sec_std": 0.5592392538821856,
+            "decode_tokens_per_sec_median": 73.14379144918699,
+            "decode_tokens_per_sec_iqr": 0.5323516997563758,
+            "n": 5,
+            "decode_overhead_fraction": 0.0,
+            "wall_overhead_fraction": 0.0
+          },
+          "research": {
+            "ttft_ms_median": 49.21220900723711,
+            "wall_ms_median": 883.1774169957498,
+            "output_tokens_per_sec_median": 54.34921577057376,
+            "output_tokens_per_sec_std": 0.5789435838446755,
+            "decode_tokens_per_sec_median": 56.112217271553675,
+            "decode_tokens_per_sec_iqr": 0.7996395306464805,
+            "n": 5,
+            "decode_overhead_fraction": 0.2328505788418851,
+            "wall_overhead_fraction": 0.2902266767130296
+          },
+          "digest": {
+            "ttft_ms_median": 42.14175000379328,
+            "wall_ms_median": 899.2469170043478,
+            "output_tokens_per_sec_median": 53.37799784724525,
+            "output_tokens_per_sec_std": 0.5053160261562751,
+            "decode_tokens_per_sec_median": 54.835744561518425,
+            "decode_tokens_per_sec_iqr": 0.36067504265650285,
+            "n": 5,
+            "decode_overhead_fraction": 0.2503021312531655,
+            "wall_overhead_fraction": 0.3137024780566153
+          }
+        },
+        "repeats": 5,
+        "warmup": 1,
+        "run_order": [
+          "minimal",
+          "research",
+          "digest",
+          "research",
+          "digest",
+          "minimal",
+          "digest",
+          "minimal",
+          "research",
+          "minimal",
+          "research",
+          "digest",
+          "research",
+          "digest",
+          "minimal"
+        ],
+        "samples": {
+          "minimal": [
+            {
+              "ttft_ms": 41.9434580107918,
+              "wall_ms": 684.5133750030072,
+              "output_tokens_per_sec": 70.12280804562675,
+              "decode_tokens_per_sec": 73.14379144918699,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 40.860834007617086,
+              "wall_ms": 688.0318750045262,
+              "output_tokens_per_sec": 69.76420968822735,
+              "decode_tokens_per_sec": 72.62376871437371,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 42.538833993603475,
+              "wall_ms": 683.3045419916743,
+              "output_tokens_per_sec": 70.24686219718535,
+              "decode_tokens_per_sec": 73.34974299239731,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 41.36541699699592,
+              "wall_ms": 683.8270419975743,
+              "output_tokens_per_sec": 70.19318782682811,
+              "decode_tokens_per_sec": 73.15612041413009,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 41.30641699885018,
+              "wall_ms": 698.1945000006817,
+              "output_tokens_per_sec": 68.7487512433185,
+              "decode_tokens_per_sec": 71.54947884763035,
+              "generated_tokens": 48.0
+            }
+          ],
+          "research": [
+            {
+              "ttft_ms": 49.66037500707898,
+              "wall_ms": 883.1774169957498,
+              "output_tokens_per_sec": 54.34921577057376,
+              "decode_tokens_per_sec": 56.387569338550875,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 41.09358300047461,
+              "wall_ms": 878.700832996401,
+              "output_tokens_per_sec": 54.6261004855524,
+              "decode_tokens_per_sec": 56.112217271553675,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 49.45312500058208,
+              "wall_ms": 879.4749999942724,
+              "output_tokens_per_sec": 54.57801529357015,
+              "decode_tokens_per_sec": 56.62501364841413,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 49.21220900723711,
+              "wall_ms": 904.9061669938965,
+              "output_tokens_per_sec": 53.0441738058392,
+              "decode_tokens_per_sec": 54.92617957778399,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 42.00937499990687,
+              "wall_ms": 887.5166670040926,
+              "output_tokens_per_sec": 54.083491369270995,
+              "decode_tokens_per_sec": 55.587929807904395,
+              "generated_tokens": 48.0
+            }
+          ],
+          "digest": [
+            {
+              "ttft_ms": 42.16287499002647,
+              "wall_ms": 892.9706659982912,
+              "output_tokens_per_sec": 53.7531655044219,
+              "decode_tokens_per_sec": 55.241619196154545,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 41.128124998067506,
+              "wall_ms": 892.7655839943327,
+              "output_tokens_per_sec": 53.76551343438067,
+              "decode_tokens_per_sec": 55.18780263070382,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 51.589624999905936,
+              "wall_ms": 908.8294999965001,
+              "output_tokens_per_sec": 52.81518700722726,
+              "decode_tokens_per_sec": 54.82712758804732,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 41.386416007298976,
+              "wall_ms": 914.1696250007953,
+              "output_tokens_per_sec": 52.50666691092284,
+              "decode_tokens_per_sec": 53.85071517840145,
+              "generated_tokens": 48.0
+            },
+            {
+              "ttft_ms": 42.14175000379328,
+              "wall_ms": 899.2469170043478,
+              "output_tokens_per_sec": 53.37799784724525,
+              "decode_tokens_per_sec": 54.835744561518425,
+              "generated_tokens": 48.0
+            }
+          ]
+        },
+        "primary_performance_lane": "minimal",
+        "note": "Counterbalanced (rotated-order) repeated runs; separate warmup. 'minimal' captures token ids + termination only; 'research' adds entropy/top-k/chosen logprob/timing; 'digest' adds full-distribution digests. Use 'minimal' for primary performance; other lanes are instrumentation-affected."
+      }
+    },
+    "unsupported": [],
+    "all_supported": true
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "run_id": "20261005T231234Z-calibration-pp1-dep-d7a370157187",
+  "artifact_id": "wvar-46d3e044d08b",
+  "deployment_id": "dep-d7a370157187",
+  "spec_hash": "df7be25355381eae268a9bad86567597779bfa0ed8c5a40c6810842489993f70",
+  "code": {
+    "version": "0.1.0",
+    "git_sha": "559d526a243f2ae99af8b6876233616edff66a9b",
+    "git_dirty": true,
+    "untracked_evidence_count": 2,
+    "tracked_dirty": false,
+    "tracked_changes": [],
+    "exploratory": false,
+    "publication_grade": true
+  },
+  "files": {
+    "environment.json": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+    "tasks.jsonl": "d6e99d52af28fb1d06a82e1c995ac7925da8387574680da66283c40c586120f8",
+    "traces.jsonl": "16b043c24e44e22c3ba4b152da138735ecee5483acb77f28c798e95e0c143f4f",
+    "probes.jsonl": "21053efd2ff14a5136de82c9078f9e19e852387aa4b95cf062f94403cbc259f8"
+  },
+  "manifest_sha256": "6caf556e98bd5922c03c64c75f58e3393c9d395d474ec78a16ed1839611b4c45",
+  "sealed_utc": "20261005T231840Z",
+  "seal_schema": "ponderscope-seal/2"
+}

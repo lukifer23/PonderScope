@@ -1,0 +1,18 @@
+{
+  "name": "calibration-pp2",
+  "task_pack": "tasks-v1",
+  "prompt_policy": "pp-v2",
+  "families": ["arith", "path", "order", "logic", "sm"],
+  "n_per_family": 2,
+  "task_seed": 0,
+  "split": "calibration",
+  "greedy_repeats": 1,
+  "sampled_seeds": [],
+  "sampled_repeats_per_seed": 1,
+  "max_tokens": 2048,
+  "capture_level": "minimal",
+  "probe": true,
+  "n_probes": 4,
+  "probe_max_tokens": 64,
+  "notes": "Termination calibration, prompt policy pp-v2 (minimal neutral instruction). Matched structures to pp-v1; generous 2048 horizon; greedy + minimal capture."
+}

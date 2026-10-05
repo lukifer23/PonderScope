@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>PonderScope report 20261005T231234Z-calibration-pp1-dep-d7a370157187</title>
+<style>
+body { font-family: -apple-system, system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color:#111; }
+h1,h2,h3 { font-weight: 600; }
+pre { background:#f6f8fa; padding: 0.75rem; overflow-x:auto; border-radius:6px; }
+code { background:#f0f0f0; padding:0 3px; border-radius:3px; }
+table { border-collapse: collapse; } td, th { border:1px solid #ccc; padding:4px 8px; font-size: 0.9rem; }
+svg { display:block; margin: 0.5rem 0 1rem; background:#fafafa; }
+</style></head><body>
+<h1>PonderScope report — 20261005T231234Z-calibration-pp1-dep-d7a370157187</h1>
+
+<p>_Generated from saved evidence; no numbers are hand-entered._</p>
+
+<h2>Deployment identity</h2>
+<li>description: `Qwen/Qwen3.5-0.8B@2fc06364715b (original, bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] greedy src=src-52161236e42a wvar=wvar-46d3e044d08b dep=dep-d7a370157187 cond=cond-2f3369427321`</li>
+<li>source artifact id: `src-52161236e42a`</li>
+<li>weight variant id: `wvar-46d3e044d08b`</li>
+<li>deployment id: `dep-d7a370157187`</li>
+<li>prompt policy: `pp-v1`</li>
+<li>condition ids: `cond-2f3369427321`</li>
+<li>model repo: `Qwen/Qwen3.5-0.8B`</li>
+<li>revision: `2fc06364715b967f1860aea9cf38778875588b17`</li>
+<li>representation: `original`</li>
+<li>precision: `bfloat16`</li>
+<li>quantization: `None` bits=None group=None</li>
+<li>runtime: `mlx-lm 0.32.0` backend=`mlx-metal`</li>
+<li>hardware: `Apple M3 Pro` os=`Darwin 27.2.0`</li>
+<li>created: `20261005T231234Z`</li>
+
+<h2>Machine / runtime environment</h2>
+<li>python: `3.12.12`</li>
+<li>platform: `macOS-27.2-arm64-arm-64bit`</li>
+<li>mlx device: `Device(gpu, 0)`</li>
+<li>memory bytes: `19327352832`</li>
+<li>packages: `{&#x27;mlx&#x27;: &#x27;0.32.3&#x27;, &#x27;mlx-lm&#x27;: &#x27;0.32.0&#x27;, &#x27;mlx-metal&#x27;: &#x27;0.32.3&#x27;, &#x27;numpy&#x27;: &#x27;2.5.3&#x27;, &#x27;transformers&#x27;: &#x27;5.18.0&#x27;, &#x27;tokenizers&#x27;: &#x27;0.23.2&#x27;, &#x27;huggingface-hub&#x27;: &#x27;1.33.0&#x27;, &#x27;safetensors&#x27;: &#x27;0.8.0&#x27;, &#x27;ponderscope&#x27;: &#x27;0.1.0&#x27;}`</li>
+
+<h2>Task population</h2>
+<li>n tasks: 10  n generations: 10</li>
+<li>spec: `{&#x27;name&#x27;: &#x27;calibration-pp1&#x27;, &#x27;task_pack&#x27;: &#x27;tasks-v1&#x27;, &#x27;prompt_policy&#x27;: &#x27;pp-v1&#x27;, &#x27;families&#x27;: [&#x27;arith&#x27;, &#x27;path&#x27;, &#x27;order&#x27;, &#x27;logic&#x27;, &#x27;sm&#x27;], &#x27;n_per_family&#x27;: 2, &#x27;task_seed&#x27;: 0, &#x27;split&#x27;: &#x27;calibration&#x27;, &#x27;greedy_repeats&#x27;: 1, &#x27;sampled_seeds&#x27;: [], &#x27;sampled_repeats_per_seed&#x27;: 1, &#x27;max_tokens&#x27;: 2048, &#x27;sampled_temperature&#x27;: 0.6, &#x27;sampled_top_p&#x27;: 0.95, &#x27;sampled_top_k&#x27;: 20, &#x27;sampled_min_p&#x27;: 0.0, &#x27;probe&#x27;: True, &#x27;n_probes&#x27;: 4, &#x27;probe_max_tokens&#x27;: 64, &#x27;capture_entropy&#x27;: True, &#x27;capture_top_k&#x27;: 5, &#x27;capture_logprob_digest&#x27;: False, &#x27;capture_level&#x27;: &#x27;minimal&#x27;, &#x27;notes&#x27;: &#x27;Termination calibration, prompt policy pp-v1 (explicit Answer: cue). Generous 2048 horizon; greedy + minimal capture. Calibration split only.&#x27;}`</li>
+
+<h2>Configurations</h2>
+<table>
+<tr><th>condition_id</th><th>mode</th><th>n</th><th>success_at_budget (95% CI)</th><th>completion_rate</th><th>censored_rate</th><th>conditional_acc_given_completed</th><th>reasoning tokens mean</th><th>tok/s</th></tr>
+<tr><td>cond-2f3369427321</td><td>greedy</td><td>10</td><td>0.1 [0, 0.3]</td><td>0.1</td><td>0.9</td><td>1</td><td>1873</td><td>62.37</td></tr>
+</table>
+
+<h2>Reasoning-length distribution</h2>
+
+<h3>cond-2f3369427321 (greedy)</h3>
+
+<pre>
+     295-383         1 ####
+     383-470         0 
+     470-558         0 
+     558-646         0 
+     646-733         0 
+     733-821         0 
+     821-909         0 
+     909-996         0 
+     996-1084        0 
+    1084-1172        0 
+    1172-1259        0 
+    1259-1347        0 
+    1347-1434        0 
+    1434-1522        0 
+    1522-1610        0 
+    1610-1697        0 
+    1697-1785        0 
+    1785-1873        0 
+    1873-1960        0 
+    1960-2048        9 ########################################
+</pre>
+<li>{&quot;n&quot;: 10, &quot;mean&quot;: 1872.7, &quot;median&quot;: 2048.0, &quot;std&quot;: 554.3472738275169, &quot;min&quot;: 295.0, &quot;max&quot;: 2048.0, &quot;p10&quot;: 1872.7, &quot;p90&quot;: 2048.0}</li>
+
+<h2>Latency / throughput</h2>
+<li>cond-2f3369427321: wall_ms {&quot;n&quot;: 10, &quot;mean&quot;: 30029.265054098505, &quot;median&quot;: 31896.260229499603, &quot;std&quot;: 8960.98377409812, &quot;min&quot;: 4941.920750003192, &quot;max&quot;: 35880.3760830051, &quot;p10&quot;: 28474.013149694656, &quot;p90&quot;: 34862.20555829059}; tok/s {&quot;n&quot;: 10, &quot;mean&quot;: 62.36816167011009, &quot;median&quot;: 63.64367095999401, &quot;std&quot;: 3.0263241893271284, &quot;min&quot;: 57.078554451664296, &quot;max&quot;: 65.87604670806981, &quot;p10&quot;: 58.75099324031683, &quot;p90&quot;: 65.38568023009796}; ttft_ms {&quot;n&quot;: 10, &quot;mean&quot;: 88.07096679811366, &quot;median&quot;: 65.96958399313735, &quot;std&quot;: 65.27022526447207, &quot;min&quot;: 47.596500007784925, &quot;max&quot;: 270.14108300500084, &quot;p10&quot;: 58.67295030329842, &quot;p90&quot;: 113.70210829772981}</li>
+
+<h2>Repetition</h2>
+<li>cond-2f3369427321: unique_token_ratio {&quot;n&quot;: 10, &quot;mean&quot;: 0.09514322916666666, &quot;median&quot;: 0.068115234375, &quot;std&quot;: 0.08065288086818474, &quot;min&quot;: 0.04345703125, &quot;max&quot;: 0.31666666666666665, &quot;p10&quot;: 0.051806640625, &quot;p90&quot;: 0.1362565104166666}; repeated_ngram_fraction_4 {&quot;n&quot;: 10, &quot;mean&quot;: 0.7679375663727741, &quot;median&quot;: 0.8466992665036674, &quot;std&quot;: 0.17318025620412994, &quot;min&quot;: 0.3434343434343434, &quot;max&quot;: 0.8953545232273838, &quot;p10&quot;: 0.5796246079375664, &quot;p90&quot;: 0.8812713936430318}; text_repeat_ratio {&quot;n&quot;: 10, &quot;mean&quot;: 0.4369290857294761, &quot;median&quot;: 0.4238953488372093, &quot;std&quot;: 0.2441783660315285, &quot;min&quot;: 0.04347826086956519, &quot;max&quot;: 0.764367816091954, &quot;p10&quot;: 0.05050167224080271, &quot;p90&quot;: 0.6559822361546499}</li>
+
+<h2>Repeatability / noise floor</h2>
+
+<h3>1. Greedy replay (same deterministic condition, repeated)</h3>
+<li>no repeated greedy conditions in this run</li>
+
+<h3>2. Same-seed sampled replay (same seed + sampler, re-executed)</h3>
+<li>no repeated same-seed sampled conditions in this run</li>
+
+<h3>3. Across-seed stochastic variation (fixed sampler policy, different seeds)</h3>
+<li>fewer than two seeds per task/condition</li>
+
+<h3>4. Across-seed token variation (valid even when all answers are censored)</h3>
+<li>fewer than two seeds per task/condition</li>
+
+<h2>Censoring / termination (do not read a capped run as a wrong answer)</h2>
+
+<li>capped_length: 9</li>
+<li>eos_observed: 1</li>
+<li>missing_answer: 9</li>
+<li>natural_eos: 1</li>
+<li>status:censored: 9</li>
+<li>status:correct: 1</li>
+<li>think_end_reached: 1</li>
+
+<h3>Budget outcomes per condition</h3>
+<table>
+<tr><th>condition_id</th><th>success_at_budget</th><th>completion_rate</th><th>censored_rate</th><th>error_rate</th><th>unparseable_rate</th><th>cond_acc</th><th>completed</th></tr>
+<tr><td>cond-2f3369427321</td><td>0.1</td><td>0.1</td><td>0.9</td><td>0</td><td>0</td><td>1</td></tr>
+</table>
+
+<h2>Prefix probes / trajectory states</h2>
+
+<li>n probes: 50</li>
+<li>stable-sufficient WITH observed natural final: 1</li>
+<li>observed-probe stable (natural final unobserved or uncounted): 3</li>
+<li>never_correct: 7</li>
+<li>wrong_to_correct: 3</li>
+
+<h2>Limitations</h2>
+<li>Single model revision on a single machine; results do not generalize to other weights or hardware.</li>
+<li>Greedy determinism is a same-process, same-machine replay test.</li>
+<li>Where the reasoning channel was never closed, the trajectory is censored, not a natural stop.</li>
+<li>No causal claims: deployment differences are associations under this protocol.</li>
+<hr>
+<h2>Plots derived from saved evidence</h2>
+<h3>cond-2f3369427321 — reasoning tokens</h3><svg xmlns="http://www.w3.org/2000/svg" width="420" height="140" viewBox="0 0 420 140"><rect x="0.0" y="126.7" width="20.0" height="13.3" fill="#3b6"/><rect x="21.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="42.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="63.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="84.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="105.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="126.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="147.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="168.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="189.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="210.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="231.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="252.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="273.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="294.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="315.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="336.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="357.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="378.0" y="140.0" width="20.0" height="0.0" fill="#3b6"/><rect x="399.0" y="20.0" width="20.0" height="120.0" fill="#3b6"/><text x="4" y="12" font-size="11" fill="#333">min=295 max=2048 mean=1872.7</text></svg>
+</body></html>
