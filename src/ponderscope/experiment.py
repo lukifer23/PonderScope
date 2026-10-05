@@ -36,6 +36,12 @@ from .tasks import generate_pack, generate_pack_metadata, normalize, score
 
 
 def build_capture(spec: ExperimentSpec, *, digest: bool | None = None) -> CaptureSpec:
+    if spec.capture_level == "minimal":
+        return CaptureSpec.minimal()
+    if spec.capture_level == "digest":
+        return CaptureSpec.research(top_k=spec.capture_top_k, digest=True)
+    if spec.capture_level != "research":
+        raise ValueError(f"unknown capture_level: {spec.capture_level!r}")
     return CaptureSpec(
         entropy=spec.capture_entropy,
         top_k=spec.capture_top_k,

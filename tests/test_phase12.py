@@ -399,6 +399,41 @@ def test_bundle_is_deterministic_and_requires_valid_seal(tmp_path):
         bundle_run(store.path, tmp_path / "c.tar.gz")
 
 
+def test_cap_prefix_invariance_helper_with_backend(fake_backend):
+    from ponderscope.calibration import run_cap_prefix_invariance
+
+    prompts = [{"task_id": "t1", "family": "arith", "token_ids": [10, 20, 30]}]
+    out = run_cap_prefix_invariance(fake_backend, prompts, [128, 256, 512])
+    assert out["all_exact_prefix"] is True
+    assert out["per_task"][0]["lengths"] == {"128": 23, "256": 23, "512": 23}
+
+
+def test_capture_level_minimal_via_spec(fake_backend, tmp_path, monkeypatch):
+    from ponderscope.experiment import run_experiment
+
+    monkeypatch.setattr("ponderscope.experiment.get_backend", lambda name: fake_backend)
+    spec = ExperimentSpec(
+        name="minimal",
+        task_pack="tasks-v1",
+        families=["arith"],
+        n_per_family=1,
+        max_tokens=8,
+        capture_level="minimal",
+    )
+    result = run_experiment(
+        spec,
+        model_repo="fake/model",
+        model_revision="deadbeef",
+        runs_dir=tmp_path,
+        code_state=CLEAN,
+    )
+    rec = result.store.read_traces()[0]
+    capture = rec["trace"]["extra"]["capture"]
+    assert capture["entropy"] is False
+    assert capture["per_token_timing"] is False
+    assert capture["chosen_logprob"] is False
+
+
 def test_capture_spec_minimal_vs_research_fields():
     assert CaptureSpec.minimal().entropy is False
     assert CaptureSpec.research(top_k=5).top_k == 5

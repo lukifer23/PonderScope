@@ -118,7 +118,11 @@ class FakeBackend:
             terminated_by_eos=True,
             capped=False,
             steps=steps,
-            extra={"think_end_reached": True, "seed": decoding.seed},
+            extra={
+                "think_end_reached": True,
+                "seed": decoding.seed,
+                "capture": capture.to_dict(),
+            },
         )
 
     def probe(

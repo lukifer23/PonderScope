@@ -41,6 +41,7 @@ class ExperimentSpec:
     capture_entropy: bool = True
     capture_top_k: int = 5
     capture_logprob_digest: bool = False
+    capture_level: str = "research"  # "minimal" | "research" | "digest"
     notes: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -66,6 +67,7 @@ class ExperimentSpec:
             "capture_entropy": self.capture_entropy,
             "capture_top_k": self.capture_top_k,
             "capture_logprob_digest": self.capture_logprob_digest,
+            "capture_level": self.capture_level,
             "notes": self.notes,
         }
 

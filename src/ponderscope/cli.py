@@ -84,6 +84,7 @@ def _load_spec(args: argparse.Namespace) -> ExperimentSpec:
         probe=args.probe,
         n_probes=args.n_probes,
         capture_logprob_digest=args.logprob_digest,
+        capture_level=args.capture_level,
     )
 
 
@@ -190,6 +191,48 @@ def _cmd_verify(args: argparse.Namespace) -> int:
     return 0 if report["pass"] else 1
 
 
+def _cmd_calibrate_prefix(args: argparse.Namespace) -> int:
+    from .backends import get_backend
+    from .calibration import run_cap_prefix_invariance
+    from .config.identity import SourceArtifactIdentity
+    from .evidence.store import atomic_write_json
+    from .tasks import generate_pack
+
+    backend = get_backend(args.backend)
+    source = backend.load(SourceArtifactIdentity(repo_id=args.model_repo, revision=args.revision))
+    tasks = generate_pack(
+        families=args.families or None,
+        n_per_family=args.n_per_family,
+        pack="tasks-v1",
+        split="calibration",
+        seed=args.task_seed,
+        prompt_policy=args.prompt_policy,
+    )
+    prompts = [
+        {
+            "task_id": t.task_id,
+            "family": t.family,
+            "token_ids": backend.tokenize_prompt(
+                [{"role": "user", "content": t.prompt}], enable_thinking=True
+            ),
+        }
+        for t in tasks
+    ]
+    result = run_cap_prefix_invariance(backend, prompts, args.caps)
+    result["model"] = {"repo_id": source.repo_id, "revision": source.revision}
+    result["source_artifact_id"] = source.source.source_artifact_id
+    result["prompt_policy"] = args.prompt_policy
+    atomic_write_json(Path(args.out), result)
+    print(f"cap-prefix invariance: all_exact_prefix={result['all_exact_prefix']}")
+    print(f"  caps={result['caps']} prompts={result['n_prompts']}")
+    for t in result["per_task"]:
+        print(
+            f"  {t['family']}/{t['task_id'][:8]} lengths={t['lengths']} ok={t['invariance']['exact_prefix']}"
+        )
+    print(f"  saved {args.out}")
+    return 0
+
+
 def _cmd_bundle(args: argparse.Namespace) -> int:
     from .evidence.bundle import bundle_run
     from .evidence.run import RunStore
@@ -257,6 +300,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--probe", action="store_true")
     p.add_argument("--n-probes", type=int, default=4)
     p.add_argument("--logprob-digest", action="store_true")
+    p.add_argument("--capture-level", default="research", choices=["minimal", "research", "digest"])
     p.add_argument("--backend", default="mlx")
     p.add_argument("--model-repo", default=MODEL_REPO_DEFAULT)
     p.add_argument("--revision", default=REVISION_DEFAULT)
@@ -293,6 +337,20 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--runs-dir", default="runs")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_verify)
+
+    p = sub.add_parser(
+        "calibrate-prefix", help="qualify cap-prefix invariance for termination calibration"
+    )
+    p.add_argument("--backend", default="mlx")
+    p.add_argument("--model-repo", default=MODEL_REPO_DEFAULT)
+    p.add_argument("--revision", default=REVISION_DEFAULT)
+    p.add_argument("--families", nargs="*", default=None)
+    p.add_argument("--n-per-family", type=int, default=1)
+    p.add_argument("--task-seed", type=int, default=0)
+    p.add_argument("--prompt-policy", default="pp-v1")
+    p.add_argument("--caps", nargs="+", type=int, default=[256, 512, 1024, 2048])
+    p.add_argument("--out", default="runs/calibration-prefix.phase1_2.json")
+    p.set_defaults(func=_cmd_calibrate_prefix)
 
     p = sub.add_parser("bundle", help="build a deterministic evidence archive for a sealed run")
     p.add_argument("--run")
