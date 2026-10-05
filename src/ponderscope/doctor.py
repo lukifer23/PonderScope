@@ -76,11 +76,12 @@ def format_doctor(report: dict[str, Any]) -> str:
         "prefix_probe",
     ):
         lines.append(f"  {key:<22} {caps[key]}")
+    source = model.get("source", model)
     lines.append("Model")
-    lines.append(f"  repo          {model['repo_id']}")
-    lines.append(f"  revision      {model['revision']}")
-    lines.append(f"  local path    {model['local_path']}")
-    lines.append(f"  precision     {model['precision']}")
+    lines.append(f"  repo          {source.get('repo_id')}")
+    lines.append(f"  revision      {source.get('revision')}")
+    lines.append(f"  local path    {model.get('local_path')}")
+    lines.append(f"  precision     {model.get('precision')}")
     lines.append(
         f"  quantization  {model['quantization']} "
         f"bits={model['quantization_bits']} group={model['quantization_group_size']}"

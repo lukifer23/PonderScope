@@ -245,6 +245,25 @@ def test_load_audit_allows_non_text_drop(tmp_path):
     assert audit["n_text_source_lost"] == 0
 
 
+def test_load_audit_accepts_renamed_text_keys(tmp_path):
+    keys = ["model.language_model.embed_tokens.weight", "model.visual.patch.weight"]
+    snap = _snapshot(tmp_path, keys)
+
+    class _RenameModel(_FakeModel):
+        def sanitize(self, weights):
+            return {"embed_tokens.weight": weights["model.language_model.embed_tokens.weight"]}
+
+        def parameters(self):
+            import mlx.core as mx
+
+            return {"embed_tokens.weight": mx.zeros((2, 2))}
+
+    audit = audit_model_load(_RenameModel({}, set()), snap)
+    assert audit["ok"] is True
+    assert audit["n_renamed_or_dropped_text"] == 1
+    assert audit["renames_or_drops_accounted_by_count"] is True
+
+
 def test_load_audit_hard_fails_on_unexpected_text_loss(tmp_path):
     keys = ["model.embed_tokens.weight", "model.visual.patch.weight"]
     snap = _snapshot(tmp_path, keys)
