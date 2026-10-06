@@ -1,0 +1,150 @@
+{
+  "caps": [
+    2048,
+    4096
+  ],
+  "n_prompts": 5,
+  "n_comparisons": 5,
+  "sufficient": true,
+  "status": "ok",
+  "all_exact_prefix": true,
+  "per_task": [
+    {
+      "task_id": "7566c88a85fc2f5d",
+      "family": "arith",
+      "lengths": {
+        "2048": 300,
+        "4096": 300
+      },
+      "invariance": {
+        "caps": [
+          2048,
+          4096
+        ],
+        "n_comparisons": 1,
+        "exact_prefix": true,
+        "status": "ok",
+        "checks": [
+          {
+            "short_cap": 2048,
+            "long_cap": 4096,
+            "short_len": 300,
+            "long_len": 300,
+            "exact_prefix": true
+          }
+        ]
+      }
+    },
+    {
+      "task_id": "d7e92c470c95fb09",
+      "family": "logic",
+      "lengths": {
+        "2048": 2048,
+        "4096": 4096
+      },
+      "invariance": {
+        "caps": [
+          2048,
+          4096
+        ],
+        "n_comparisons": 1,
+        "exact_prefix": true,
+        "status": "ok",
+        "checks": [
+          {
+            "short_cap": 2048,
+            "long_cap": 4096,
+            "short_len": 2048,
+            "long_len": 4096,
+            "exact_prefix": true
+          }
+        ]
+      }
+    },
+    {
+      "task_id": "061fb724a8cbc229",
+      "family": "order",
+      "lengths": {
+        "2048": 2048,
+        "4096": 4096
+      },
+      "invariance": {
+        "caps": [
+          2048,
+          4096
+        ],
+        "n_comparisons": 1,
+        "exact_prefix": true,
+        "status": "ok",
+        "checks": [
+          {
+            "short_cap": 2048,
+            "long_cap": 4096,
+            "short_len": 2048,
+            "long_len": 4096,
+            "exact_prefix": true
+          }
+        ]
+      }
+    },
+    {
+      "task_id": "052f3e33cc75673b",
+      "family": "path",
+      "lengths": {
+        "2048": 2048,
+        "4096": 4096
+      },
+      "invariance": {
+        "caps": [
+          2048,
+          4096
+        ],
+        "n_comparisons": 1,
+        "exact_prefix": true,
+        "status": "ok",
+        "checks": [
+          {
+            "short_cap": 2048,
+            "long_cap": 4096,
+            "short_len": 2048,
+            "long_len": 4096,
+            "exact_prefix": true
+          }
+        ]
+      }
+    },
+    {
+      "task_id": "39578687f1081f5e",
+      "family": "sm",
+      "lengths": {
+        "2048": 2048,
+        "4096": 4096
+      },
+      "invariance": {
+        "caps": [
+          2048,
+          4096
+        ],
+        "n_comparisons": 1,
+        "exact_prefix": true,
+        "status": "ok",
+        "checks": [
+          {
+            "short_cap": 2048,
+            "long_cap": 4096,
+            "short_len": 2048,
+            "long_len": 4096,
+            "exact_prefix": true
+          }
+        ]
+      }
+    }
+  ],
+  "note": "A single cap yields zero comparisons and is NOT a validation; all_exact_prefix is only meaningful with at least two distinct caps. If True, closure and lower-cap censoring can be derived from one generous greedy run without re-running each cap.",
+  "model": {
+    "repo_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17"
+  },
+  "source_artifact_id": "src-52161236e42a",
+  "prompt_policy": "pp-v1"
+}

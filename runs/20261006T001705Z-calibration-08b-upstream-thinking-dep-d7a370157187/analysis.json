@@ -1,0 +1,1255 @@
+{
+  "interpretation": "phase1.3",
+  "run_id": "20261006T001705Z-calibration-08b-upstream-thinking-dep-d7a370157187",
+  "artifact_id": "wvar-46d3e044d08b",
+  "deployment_id": "dep-d7a370157187",
+  "condition_ids": [
+    "cond-74a29a115886"
+  ],
+  "deployment_description": "Qwen/Qwen3.5-0.8B@2fc06364715b (original, bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] greedy src=src-52161236e42a wvar=wvar-46d3e044d08b dep=dep-d7a370157187 cond=cond-2f3369427321",
+  "task_pack": {
+    "pack_version": "tasks-v1",
+    "generator_version": "generator-v1",
+    "prompt_policy": "pp-v1",
+    "prompt_policies_present": [
+      "pp-v1"
+    ],
+    "requested_pack": "tasks-v1",
+    "structural_params": {
+      "families": [
+        "arith",
+        "path",
+        "order",
+        "logic",
+        "sm"
+      ],
+      "difficulty_levels": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "splits": [
+        "train",
+        "calibration",
+        "dev",
+        "test"
+      ]
+    },
+    "provenance": "Phase 1.0 initial procedural pack; frozen after first live evidence.",
+    "families": [
+      "arith",
+      "logic",
+      "order",
+      "path",
+      "sm"
+    ],
+    "n_per_family": 2,
+    "split": "calibration",
+    "seed": 0,
+    "n_tasks": 10,
+    "structural_task_ids": [
+      "052f3e33cc75673b",
+      "061fb724a8cbc229",
+      "39578687f1081f5e",
+      "3c69470cbcf9d045",
+      "63b0cc5b5cb75c8c",
+      "7566c88a85fc2f5d",
+      "802f085de3864bca",
+      "89be5df23906fda6",
+      "c50445f190baa2cb",
+      "d7e92c470c95fb09"
+    ],
+    "task_ids_sha256": "be54401812510e6ffcc4d24152043f0c23d9300ca7a4e0ad8aef03d5a452e659",
+    "structural_task_ids_sha256": "be54401812510e6ffcc4d24152043f0c23d9300ca7a4e0ad8aef03d5a452e659",
+    "presentation_ids": [
+      "pres-6b2af33a32e5",
+      "pres-79700845ad24",
+      "pres-9e280afe28ad",
+      "pres-9eb51ff8f5bd",
+      "pres-9f5315dd3f3d",
+      "pres-b1f3228c270f",
+      "pres-b8b9d181900e",
+      "pres-de97fb7d6590",
+      "pres-ebfba7aa27ec",
+      "pres-ee1a83453f4d"
+    ],
+    "presentation_ids_sha256": "494c0cda7d2c34489a377bdaa4d1705a19d85c89af507b1443090052fa812819",
+    "n_presentations": 10
+  },
+  "n_generations": 60,
+  "n_probes": 0,
+  "n_tasks": 10,
+  "configs": {
+    "cond-74a29a115886": {
+      "condition_id": "cond-74a29a115886",
+      "mode": "sampled",
+      "n": 60,
+      "n_tasks": 10,
+      "deployment_description": "Qwen/Qwen3.5-0.8B@2fc06364715b precision=bfloat16 quant=none | mlx-lm 0.32.0 on Apple M3 Pro | sampled",
+      "success_at_budget": 0.06666666666666667,
+      "success_at_budget_ci": [
+        0.0,
+        0.16666666666666666
+      ],
+      "success_at_budget_ci_clusters": {
+        "n_clusters": 10,
+        "n_obs": 60,
+        "mean": 0.06666666666666667,
+        "lo": 0.0,
+        "hi": 0.16666666666666666
+      },
+      "outcomes": {
+        "n_attempted": 60,
+        "n_completed": 4,
+        "n_answer_observed": 4,
+        "n_censored": 56,
+        "n_error": 0,
+        "n_unparseable": 0,
+        "success_at_budget": 0.06666666666666667,
+        "completion_rate": 0.06666666666666667,
+        "conditional_accuracy_given_completed": 1.0,
+        "answer_observed_accuracy": 1.0,
+        "censored_rate": 0.9333333333333333,
+        "error_rate": 0.0,
+        "unparseable_rate": 0.0,
+        "answer_observation_rate": 0.06666666666666667
+      },
+      "reasoning_tokens": {
+        "n": 60,
+        "mean": 1951.3,
+        "median": 2048.0,
+        "std": 374.119816754119,
+        "min": 280.0,
+        "max": 2048.0,
+        "p10": 2048.0,
+        "p90": 2048.0
+      },
+      "answer_tokens": {
+        "n": 60,
+        "mean": 5.166666666666667,
+        "median": 0.0,
+        "std": 20.08133180358439,
+        "min": 0.0,
+        "max": 96.0,
+        "p10": 0.0,
+        "p90": 0.0
+      },
+      "total_tokens": {
+        "n": 60,
+        "mean": 1956.5333333333333,
+        "median": 2048.0,
+        "std": 353.79710103471024,
+        "min": 377.0,
+        "max": 2048.0,
+        "p10": 2048.0,
+        "p90": 2048.0
+      },
+      "wall_ms": {
+        "n": 60,
+        "mean": 28958.154518732776,
+        "median": 29782.572562995483,
+        "std": 5399.600286323016,
+        "min": 5483.594165998511,
+        "max": 35168.62354100158,
+        "p10": 29132.98725840723,
+        "p90": 31532.50069579226
+      },
+      "tokens_per_sec": {
+        "n": 60,
+        "mean": 67.65058402294525,
+        "median": 68.6954439684518,
+        "std": 2.7243348091926127,
+        "min": 58.233726367263856,
+        "max": 70.73992837816972,
+        "p10": 64.77693131962593,
+        "p90": 70.21969279422397
+      },
+      "ttft_ms": {
+        "n": 60,
+        "mean": 77.82349369954318,
+        "median": 63.81941700237803,
+        "std": 83.54479160120535,
+        "min": 43.989541998598725,
+        "max": 703.6982499994338,
+        "p10": 47.337546189373825,
+        "p90": 94.06250000465661
+      },
+      "unique_token_ratio": {
+        "n": 60,
+        "mean": 0.14072883164787797,
+        "median": 0.130615234375,
+        "std": 0.03581237676906193,
+        "min": 0.08544921875,
+        "max": 0.27851458885941643,
+        "p10": 0.10874023437500001,
+        "p90": 0.17182617187500002
+      },
+      "repeated_ngram_fraction_4": {
+        "n": 60,
+        "mean": 0.4678636707006822,
+        "median": 0.45843520782396086,
+        "std": 0.1334839552894706,
+        "min": 0.25623471882640586,
+        "max": 0.7286063569682152,
+        "p10": 0.3308557457212714,
+        "p90": 0.6425916870415648
+      },
+      "text_repeat_ratio": {
+        "n": 60,
+        "mean": 0.08898819668575096,
+        "median": 0.07111251580278127,
+        "std": 0.07798574857969134,
+        "min": 0.0,
+        "max": 0.33526011560693647,
+        "p10": 0.008338219008533621,
+        "p90": 0.1738542297597416
+      },
+      "termination": {
+        "status:correct": 4,
+        "natural_eos": 4,
+        "eos_observed": 4,
+        "think_end_reached": 4,
+        "status:censored": 56,
+        "capped_length": 56,
+        "missing_answer": 56
+      },
+      "per_family": {
+        "arith": {
+          "n": 12,
+          "success_at_budget": 0.3333333333333333,
+          "outcomes": {
+            "n_attempted": 12,
+            "n_completed": 4,
+            "n_answer_observed": 4,
+            "n_censored": 8,
+            "n_error": 0,
+            "n_unparseable": 0,
+            "success_at_budget": 0.3333333333333333,
+            "completion_rate": 0.3333333333333333,
+            "conditional_accuracy_given_completed": 1.0,
+            "answer_observed_accuracy": 1.0,
+            "censored_rate": 0.6666666666666666,
+            "error_rate": 0.0,
+            "unparseable_rate": 0.0,
+            "answer_observation_rate": 0.3333333333333333
+          },
+          "reasoning_tokens_mean": 1564.5
+        },
+        "logic": {
+          "n": 12,
+          "success_at_budget": 0.0,
+          "outcomes": {
+            "n_attempted": 12,
+            "n_completed": 0,
+            "n_answer_observed": 0,
+            "n_censored": 12,
+            "n_error": 0,
+            "n_unparseable": 0,
+            "success_at_budget": 0.0,
+            "completion_rate": 0.0,
+            "conditional_accuracy_given_completed": null,
+            "answer_observed_accuracy": null,
+            "censored_rate": 1.0,
+            "error_rate": 0.0,
+            "unparseable_rate": 0.0,
+            "answer_observation_rate": 0.0
+          },
+          "reasoning_tokens_mean": 2048.0
+        },
+        "order": {
+          "n": 12,
+          "success_at_budget": 0.0,
+          "outcomes": {
+            "n_attempted": 12,
+            "n_completed": 0,
+            "n_answer_observed": 0,
+            "n_censored": 12,
+            "n_error": 0,
+            "n_unparseable": 0,
+            "success_at_budget": 0.0,
+            "completion_rate": 0.0,
+            "conditional_accuracy_given_completed": null,
+            "answer_observed_accuracy": null,
+            "censored_rate": 1.0,
+            "error_rate": 0.0,
+            "unparseable_rate": 0.0,
+            "answer_observation_rate": 0.0
+          },
+          "reasoning_tokens_mean": 2048.0
+        },
+        "path": {
+          "n": 12,
+          "success_at_budget": 0.0,
+          "outcomes": {
+            "n_attempted": 12,
+            "n_completed": 0,
+            "n_answer_observed": 0,
+            "n_censored": 12,
+            "n_error": 0,
+            "n_unparseable": 0,
+            "success_at_budget": 0.0,
+            "completion_rate": 0.0,
+            "conditional_accuracy_given_completed": null,
+            "answer_observed_accuracy": null,
+            "censored_rate": 1.0,
+            "error_rate": 0.0,
+            "unparseable_rate": 0.0,
+            "answer_observation_rate": 0.0
+          },
+          "reasoning_tokens_mean": 2048.0
+        },
+        "sm": {
+          "n": 12,
+          "success_at_budget": 0.0,
+          "outcomes": {
+            "n_attempted": 12,
+            "n_completed": 0,
+            "n_answer_observed": 0,
+            "n_censored": 12,
+            "n_error": 0,
+            "n_unparseable": 0,
+            "success_at_budget": 0.0,
+            "completion_rate": 0.0,
+            "conditional_accuracy_given_completed": null,
+            "answer_observed_accuracy": null,
+            "censored_rate": 1.0,
+            "error_rate": 0.0,
+            "unparseable_rate": 0.0,
+            "answer_observation_rate": 0.0
+          },
+          "reasoning_tokens_mean": 2048.0
+        }
+      }
+    }
+  },
+  "noise_floor": {
+    "greedy_replay": {
+      "available": false,
+      "n_task_conditions": 0,
+      "token_identical_count": 0,
+      "token_identical_rate": null,
+      "answer_agreement_rate": null,
+      "mean_reasoning_token_std": null,
+      "mean_wall_ms_std": null,
+      "per_task": [],
+      "note": "Same-process, same-condition greedy replay on this machine."
+    },
+    "same_seed_replay": {
+      "available": true,
+      "n_task_condition_seeds": 30,
+      "token_identical_count": 30,
+      "token_identical_rate": 1.0,
+      "ambiguous_seed_count": 0,
+      "answer_agreement_rate": 1.0,
+      "mean_reasoning_token_std": 0.0,
+      "per_task": [
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "052f3e33cc75673b",
+          "seed": 0,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 226.05193750496255
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "052f3e33cc75673b",
+          "seed": 1,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 834.8826459987322
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "052f3e33cc75673b",
+          "seed": 2,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 17.310145500232466
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "061fb724a8cbc229",
+          "seed": 0,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 122.31985400285339
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "061fb724a8cbc229",
+          "seed": 1,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 12.352062491117977
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "061fb724a8cbc229",
+          "seed": 2,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 526.7976460017962
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "39578687f1081f5e",
+          "seed": 0,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 1569.8893959997804
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "39578687f1081f5e",
+          "seed": 1,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 1955.626333001419
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "39578687f1081f5e",
+          "seed": 2,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 777.9175415053032
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "3c69470cbcf9d045",
+          "seed": 0,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 927.5594585051294
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "3c69470cbcf9d045",
+          "seed": 1,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 241.1360624973895
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "3c69470cbcf9d045",
+          "seed": 2,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 121.55139551032335
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "63b0cc5b5cb75c8c",
+          "seed": 0,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 21.973958500893787
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "63b0cc5b5cb75c8c",
+          "seed": 1,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 21.16333299636608
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "63b0cc5b5cb75c8c",
+          "seed": 2,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 270.54929149744567
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "7566c88a85fc2f5d",
+          "seed": 0,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": true,
+          "answer_observed": true,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 321.70310449873796
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "7566c88a85fc2f5d",
+          "seed": 1,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 498.5567499898025
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "7566c88a85fc2f5d",
+          "seed": 2,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 786.8934999933117
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "802f085de3864bca",
+          "seed": 0,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 116.95787450298667
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "802f085de3864bca",
+          "seed": 1,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 766.4711250108667
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "802f085de3864bca",
+          "seed": 2,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 90.20820799923968
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "89be5df23906fda6",
+          "seed": 0,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 16.58868699450977
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "89be5df23906fda6",
+          "seed": 1,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 508.9603334927233
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "89be5df23906fda6",
+          "seed": 2,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 39.92733349878108
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "c50445f190baa2cb",
+          "seed": 0,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": true,
+          "answer_observed": true,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 87.5735630033887
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "c50445f190baa2cb",
+          "seed": 1,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 676.0593125000014
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "c50445f190baa2cb",
+          "seed": 2,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 92.76439550012583
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "d7e92c470c95fb09",
+          "seed": 0,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 472.1330619941
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "d7e92c470c95fb09",
+          "seed": 1,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 74.71454199549044
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "d7e92c470c95fb09",
+          "seed": 2,
+          "n_repeats": 2,
+          "identical_tokens": true,
+          "seed_ambiguous": false,
+          "first_token_divergence": null,
+          "first_logprob_digest_divergence": null,
+          "answer_agreement": null,
+          "answer_observed": false,
+          "reasoning_token_std": 0.0,
+          "wall_ms_std": 76.48170849279268
+        }
+      ],
+      "note": "Same seed, same sampler configuration, re-executed."
+    },
+    "across_seed": {
+      "available": true,
+      "n_task_conditions": 10,
+      "mean_distinct_answers": 1.0,
+      "mean_accuracy_std_across_seeds": null,
+      "any_ambiguous_seeds": false,
+      "per_task": [
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "052f3e33cc75673b",
+          "n_seeds": 3,
+          "n_seeds_with_observed_answer": 0,
+          "n_ambiguous_seeds": 0,
+          "distinct_answers": null,
+          "answer_observation_rate": 0.0,
+          "accuracy_std_across_seeds": null
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "061fb724a8cbc229",
+          "n_seeds": 3,
+          "n_seeds_with_observed_answer": 0,
+          "n_ambiguous_seeds": 0,
+          "distinct_answers": null,
+          "answer_observation_rate": 0.0,
+          "accuracy_std_across_seeds": null
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "39578687f1081f5e",
+          "n_seeds": 3,
+          "n_seeds_with_observed_answer": 0,
+          "n_ambiguous_seeds": 0,
+          "distinct_answers": null,
+          "answer_observation_rate": 0.0,
+          "accuracy_std_across_seeds": null
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "3c69470cbcf9d045",
+          "n_seeds": 3,
+          "n_seeds_with_observed_answer": 0,
+          "n_ambiguous_seeds": 0,
+          "distinct_answers": null,
+          "answer_observation_rate": 0.0,
+          "accuracy_std_across_seeds": null
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "63b0cc5b5cb75c8c",
+          "n_seeds": 3,
+          "n_seeds_with_observed_answer": 0,
+          "n_ambiguous_seeds": 0,
+          "distinct_answers": null,
+          "answer_observation_rate": 0.0,
+          "accuracy_std_across_seeds": null
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "7566c88a85fc2f5d",
+          "n_seeds": 3,
+          "n_seeds_with_observed_answer": 1,
+          "n_ambiguous_seeds": 0,
+          "distinct_answers": 1,
+          "answer_observation_rate": 0.3333333333333333,
+          "accuracy_std_across_seeds": null
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "802f085de3864bca",
+          "n_seeds": 3,
+          "n_seeds_with_observed_answer": 0,
+          "n_ambiguous_seeds": 0,
+          "distinct_answers": null,
+          "answer_observation_rate": 0.0,
+          "accuracy_std_across_seeds": null
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "89be5df23906fda6",
+          "n_seeds": 3,
+          "n_seeds_with_observed_answer": 0,
+          "n_ambiguous_seeds": 0,
+          "distinct_answers": null,
+          "answer_observation_rate": 0.0,
+          "accuracy_std_across_seeds": null
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "c50445f190baa2cb",
+          "n_seeds": 3,
+          "n_seeds_with_observed_answer": 1,
+          "n_ambiguous_seeds": 0,
+          "distinct_answers": 1,
+          "answer_observation_rate": 0.3333333333333333,
+          "accuracy_std_across_seeds": null
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "d7e92c470c95fb09",
+          "n_seeds": 3,
+          "n_seeds_with_observed_answer": 0,
+          "n_ambiguous_seeds": 0,
+          "distinct_answers": null,
+          "answer_observation_rate": 0.0,
+          "accuracy_std_across_seeds": null
+        }
+      ],
+      "note": "Final-answer diversity is only defined over observed answers; None elsewhere."
+    },
+    "cross_seed_tokens": {
+      "available": true,
+      "n_task_conditions": 10,
+      "mean_first_token_divergence": 6.2,
+      "mean_reasoning_tokens_std_across_seeds": 136.75445148147827,
+      "per_task": [
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "052f3e33cc75673b",
+          "n_seeds": 3,
+          "first_token_divergence": 8,
+          "reasoning_tokens_std_across_seeds": 0.0
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "061fb724a8cbc229",
+          "n_seeds": 3,
+          "first_token_divergence": 13,
+          "reasoning_tokens_std_across_seeds": 0.0
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "39578687f1081f5e",
+          "n_seeds": 3,
+          "first_token_divergence": 10,
+          "reasoning_tokens_std_across_seeds": 0.0
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "3c69470cbcf9d045",
+          "n_seeds": 3,
+          "first_token_divergence": 1,
+          "reasoning_tokens_std_across_seeds": 0.0
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "63b0cc5b5cb75c8c",
+          "n_seeds": 3,
+          "first_token_divergence": 10,
+          "reasoning_tokens_std_across_seeds": 0.0
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "7566c88a85fc2f5d",
+          "n_seeds": 3,
+          "first_token_divergence": 0,
+          "reasoning_tokens_std_across_seeds": 833.443192758544
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "802f085de3864bca",
+          "n_seeds": 3,
+          "first_token_divergence": 0,
+          "reasoning_tokens_std_across_seeds": 0.0
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "89be5df23906fda6",
+          "n_seeds": 3,
+          "first_token_divergence": 1,
+          "reasoning_tokens_std_across_seeds": 0.0
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "c50445f190baa2cb",
+          "n_seeds": 3,
+          "first_token_divergence": 16,
+          "reasoning_tokens_std_across_seeds": 534.1013220562389
+        },
+        {
+          "condition_id": "cond-74a29a115886",
+          "task_id": "d7e92c470c95fb09",
+          "n_seeds": 3,
+          "first_token_divergence": 3,
+          "reasoning_tokens_std_across_seeds": 0.0
+        }
+      ],
+      "note": "Seed variation is observable at the token level even when all final answers are censored."
+    }
+  },
+  "survival": {
+    "tau": 2048.0,
+    "time_definition": "generated tokens to closure (observation horizon if censored)",
+    "event_definition": "natural native think-end or EOS observed",
+    "censoring_definition": "max-token observation horizon reached before closure",
+    "per_condition": {
+      "cond-74a29a115886": {
+        "family": null,
+        "tau": 2048.0,
+        "kaplan_meier": {
+          "n": 60,
+          "n_events": 4,
+          "n_censored": 56,
+          "times": [
+            377.0,
+            975.0,
+            2048.0
+          ],
+          "survival": [
+            0.9666666666666667,
+            0.9333333333333333,
+            0.9333333333333333
+          ],
+          "at_risk": [
+            60,
+            58,
+            56
+          ],
+          "events": [
+            2,
+            2,
+            0
+          ],
+          "censored": [
+            0,
+            0,
+            56
+          ],
+          "median": null,
+          "max_time": 2048.0,
+          "note": "Product-limit closure survival; time is generated tokens to native think-end closure; censored at the observation horizon."
+        },
+        "rmst": 1956.5333333333333,
+        "median_tokens_to_closure": null,
+        "n_at_risk_initial": 60,
+        "n_events": 4,
+        "n_censored": 56,
+        "note": "If only one event exists, uncertainty is enormous; median/RMST are descriptive and should not be over-interpreted.",
+        "by_family": {
+          "arith": {
+            "family": "arith",
+            "tau": 2048.0,
+            "kaplan_meier": {
+              "n": 12,
+              "n_events": 4,
+              "n_censored": 8,
+              "times": [
+                377.0,
+                975.0,
+                2048.0
+              ],
+              "survival": [
+                0.8333333333333334,
+                0.6666666666666667,
+                0.6666666666666667
+              ],
+              "at_risk": [
+                12,
+                10,
+                8
+              ],
+              "events": [
+                2,
+                2,
+                0
+              ],
+              "censored": [
+                0,
+                0,
+                8
+              ],
+              "median": null,
+              "max_time": 2048.0,
+              "note": "Product-limit closure survival; time is generated tokens to native think-end closure; censored at the observation horizon."
+            },
+            "rmst": 1590.6666666666667,
+            "median_tokens_to_closure": null,
+            "n_at_risk_initial": 12,
+            "n_events": 4,
+            "n_censored": 8,
+            "note": "If only one event exists, uncertainty is enormous; median/RMST are descriptive and should not be over-interpreted.",
+            "insufficient_data": false,
+            "n": 12
+          },
+          "logic": {
+            "family": "logic",
+            "tau": 2048.0,
+            "kaplan_meier": {
+              "n": 12,
+              "n_events": 0,
+              "n_censored": 12,
+              "times": [
+                2048.0
+              ],
+              "survival": [
+                1.0
+              ],
+              "at_risk": [
+                12
+              ],
+              "events": [
+                0
+              ],
+              "censored": [
+                12
+              ],
+              "median": null,
+              "max_time": 2048.0,
+              "note": "Product-limit closure survival; time is generated tokens to native think-end closure; censored at the observation horizon."
+            },
+            "rmst": 2048.0,
+            "median_tokens_to_closure": null,
+            "n_at_risk_initial": 12,
+            "n_events": 0,
+            "n_censored": 12,
+            "note": "If only one event exists, uncertainty is enormous; median/RMST are descriptive and should not be over-interpreted.",
+            "insufficient_data": false,
+            "n": 12
+          },
+          "order": {
+            "family": "order",
+            "tau": 2048.0,
+            "kaplan_meier": {
+              "n": 12,
+              "n_events": 0,
+              "n_censored": 12,
+              "times": [
+                2048.0
+              ],
+              "survival": [
+                1.0
+              ],
+              "at_risk": [
+                12
+              ],
+              "events": [
+                0
+              ],
+              "censored": [
+                12
+              ],
+              "median": null,
+              "max_time": 2048.0,
+              "note": "Product-limit closure survival; time is generated tokens to native think-end closure; censored at the observation horizon."
+            },
+            "rmst": 2048.0,
+            "median_tokens_to_closure": null,
+            "n_at_risk_initial": 12,
+            "n_events": 0,
+            "n_censored": 12,
+            "note": "If only one event exists, uncertainty is enormous; median/RMST are descriptive and should not be over-interpreted.",
+            "insufficient_data": false,
+            "n": 12
+          },
+          "path": {
+            "family": "path",
+            "tau": 2048.0,
+            "kaplan_meier": {
+              "n": 12,
+              "n_events": 0,
+              "n_censored": 12,
+              "times": [
+                2048.0
+              ],
+              "survival": [
+                1.0
+              ],
+              "at_risk": [
+                12
+              ],
+              "events": [
+                0
+              ],
+              "censored": [
+                12
+              ],
+              "median": null,
+              "max_time": 2048.0,
+              "note": "Product-limit closure survival; time is generated tokens to native think-end closure; censored at the observation horizon."
+            },
+            "rmst": 2048.0,
+            "median_tokens_to_closure": null,
+            "n_at_risk_initial": 12,
+            "n_events": 0,
+            "n_censored": 12,
+            "note": "If only one event exists, uncertainty is enormous; median/RMST are descriptive and should not be over-interpreted.",
+            "insufficient_data": false,
+            "n": 12
+          },
+          "sm": {
+            "family": "sm",
+            "tau": 2048.0,
+            "kaplan_meier": {
+              "n": 12,
+              "n_events": 0,
+              "n_censored": 12,
+              "times": [
+                2048.0
+              ],
+              "survival": [
+                1.0
+              ],
+              "at_risk": [
+                12
+              ],
+              "events": [
+                0
+              ],
+              "censored": [
+                12
+              ],
+              "median": null,
+              "max_time": 2048.0,
+              "note": "Product-limit closure survival; time is generated tokens to native think-end closure; censored at the observation horizon."
+            },
+            "rmst": 2048.0,
+            "median_tokens_to_closure": null,
+            "n_at_risk_initial": 12,
+            "n_events": 0,
+            "n_censored": 12,
+            "note": "If only one event exists, uncertainty is enormous; median/RMST are descriptive and should not be over-interpreted.",
+            "insufficient_data": false,
+            "n": 12
+          }
+        }
+      }
+    },
+    "note": "max_tokens is an observation horizon, not a natural stopping threshold."
+  },
+  "loop": {
+    "per_condition": {
+      "cond-74a29a115886": {
+        "available": true,
+        "n": 60,
+        "longest_run_length": {
+          "n": 60,
+          "mean": 1.5,
+          "median": 1.0,
+          "std": 0.676481425202546,
+          "min": 1.0,
+          "max": 3.0,
+          "p10": 1.0,
+          "p90": 2.1000000000000014
+        },
+        "degeneration_onset_index": {
+          "n": 4,
+          "mean": 1974.5,
+          "median": 1974.5,
+          "std": 6.3508529610858835,
+          "min": 1969.0,
+          "max": 1980.0,
+          "p10": 1969.0,
+          "p90": 1980.0
+        },
+        "n_with_degeneration_onset": 4,
+        "special_longest_run_count": 0,
+        "top_motif_count": {
+          "n": 60,
+          "mean": 25.833333333333332,
+          "median": 21.5,
+          "std": 14.717874140277175,
+          "min": 7.0,
+          "max": 72.0,
+          "p10": 12.0,
+          "p90": 46.0
+        }
+      }
+    },
+    "note": "Descriptive loop structure with an explicitly documented onset rule; not a validated universal loop detector."
+  },
+  "probes": {
+    "n": 0,
+    "supported": true,
+    "n_stable_sufficient_with_natural_final": 0,
+    "n_observed_probe_stable": 0,
+    "prefix_state_counts": {},
+    "per_task": []
+  },
+  "status": {
+    "run": "EVIDENCE_COMPLETE",
+    "observations": [
+      "model loaded; precision=bfloat16; quantization=None; load_audit_ok=True",
+      "model policy qwen35-08b-thinking-upstream-v1 (qwen-upstream-profile-on-mlx) recorded; recommended={'temperature': 1.0, 'top_p': 0.95, 'top_k': 20, 'min_p': 0.0, 'presence_penalty': 1.5, 'repetition_penalty': 1.0, 'enable_thinking': True}"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "model": {
+    "repo_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17"
+  },
+  "source_artifact_id": "src-52161236e42a",
+  "model_policy": "qwen35-08b-thinking-upstream-v1",
+  "condition_label": "qwen-upstream-profile-on-mlx",
+  "decoding": {
+    "mode": "sampled",
+    "max_tokens": 64,
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "presence_penalty": 1.5,
+    "presence_context_size": 20,
+    "repetition_penalty": 1.0,
+    "repetition_context_size": 20,
+    "frequency_penalty": null,
+    "frequency_context_size": null,
+    "seed": 0,
+    "stop_on_eos": true,
+    "context": {
+      "enable_thinking": true
+    }
+  },
+  "condition_id": "cond-c3ee4032c4d5",
+  "per_task": [
+    {
+      "task_id": "7566c88a85fc2f5d",
+      "family": "arith",
+      "equivalence": {
+        "greedy": {
+          "identical": true,
+          "first_divergence": null,
+          "minimal_tokens": 64,
+          "research_tokens": 64
+        },
+        "sampled_same_seed": {
+          "identical": true,
+          "first_divergence": null,
+          "minimal_tokens": 64,
+          "research_tokens": 64
+        },
+        "equivalent": true,
+        "note": "Deterministic decoding must be token-identical across capture lanes; a difference is an instrumentation effect."
+      }
+    },
+    {
+      "task_id": "061fb724a8cbc229",
+      "family": "order",
+      "equivalence": {
+        "greedy": {
+          "identical": true,
+          "first_divergence": null,
+          "minimal_tokens": 64,
+          "research_tokens": 64
+        },
+        "sampled_same_seed": {
+          "identical": true,
+          "first_divergence": null,
+          "minimal_tokens": 64,
+          "research_tokens": 64
+        },
+        "equivalent": true,
+        "note": "Deterministic decoding must be token-identical across capture lanes; a difference is an instrumentation effect."
+      }
+    },
+    {
+      "task_id": "39578687f1081f5e",
+      "family": "sm",
+      "equivalence": {
+        "greedy": {
+          "identical": true,
+          "first_divergence": null,
+          "minimal_tokens": 64,
+          "research_tokens": 64
+        },
+        "sampled_same_seed": {
+          "identical": true,
+          "first_divergence": null,
+          "minimal_tokens": 64,
+          "research_tokens": 64
+        },
+        "equivalent": true,
+        "note": "Deterministic decoding must be token-identical across capture lanes; a difference is an instrumentation effect."
+      }
+    }
+  ],
+  "equivalent": true
+}
