@@ -1,0 +1,32 @@
+{
+  "model": {
+    "repo_id": "Qwen/Qwen3.5-4B",
+    "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a"
+  },
+  "load_seconds": 4.43,
+  "precision": "bfloat16",
+  "quantization": null,
+  "dtype_counts": {
+    "bfloat16": 378,
+    "float32": 48
+  },
+  "load_audit": {
+    "ok": true,
+    "n_source_keys": 738,
+    "n_loaded_params": 426,
+    "n_text_source_lost": 0,
+    "dropped_unexpected": 0
+  },
+  "mlx_peak_bytes_after_load": 8411510442,
+  "process_maxrss_bytes": 1392115712,
+  "probe_generated_tokens": 64,
+  "probe_finish_reason": "length",
+  "probe_think_end": false,
+  "probe_seconds": 8.48,
+  "probe_tokens_per_sec": 7.54,
+  "mlx_peak_bytes_after_generate": 8530754046,
+  "process_maxrss_bytes_after_generate": 1392115712,
+  "physical_memory_bytes": 19327352832,
+  "checkpoint_weight_shard_bytes": 9319828096,
+  "checkpoint_snapshot_total_bytes": 9342894355
+}
