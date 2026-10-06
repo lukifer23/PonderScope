@@ -1,0 +1,54 @@
+{
+  "condition_id": "cond-f5e762d3078f",
+  "presence_scope": "generated_history",
+  "seed": 0,
+  "repeats_per_task": 3,
+  "n_tasks": 3,
+  "all_token_identical": true,
+  "per_task": [
+    {
+      "task_id": "7566c88a85fc2f5d",
+      "family": "arith",
+      "n_executions": 3,
+      "token_identical": true,
+      "first_token_divergence": null,
+      "generated_tokens": [
+        589,
+        589,
+        589
+      ]
+    },
+    {
+      "task_id": "061fb724a8cbc229",
+      "family": "order",
+      "n_executions": 3,
+      "token_identical": true,
+      "first_token_divergence": null,
+      "generated_tokens": [
+        799,
+        799,
+        799
+      ]
+    },
+    {
+      "task_id": "39578687f1081f5e",
+      "family": "sm",
+      "n_executions": 3,
+      "token_identical": true,
+      "first_token_divergence": null,
+      "generated_tokens": [
+        1222,
+        1222,
+        1222
+      ]
+    }
+  ],
+  "note": "Same-seed technical replay to confirm the custom logits processor is reproducible. These executions are NOT part of any primary stochastic-draw N.",
+  "model": {
+    "repo_id": "Qwen/Qwen3.5-4B",
+    "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a"
+  },
+  "source_artifact_id": "src-6209ef70e318",
+  "prompt_policy": "pp-v1",
+  "spec_hash": "2d096a61cf047aee334df2ad93bd37f2f15cae75c631c823e1234525c16a82e7"
+}

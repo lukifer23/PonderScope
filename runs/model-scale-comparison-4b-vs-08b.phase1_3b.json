@@ -1,0 +1,80 @@
+{
+  "comparison": "model/scale comparison (Qwen3.5-4B BF16 vs Qwen3.5-0.8B BF16)",
+  "not": "deployment-drift causal result",
+  "shared_condition_id": "cond-f5e762d3078f",
+  "tau": 2048.0,
+  "matched_presentations": 10,
+  "model": {
+    "4b": {
+      "n_unique_draws": 30,
+      "n_closure_events": 20,
+      "closure_rate": 0.6666666666666666,
+      "censored": 10,
+      "rmst_2048": 1511.9333333333336,
+      "median": 1718.0,
+      "per_family": {
+        "arith": {
+          "draws": 6,
+          "events": 6
+        },
+        "logic": {
+          "draws": 6,
+          "events": 0
+        },
+        "order": {
+          "draws": 6,
+          "events": 6
+        },
+        "path": {
+          "draws": 6,
+          "events": 2
+        },
+        "sm": {
+          "draws": 6,
+          "events": 6
+        }
+      }
+    },
+    "08b": {
+      "n_unique_draws": 30,
+      "n_closure_events": 1,
+      "closure_rate": 0.03333333333333333,
+      "censored": 29,
+      "rmst_2048": 1987.7333333333333,
+      "median": null,
+      "per_family": {
+        "arith": {
+          "draws": 6,
+          "events": 1
+        },
+        "logic": {
+          "draws": 6,
+          "events": 0
+        },
+        "order": {
+          "draws": 6,
+          "events": 0
+        },
+        "path": {
+          "draws": 6,
+          "events": 0
+        },
+        "sm": {
+          "draws": 6,
+          "events": 0
+        }
+      }
+    }
+  },
+  "rmst_delta_4b_minus_08b_clustered": {
+    "n_clusters": 10,
+    "n_resamples_used": 5000,
+    "point": -475.7999999999997,
+    "mean": -477.3164666666666,
+    "lo": -700.4524999999999,
+    "hi": -253.3666666666668,
+    "excludes_zero": true,
+    "tau": 2048.0,
+    "note": "task-clustered bootstrap of RMST(A) - RMST(B); positive favors A."
+  }
+}

@@ -1,0 +1,369 @@
+{
+  "run_id": "20261006T022442Z-calibration-4b-generated-history-api-seed0-dep-e1c20569173a",
+  "created_utc": "20261006T022442Z",
+  "name": "calibration-4b-generated-history-api-seed0",
+  "spec": {
+    "name": "calibration-4b-generated-history-api-seed0",
+    "task_pack": "tasks-v1",
+    "prompt_policy": "pp-v1",
+    "model_policy": "qwen35-4b-thinking-api-v1",
+    "families": [
+      "arith",
+      "path",
+      "order",
+      "logic",
+      "sm"
+    ],
+    "n_per_family": 2,
+    "task_seed": 0,
+    "split": "calibration",
+    "greedy_repeats": 0,
+    "sampled_seeds": [
+      0
+    ],
+    "sampled_repeats_per_seed": 1,
+    "max_tokens": 2048,
+    "sampled_temperature": 1.0,
+    "sampled_top_p": 0.95,
+    "sampled_top_k": 20,
+    "sampled_min_p": 0.0,
+    "sampled_presence_penalty": 1.5,
+    "sampled_presence_context_size": 20,
+    "sampled_presence_scope": "generated_history",
+    "sampled_repetition_penalty": 1.0,
+    "sampled_repetition_context_size": 20,
+    "sampled_frequency_penalty": 0.0,
+    "sampled_frequency_context_size": 20,
+    "probe": false,
+    "n_probes": 4,
+    "probe_max_tokens": 64,
+    "capture_entropy": true,
+    "capture_top_k": 5,
+    "capture_logprob_digest": false,
+    "capture_level": "minimal",
+    "notes": "Stage B pilot: Qwen3.5-4B native BF16, same tasks-v1 calibration presentations, pp-v1, same generated-history thinking semantics as Stage A2, 2048 horizon, one predeclared seed (0) = 10 draws. Extend to seeds {0,1,2} only if execution is clean and runtime is reasonable."
+  },
+  "spec_hash": "dcd2e9f61a202e3891da34008dfc5cc17c007b0c51476f26973f1ecc248e9877",
+  "source_artifact": {
+    "repo_id": "Qwen/Qwen3.5-4B",
+    "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "weight_files": {
+      "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+      "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+    },
+    "tokenizer_files": {
+      "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "tokenizer_config.json": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+      "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003",
+      "merges.txt": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d",
+      "chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+    },
+    "chat_template_sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+  },
+  "source_artifact_id": "src-6209ef70e318",
+  "weight_variant": {
+    "source": {
+      "repo_id": "Qwen/Qwen3.5-4B",
+      "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "weight_files": {
+        "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+        "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+      },
+      "tokenizer_files": {
+        "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+        "tokenizer_config.json": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+        "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003",
+        "merges.txt": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d",
+        "chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+      },
+      "chat_template_sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+    },
+    "representation": "original",
+    "variant_weight_files": {
+      "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+      "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+    },
+    "precision": "bfloat16",
+    "quantization": null,
+    "quantization_bits": null,
+    "quantization_group_size": null,
+    "quantization_params": {
+      "detected": {
+        "quantized": false
+      },
+      "dtype_counts": {
+        "bfloat16": 378,
+        "float32": 48
+      }
+    },
+    "conversion": {},
+    "local_path": "/Users/admin/.cache/huggingface/hub/models--Qwen--Qwen3.5-4B/snapshots/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "load_audit": {
+      "ok": true,
+      "allowlist": [
+        "model.visual.",
+        "model.visual",
+        "vision_tower",
+        "mtp."
+      ],
+      "n_source_keys": 738,
+      "n_text_source_keys": 426,
+      "n_non_text_source_keys": 312,
+      "n_sanitized_keys": 426,
+      "n_loaded_params": 426,
+      "n_dropped_by_sanitize": 738,
+      "n_dropped_allowed_non_text": 312,
+      "n_renamed_or_dropped_text": 426,
+      "n_dropped_unexpected": 0,
+      "n_text_source_lost": 0,
+      "dropped_key_categories": {
+        "model": 723,
+        "mtp": 15
+      },
+      "missing_from_sanitized_params": [],
+      "unused_sanitized_params": [],
+      "dropped_unexpected_keys": [],
+      "text_source_keys_lost": [],
+      "renames_or_drops_accounted_by_count": true,
+      "text_key_count_consistent": true,
+      "load_strict": false
+    }
+  },
+  "weight_variant_id": "wvar-9b6f9b40b789",
+  "artifact": {
+    "source": {
+      "repo_id": "Qwen/Qwen3.5-4B",
+      "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "weight_files": {
+        "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+        "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+      },
+      "tokenizer_files": {
+        "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+        "tokenizer_config.json": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+        "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003",
+        "merges.txt": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d",
+        "chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+      },
+      "chat_template_sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+    },
+    "representation": "original",
+    "variant_weight_files": {
+      "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+      "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+    },
+    "precision": "bfloat16",
+    "quantization": null,
+    "quantization_bits": null,
+    "quantization_group_size": null,
+    "quantization_params": {
+      "detected": {
+        "quantized": false
+      },
+      "dtype_counts": {
+        "bfloat16": 378,
+        "float32": 48
+      }
+    },
+    "conversion": {},
+    "local_path": "/Users/admin/.cache/huggingface/hub/models--Qwen--Qwen3.5-4B/snapshots/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "load_audit": {
+      "ok": true,
+      "allowlist": [
+        "model.visual.",
+        "model.visual",
+        "vision_tower",
+        "mtp."
+      ],
+      "n_source_keys": 738,
+      "n_text_source_keys": 426,
+      "n_non_text_source_keys": 312,
+      "n_sanitized_keys": 426,
+      "n_loaded_params": 426,
+      "n_dropped_by_sanitize": 738,
+      "n_dropped_allowed_non_text": 312,
+      "n_renamed_or_dropped_text": 426,
+      "n_dropped_unexpected": 0,
+      "n_text_source_lost": 0,
+      "dropped_key_categories": {
+        "model": 723,
+        "mtp": 15
+      },
+      "missing_from_sanitized_params": [],
+      "unused_sanitized_params": [],
+      "dropped_unexpected_keys": [],
+      "text_source_keys_lost": [],
+      "renames_or_drops_accounted_by_count": true,
+      "text_key_count_consistent": true,
+      "load_strict": false
+    }
+  },
+  "artifact_id": "wvar-9b6f9b40b789",
+  "runtime": {
+    "runtime": "mlx-lm",
+    "runtime_version": "0.32.0",
+    "backend": "mlx-metal",
+    "hardware": "Apple M3 Pro",
+    "os": "Darwin 27.2.0",
+    "python_version": "3.12.12",
+    "device": "Device(gpu, 0)",
+    "extra": {}
+  },
+  "deployment_id": "dep-e1c20569173a",
+  "deployment_description": "Qwen/Qwen3.5-4B@851bf6e806ef (original, bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-9b6f9b40b789 dep=dep-e1c20569173a",
+  "conditions": [
+    {
+      "condition_id": "cond-f5e762d3078f",
+      "decoding": {
+        "mode": "sampled",
+        "max_tokens": 2048,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20,
+        "min_p": 0.0,
+        "presence_penalty": 1.5,
+        "stop_on_eos": true,
+        "context": {
+          "enable_thinking": true
+        },
+        "presence_scope": "generated_history"
+      },
+      "description": "sampled(scope=generated_history) cond=cond-f5e762d3078f"
+    }
+  ],
+  "code": {
+    "version": "0.1.0",
+    "git_sha": "3a2cc0f18bea08280cc0ccfd4f8a5d27ddbee483",
+    "git_dirty": false,
+    "untracked_evidence_count": 0,
+    "tracked_dirty": false,
+    "tracked_changes": [],
+    "exploratory": false,
+    "publication_grade": true
+  },
+  "prompt_policy": "pp-v1",
+  "timestamps": {
+    "started_utc": "20261006T022442Z",
+    "completed_utc": "20261006T024411Z"
+  },
+  "status": {
+    "run": "EVIDENCE_COMPLETE",
+    "observations": [
+      "model loaded; precision=bfloat16; quantization=None; load_audit_ok=True",
+      "model policy qwen35-4b-thinking-api-v1 (qwen-generated-history-presence-v1) recorded; recommended={'temperature': 1.0, 'top_p': 0.95, 'top_k': 20, 'min_p': 0.0, 'presence_penalty': 1.5, 'repetition_penalty': 1.0, 'enable_thinking': True}"
+    ],
+    "error": null
+  },
+  "model_policy": {
+    "profile_id": "qwen35-4b-thinking-api-v1",
+    "repo_id": "Qwen/Qwen3.5-4B",
+    "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "generation_mode": "text-thinking",
+    "recommended": {
+      "temperature": 1.0,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "presence_penalty": 1.5,
+      "repetition_penalty": 1.0,
+      "enable_thinking": true
+    },
+    "provenance": {
+      "source": "Hugging Face model card (README.md)",
+      "page_url": "https://huggingface.co/Qwen/Qwen3.5-4B/blob/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/README.md",
+      "raw_url": "https://huggingface.co/Qwen/Qwen3.5-4B/raw/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/README.md",
+      "retrieved_utc": "2026-10-06T02:00:00Z",
+      "readme_sha256": "1406be1b6b8fd8a6545870da516912804756593628a1d0fb0a7965211e82a7bb",
+      "readme_bytes": 77661
+    },
+    "mlx_mapping": {
+      "framework": "mlx-lm",
+      "framework_version": "0.32.0",
+      "equivalence_label": "qwen-generated-history-presence-v1",
+      "presence_scope": "generated_history",
+      "logits_processors": [
+        "presence_penalty"
+      ],
+      "processor_order": [
+        "repetition_penalty",
+        "presence_penalty",
+        "frequency_penalty"
+      ],
+      "presence_context_size": null,
+      "repetition_context_size": 20,
+      "semantics_note": "Same generated-history presence mapping as the 0.8B API profile. Model, not decoding semantics, is the intended contrast for the Stage B scale control."
+    },
+    "condition_label": "qwen-generated-history-presence-v1"
+  },
+  "task_pack": {
+    "pack_version": "tasks-v1",
+    "generator_version": "generator-v1",
+    "prompt_policy": "pp-v1",
+    "prompt_policies_present": [
+      "pp-v1"
+    ],
+    "requested_pack": "tasks-v1",
+    "structural_params": {
+      "families": [
+        "arith",
+        "path",
+        "order",
+        "logic",
+        "sm"
+      ],
+      "difficulty_levels": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "splits": [
+        "train",
+        "calibration",
+        "dev",
+        "test"
+      ]
+    },
+    "provenance": "Phase 1.0 initial procedural pack; frozen after first live evidence.",
+    "families": [
+      "arith",
+      "logic",
+      "order",
+      "path",
+      "sm"
+    ],
+    "n_per_family": 2,
+    "split": "calibration",
+    "seed": 0,
+    "n_tasks": 10,
+    "structural_task_ids": [
+      "052f3e33cc75673b",
+      "061fb724a8cbc229",
+      "39578687f1081f5e",
+      "3c69470cbcf9d045",
+      "63b0cc5b5cb75c8c",
+      "7566c88a85fc2f5d",
+      "802f085de3864bca",
+      "89be5df23906fda6",
+      "c50445f190baa2cb",
+      "d7e92c470c95fb09"
+    ],
+    "task_ids_sha256": "be54401812510e6ffcc4d24152043f0c23d9300ca7a4e0ad8aef03d5a452e659",
+    "structural_task_ids_sha256": "be54401812510e6ffcc4d24152043f0c23d9300ca7a4e0ad8aef03d5a452e659",
+    "presentation_ids": [
+      "pres-6b2af33a32e5",
+      "pres-79700845ad24",
+      "pres-9e280afe28ad",
+      "pres-9eb51ff8f5bd",
+      "pres-9f5315dd3f3d",
+      "pres-b1f3228c270f",
+      "pres-b8b9d181900e",
+      "pres-de97fb7d6590",
+      "pres-ebfba7aa27ec",
+      "pres-ee1a83453f4d"
+    ],
+    "presentation_ids_sha256": "494c0cda7d2c34489a377bdaa4d1705a19d85c89af507b1443090052fa812819",
+    "n_presentations": 10
+  },
+  "probe_supported": true,
+  "seal_schema": "ponderscope-seal/2"
+}
