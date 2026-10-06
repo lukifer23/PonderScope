@@ -22,33 +22,36 @@ The first priority is to build a trustworthy measurement instrument.
 
 ## Status
 
-Work in progress. **Phase 1.3 (decoding validity, censored-termination analysis,
-and same-family baseline qualification) is in progress on `main`.** Phase 1.1's
-live capability gates pass on
-`Qwen/Qwen3.5-0.8B`@`2fc06364715b967f1860aea9cf38778875588b17` (MLX-LM 0.32.0,
-Apple M3 Pro). Phase 1.2 corrected measurement semantics that treated a capped
-(censored) generation as an observed wrong answer, fixed the evidence-seal
-ordering, and split source-/weight-variant identity. See
-`docs/PHASE1_2_REPORT.md`, `docs/PHASE1_2_CORRECTION.md`, and
-`docs/PHASE1_3_REPORT.md`.
+Work in progress. **Phase 1.3B is complete on `main`** and a primary BF16
+baseline now exists. Phase 1.2 corrected measurement semantics that treated a
+capped (censored) generation as an observed wrong answer, fixed the evidence-seal
+ordering, and split source-/weight-variant identity. Phase 1.3 Stage A measured
+the upstream-recommended *numeric* thinking settings. Phase 1.3B corrected the
+upstream-policy interpretation, added explicit generated-history presence
+semantics, formalized the stochastic-draw/task statistical hierarchy, split
+reasoning-closure from EOS termination, fixed run-level deployment descriptions,
+and executed the same-family scale control. See `docs/PHASE1_2_REPORT.md`,
+`docs/PHASE1_2_CORRECTION.md`, `docs/PHASE1_3_REPORT.md`, and
+`docs/PHASE1_3B_REPORT.md`.
 
-Measured finding (Phase 1.2, greedy thinking condition): under a generous
-uniform 2048-token cap, this deployment remains in the reasoning channel on
-9/10 trivial calibration tasks **for both prompt policies**, and the censored
-traces loop (repeated-4-gram fraction 0.61–0.90). Failure to terminate is
-therefore the phenomenon to measure, not a task-difficulty problem; **no
-`tasks-v2` is created**.
+Key measured results:
 
-Interpretation correction (Phase 1.3): the pp-v1 vs pp-v2 answer-format ablation
-did not produce a detectable large termination improvement in this 10-task
-greedy calibration, and looping occurs even on structurally trivial tasks, so
-structural difficulty alone does not explain the nontermination. This is
-classified as **termination stress under the tested greedy thinking condition**,
-not as a model property. Upstream documentation already warns that
-Qwen3.5-0.8B is unusually prone to thinking loops, and recommends sampled
-decoding with a presence penalty in thinking mode; Phase 1.3 measures that
-upstream-recommended condition before any broader classification. See
-`model_policies/qwen35-08b-thinking-upstream-v1.json`.
+- The old Stage A condition is `qwen-upstream-values-mlx-window20` (upstream
+  numeric values mapped through MLX-LM's 20-token prompt-inclusive presence
+  window), not a faithful upstream-serving-semantics reproduction. Reanalysed at
+  the correct unit, it is 60 executions → 30 stochastic draws → 2.0 closures →
+  6.67% completion.
+- `Qwen/Qwen3.5-0.8B` is a **termination-stress** deployment under every tested
+  policy: greedy, MLX-window upstream values, generated-history T=1.0 (1/30
+  closures), and generated-history T=0.6 (0/10). It is retained as a stress
+  model.
+- `Qwen/Qwen3.5-4B` BF16
+  @ `851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a` is the **PRIMARY BF16 baseline**:
+  native BF16, load audit ok, MLX peak 8.5 GB of 19.3 GB, 20/30 natural
+  reasoning closures (66.7%), RMST(2048)=1511.9, median 1718 tokens, and
+  token-identical same-seed replay. `logic` remains censored 6/6 at this horizon.
+- The central deployment-drift comparison (4B BF16 vs controlled MLX Q4 of the
+  same revision) is **NOT YET TESTED** and is the single next experiment.
 
 Terminology is used strictly: `IMPLEMENTED`, `LIVE VALIDATED`, `MEASURED`,
 `HYPOTHESIS`, `UNSUPPORTED`, `NOT YET TESTED`.
