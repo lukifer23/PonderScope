@@ -126,9 +126,21 @@ class RunStore:
             "artifact_id": deployment.artifact_id,
             "runtime": deployment.runtime.to_dict(),
             "deployment_id": deployment.deployment_id,
-            "deployment_description": deployment.describe(),
+            # Run-level description is model/weight/runtime/hardware only. It must
+            # never name a decoding condition that was not executed; per-condition
+            # descriptions are listed separately below.
+            "deployment_description": deployment.describe_deployment(),
             "conditions": [
-                {"condition_id": d.condition_id, "decoding": d.identity_dict()} for d in conds
+                {
+                    "condition_id": d.condition_id,
+                    "decoding": d.identity_dict(),
+                    "description": Deployment(
+                        model=deployment.model,
+                        runtime=deployment.runtime,
+                        decoding=d,
+                    ).describe_condition(),
+                }
+                for d in conds
             ],
             "code": code_state if code_state is not None else capture_code_state(),
             "prompt_policy": prompt_policy,

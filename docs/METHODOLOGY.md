@@ -136,9 +136,14 @@ and `frequency_penalty` fields with explicit context sizes. They are built with
 `mlx_lm.sample_utils.make_logits_processors` (MLX-LM 0.32.0 order:
 repetition → presence → frequency) and passed to `generate_step`; the framework,
 version, processor order, context sizes, and an honest equivalence label are
-recorded per generation. MLX's penalties are an OpenAI-*like* approximation, so a
-condition that maps an upstream serving recipe onto MLX is labelled
-`qwen-upstream-profile-on-mlx`, never claimed bit-for-bit equivalent.
+recorded per generation. MLX's built-in penalties are an OpenAI-*like*
+approximation, so a condition that maps upstream numeric values onto MLX's
+20-token prompt-inclusive presence window is labelled
+`qwen-upstream-values-mlx-window20`, never claimed bit-for-bit equivalent. The
+explicit generated-history presence scope (prompt excluded, full generated
+history) is labelled `qwen-generated-history-presence-v1`; the scope is part of
+the `DecodingPolicy` condition identity, and the two semantics are never swapped
+silently.
 
 ## Censor-aware time-to-closure
 

@@ -193,19 +193,38 @@ class RuntimeIdentity:
         return asdict(self)
 
 
+PRESENCE_SCOPES = ("mlx_window", "generated_history")
+
+
 @dataclass(frozen=True)
 class DecodingPolicy:
     """Decoding/sampling/context configuration.
 
     ``seed`` is trial state, not condition identity: it is excluded from
     :attr:`condition_id`. Changing temperature/top-p/top-k/min-p/budget, or an
-    *active* logits-processor penalty (and its context size), changes condition
-    identity. Inactive penalties (``None``/``0`` for additive penalties, ``1.0``
-    for the multiplicative repetition penalty) are normalized away so that they
-    reproduce prior decoding identity exactly.
+    *active* logits-processor penalty (and its context size/scope), changes
+    condition identity. Inactive penalties (``None``/``0`` for additive
+    penalties, ``1.0`` for the multiplicative repetition penalty) are normalized
+    away so that they reproduce prior decoding identity exactly.
 
     The penalty fields mirror ``mlx_lm.sample_utils.make_logits_processors`` and
     are recorded explicitly rather than being treated as framework defaults.
+
+    ``presence_scope`` selects the *semantics* of the presence penalty, which is
+    not the same thing as its numeric value:
+
+    - ``mlx_window`` (historical default): MLX-LM's built-in processor subtracts
+      the penalty for tokens seen in the last ``presence_context_size`` positions
+      of the accumulated prompt+generated token history. Prompt tokens inside
+      that window therefore count.
+    - ``generated_history``: PonderScope's own processor excludes prompt tokens
+      and penalizes a token if it appears anywhere in the generated output so
+      far (no rolling window).
+
+    ``mlx_window`` is normalized out of the identity hash so pre-Phase-1.3B
+    condition ids are preserved exactly. ``generated_history`` participates in
+    identity and, because history is the full generated sequence,
+    ``presence_context_size`` is dropped from identity under that scope.
     """
 
     mode: str  # "greedy" | "sampled"
@@ -223,6 +242,13 @@ class DecodingPolicy:
     seed: int | None = None
     stop_on_eos: bool = True
     context: dict[str, Any] = field(default_factory=dict)
+    presence_scope: str = "mlx_window"
+
+    def __post_init__(self) -> None:
+        if self.presence_scope not in PRESENCE_SCOPES:
+            raise ValueError(
+                f"presence_scope must be one of {PRESENCE_SCOPES}, got {self.presence_scope!r}"
+            )
 
     def identity_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -230,6 +256,13 @@ class DecodingPolicy:
         # Inactive penalties must not change condition identity.
         if not self.presence_penalty:
             d.pop("presence_penalty", None)
+            d.pop("presence_context_size", None)
+            d.pop("presence_scope", None)
+        elif self.presence_scope == "mlx_window":
+            # Historical MLX-LM semantics; keep the historical condition id.
+            d.pop("presence_scope", None)
+        else:
+            # generated-history semantics: the rolling context size is a no-op.
             d.pop("presence_context_size", None)
         if not self.frequency_penalty:
             d.pop("frequency_penalty", None)
@@ -295,6 +328,27 @@ class TrialIdentity:
     def trial_id(self) -> str:
         return configuration_id(self.to_dict(), prefix="trial")
 
+    def draw_dict(self) -> dict[str, Any]:
+        """Identity of the stochastic draw (everything but the repeat index).
+
+        A *stochastic draw* is one independent sample: presentation + condition
+        + seed. Same-seed technical repeats are separate *executions* of one
+        draw and must not be counted as independent subjects. For greedy
+        conditions ``seed`` is ``None`` and the draw is the task/presentation
+        condition itself.
+        """
+        return {
+            "task_id": self.task_id,
+            "presentation_id": self.presentation_id,
+            "condition": self.condition.identity_dict(),
+            "seed": self.seed,
+        }
+
+    @property
+    def stochastic_draw_id(self) -> str:
+        """Stable, repeat-independent id for the underlying stochastic draw."""
+        return configuration_id(self.draw_dict(), prefix="draw")
+
 
 @dataclass(frozen=True)
 class DeploymentIdentity:
@@ -358,6 +412,14 @@ class Deployment:
         return DeploymentIdentity(variant=self.model, runtime=self.runtime)
 
     def describe(self) -> str:
+        return f"{self.describe_deployment()} {self.describe_condition()}"
+
+    def describe_deployment(self) -> str:
+        """Model/weight/runtime/hardware identity only — no decoding condition.
+
+        A run-level description must never name a decoding condition that was
+        not executed, so this deliberately omits the decoding policy.
+        """
         m = self.model
         quant = ""
         if m.quantization:
@@ -370,8 +432,14 @@ class Deployment:
             f"{m.repo_id}@{m.revision[:12]} ({m.representation}, {m.precision}{quant}) "
             f"under {self.runtime.runtime} {self.runtime.runtime_version} "
             f"[{self.runtime.backend}, {self.runtime.hardware}] "
-            f"{self.decoding.mode} src={self.source_artifact_id} "
-            f"wvar={self.weight_variant_id} dep={self.deployment_id} cond={self.condition_id}"
+            f"src={self.source_artifact_id} "
+            f"wvar={self.weight_variant_id} dep={self.deployment_id}"
+        )
+
+    def describe_condition(self) -> str:
+        """Readable description of the *actual* decoding condition."""
+        return (
+            f"{self.decoding.mode}(scope={self.decoding.presence_scope}) cond={self.condition_id}"
         )
 
 

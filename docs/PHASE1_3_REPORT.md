@@ -54,10 +54,20 @@ revision** `2fc06364715b967f1860aea9cf38778875588b17`
   `repetition → presence → frequency`; `presence_context_size=20`,
   `repetition_context_size=20` (context sizes not specified upstream; recorded as
   explicit choices). Passed to `generate_step(logits_processors=...)`.
-- MLX presence penalty is OpenAI-*like* (subtract a constant from logits of
-  tokens seen in the last context window); this is labelled
-  **`qwen-upstream-profile-on-mlx`**, not claimed bit-for-bit equivalent to any
-  OpenAI-compatible server. Recorded per generation in `trace.extra`.
+- **Interpretation correction (Phase 1.3B).** The Stage A condition recorded the
+  published numeric values, but the MLX mapping is **not** equivalent to the
+  OpenAI-compatible serving semantics used in the model-card examples. MLX-LM's
+  built-in presence penalty subtracts the penalty for tokens seen in the last
+  `presence_context_size` positions of the *prompt-inclusive* accumulated token
+  history, whereas the upstream/OpenAI presence penalty is defined over tokens
+  present in the **generated** output so far. The Stage A condition is therefore
+  relabelled **`qwen-upstream-values-mlx-window20`**; it is not a full
+  reproduction of upstream serving semantics. The historical condition id and
+  raw evidence are unchanged.
+- Phase 1.3B introduces an explicit `presence_scope` (`mlx_window` |
+  `generated_history`) as part of condition identity and adds a narrow
+  PonderScope processor implementing the generated-history semantics. The two
+  semantics are never swapped silently.
 
 ## Corrected 2048↔4096 prefix qualification
 
@@ -122,8 +132,13 @@ estimable. `max_tokens=2048` is an observation horizon, not a stopping threshold
 - repeated-4-gram fraction: mean 0.468 (p10 0.331, p90 0.643, max 0.729) —
   lower than the historical greedy censored traces (0.61–0.90).
 - unique-token ratio: mean 0.141.
-- longest identical-token run: max **3** (vs **1,201** historically): the
-  presence penalty eliminated the extreme single-token run.
+- longest identical-token run: max **3** (vs the 1,201-token historical greedy
+  example). Under the sampled + penalty condition the maximum identical-token
+  run in the measured sample was 3 rather than 1,201, while repeated multi-token
+  motifs remained. This is a descriptive association, not a causal claim:
+  greedy→sampling, temperature, RNG trajectory, presence penalty, and prompt
+  context all changed together, and no dedicated presence-penalty-only ablation
+  was run.
 - dominant repeated motif (n=4) count: mean 25.8, max 72 — repetition now
   manifests as repeated multi-token motifs, not one repeated token.
 - 4 generations have a sustained degeneration onset; 0 longest runs are special.
@@ -136,13 +151,17 @@ estimable. `max_tokens=2048` is an observation horizon, not a stopping threshold
 - Across-seed: mean first token divergence **6.2** tokens; mean reasoning-token
   std across seeds **136.8** → stochastic variation is present.
 
-### Does official sampling materially change the termination conclusion?
+### Does the upstream-numeric sampled condition change the termination conclusion?
 
-**No.** Completion is 4/60 (6.7%) under the upstream-recommended condition versus
-1/10 (10%) under the historical greedy condition (different designs; descriptive
-reference only). Censoring remains 93.3%, four of five families never close, and
-repetition remains severe. The recommended condition removes the extreme
-single-token run but does not restore termination.
+**No.** Completion is 4/60 executions (6.7%) under the Qwen-recommended numeric
+values mapped through MLX-LM's 20-token prompt-inclusive presence processor,
+versus 1/10 under the historical greedy condition (different designs;
+descriptive reference only). Censoring remains 93.3% at the 2048-token
+observation horizon, four of five families never close, and repetition remains
+severe. Expressed at the correct analytical unit, the sampled condition has 30
+stochastic draws with 2 closure events (6.67%); the four completed executions
+are two arith draws measured twice. This condition does not restore termination;
+whether the *generated-history* presence semantics do is tested in Phase 1.3B.
 
 ### Stage A decision
 
@@ -180,8 +199,9 @@ a descriptive qualification, not a universal conclusion.
 Stage A still shows severe looping, so a Stage B control is warranted:
 `Qwen/Qwen3.5-4B` native BF16 (same Qwen3.5 family; not singled out by the 0.8B
 loop warning; ~9.34 GB, may fit the 18 GB M3 Pro), falling back to official
-`Qwen/Qwen3.5-2B` BF16 if 4B cannot run safely. **Not executed in this commit**:
-per the agreed protocol the ~9 GB download is paused for explicit confirmation.
+`Qwen/Qwen3.5-2B` BF16 if 4B cannot run safely. **Not executed in Phase 1.3**:
+the ~9 GB download was paused for explicit confirmation. It is executed in
+**Phase 1.3B** under explicit authorization; see `docs/PHASE1_3B_REPORT.md`.
 
 ## Tests / quality gates
 

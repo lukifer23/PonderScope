@@ -10,6 +10,11 @@ from .analyze import (
     same_seed_replay_variation,
 )
 from .compare import compare_configs
+from .draws import (
+    collapse_to_stochastic_draws,
+    draw_summary,
+    draws_by_condition,
+)
 from .report import generate_report
 from .stats import (
     bootstrap_ci,
@@ -35,9 +40,12 @@ __all__ = [
     "bootstrap_ci",
     "classify_effect",
     "cluster_bootstrap_ci",
+    "collapse_to_stochastic_draws",
     "combine_noise_scales",
     "compare_configs",
     "cross_seed_token_variation",
+    "draw_summary",
+    "draws_by_condition",
     "generate_report",
     "greedy_replay_variation",
     "kaplan_meier",

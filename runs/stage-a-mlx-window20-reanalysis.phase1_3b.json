@@ -1,0 +1,93 @@
+{
+  "run_id": "20261006T001705Z-calibration-08b-upstream-thinking-dep-d7a370157187",
+  "condition_id": "cond-74a29a115886",
+  "condition_label": "qwen-upstream-values-mlx-window20",
+  "note": "Phase 1.3B reanalysis of the preserved Stage A raw evidence. Raw files and the on-disk analysis.json are unchanged. Same-seed technical repeats are collapsed to unique stochastic draws before primary summaries.",
+  "endpoints": {
+    "primary_reasoning_closure": "native think_end_reached",
+    "secondary_generation_termination": "terminated_by_eos"
+  },
+  "n_executions": 60,
+  "n_unique_draws": 30,
+  "n_ambiguous_draws": 0,
+  "n_primary_draws": 30,
+  "n_reasoning_closure_events": 2,
+  "n_reasoning_closure_censored": 28,
+  "n_generation_termination_events": 2,
+  "completion_proportion": 0.06666666666666667,
+  "km_rmst_primary": {
+    "family": null,
+    "tau": 2048.0,
+    "kaplan_meier": {
+      "n": 30,
+      "n_events": 2,
+      "n_censored": 28,
+      "times": [
+        377.0,
+        975.0,
+        2048.0
+      ],
+      "survival": [
+        0.9666666666666667,
+        0.9333333333333333,
+        0.9333333333333333
+      ],
+      "at_risk": [
+        30,
+        29,
+        28
+      ],
+      "events": [
+        1,
+        1,
+        0
+      ],
+      "censored": [
+        0,
+        0,
+        28
+      ],
+      "median": null,
+      "max_time": 2048.0,
+      "note": "Product-limit closure survival; time is generated tokens to native think-end closure; censored at the observation horizon."
+    },
+    "rmst": 1956.5333333333333,
+    "median_tokens_to_closure": null,
+    "n_at_risk_initial": 30,
+    "n_events": 2,
+    "n_censored": 28,
+    "note": "If only one event exists, uncertainty is enormous; median/RMST are descriptive and should not be over-interpreted."
+  },
+  "per_family": {
+    "arith": {
+      "n_executions": 12,
+      "n_unique_draws": 6,
+      "n_closure_events": 2,
+      "rmst_2048": 1590.6666666666667
+    },
+    "logic": {
+      "n_executions": 12,
+      "n_unique_draws": 6,
+      "n_closure_events": 0,
+      "rmst_2048": 2048.0
+    },
+    "order": {
+      "n_executions": 12,
+      "n_unique_draws": 6,
+      "n_closure_events": 0,
+      "rmst_2048": 2048.0
+    },
+    "path": {
+      "n_executions": 12,
+      "n_unique_draws": 6,
+      "n_closure_events": 0,
+      "rmst_2048": 2048.0
+    },
+    "sm": {
+      "n_executions": 12,
+      "n_unique_draws": 6,
+      "n_closure_events": 0,
+      "rmst_2048": 2048.0
+    }
+  }
+}

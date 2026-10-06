@@ -15,6 +15,66 @@ from .backends.base import Backend, CaptureSpec
 from .config.identity import DecodingPolicy
 
 
+def run_same_seed_replay_subset(
+    backend: Backend,
+    prompts: list[dict[str, Any]],
+    decoding: DecodingPolicy,
+    *,
+    repeats: int = 3,
+) -> dict[str, Any]:
+    """Replay one seeded decoding on predeclared prompts to test reproducibility.
+
+    These are *technical replicates*: they prove the custom generated-history
+    processor is deterministic and are deliberately kept separate from any
+    primary stochastic-draw N.
+    """
+    repeats = max(2, int(repeats))
+    per_task: list[dict[str, Any]] = []
+    for prompt in prompts:
+        traces = [
+            backend.generate(prompt["token_ids"], decoding, CaptureSpec.minimal())
+            for _ in range(repeats)
+        ]
+        base = traces[0].token_ids
+        identical = all(t.token_ids == base for t in traces[1:])
+        first_div: int | None = None
+        if not identical:
+            for trace in traces[1:]:
+                seq = trace.token_ids
+                for i in range(max(len(base), len(seq))):
+                    a = base[i] if i < len(base) else None
+                    b = seq[i] if i < len(seq) else None
+                    if a != b:
+                        first_div = i
+                        break
+                if first_div is not None:
+                    break
+        per_task.append(
+            {
+                "task_id": prompt["task_id"],
+                "family": prompt["family"],
+                "n_executions": len(traces),
+                "token_identical": identical,
+                "first_token_divergence": first_div,
+                "generated_tokens": [len(t.token_ids) for t in traces],
+            }
+        )
+    return {
+        "condition_id": decoding.condition_id,
+        "presence_scope": decoding.presence_scope,
+        "seed": decoding.seed,
+        "repeats_per_task": repeats,
+        "n_tasks": len(per_task),
+        "all_token_identical": all(p["token_identical"] for p in per_task),
+        "per_task": per_task,
+        "note": (
+            "Same-seed technical replay to confirm the custom logits processor is "
+            "reproducible. These executions are NOT part of any primary "
+            "stochastic-draw N."
+        ),
+    }
+
+
 def run_cap_prefix_invariance(
     backend: Backend,
     prompts: list[dict[str, Any]],

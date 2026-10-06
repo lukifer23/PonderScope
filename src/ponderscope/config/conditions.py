@@ -39,6 +39,7 @@ def decoding_for(spec: ExperimentSpec, condition: dict[str, Any]) -> DecodingPol
         min_p=spec.sampled_min_p,
         presence_penalty=spec.sampled_presence_penalty,
         presence_context_size=spec.sampled_presence_context_size,
+        presence_scope=spec.sampled_presence_scope,
         repetition_penalty=spec.sampled_repetition_penalty,
         repetition_context_size=spec.sampled_repetition_context_size,
         frequency_penalty=spec.sampled_frequency_penalty,

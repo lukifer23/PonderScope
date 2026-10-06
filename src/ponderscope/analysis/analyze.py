@@ -26,6 +26,11 @@ from ..reasoning.transitions import (
     classify_transitions,
     natural_final_status_for_record,
 )
+from .draws import (
+    collapse_to_stochastic_draws,
+    draw_summary,
+    draws_by_condition,
+)
 from .stats import (
     cluster_bootstrap_ci,
     group_values_by_task,
@@ -174,10 +179,14 @@ def _config_summary(condition_id: str, records: list[dict[str, Any]]) -> dict[st
         families[r["family"]].append(r)
     by_task = group_values_by_task(records, "task_id", lambda r: 1.0 if r["correct"] else 0.0)
     acc_ci = cluster_bootstrap_ci(by_task)
+    ds = draw_summary(collapse_to_stochastic_draws(records))
     return {
         "condition_id": condition_id,
         "mode": records[0]["condition"]["mode"],
         "n": len(records),
+        "n_executions": ds["n_executions"],
+        "n_unique_draws": ds["n_unique_draws"],
+        "n_ambiguous_draws": ds["n_ambiguous_draws"],
         "n_tasks": len({r["task_id"] for r in records}),
         "deployment_description": _describe(records[0]["deployment"]),
         "success_at_budget": acc_ci["mean"],
@@ -457,9 +466,14 @@ def across_seed_variation(records: list[dict[str, Any]]) -> dict[str, Any]:
             }
         )
     n = len(per_task)
+    n_total = len(by_condition_task)
+    n_estimable = sum(1 for p in per_task if p["distinct_answers"] is not None)
     return {
         "available": bool(per_task),
         "n_task_conditions": n,
+        "n_task_conditions_total": n_total,
+        "n_task_conditions_with_estimable_answer_diversity": n_estimable,
+        "proportion_estimable": (n_estimable / n_total) if n_total else None,
         "mean_distinct_answers": _mean_or_none(
             [p["distinct_answers"] for p in per_task if p["distinct_answers"] is not None]
         ),
@@ -472,7 +486,12 @@ def across_seed_variation(records: list[dict[str, Any]]) -> dict[str, Any]:
         ),
         "any_ambiguous_seeds": any(p["n_ambiguous_seeds"] > 0 for p in per_task),
         "per_task": per_task,
-        "note": "Final-answer diversity is only defined over observed answers; None elsewhere.",
+        "note": (
+            "Final-answer diversity is only defined over observed answers. A mean is "
+            "always reported alongside its support count "
+            "(n_task_conditions_with_estimable_answer_diversity / "
+            "n_task_conditions_total); None means unobserved, not zero."
+        ),
     }
 
 
@@ -489,10 +508,19 @@ def noise_floor(traces: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _is_closure(record: dict[str, Any]) -> bool:
-    """A natural native think-end / reasoning closure was observed."""
-    term = record["termination"]
-    return bool(term.get("think_end_reached") or term.get("terminated_by_eos"))
+def _is_reasoning_closure(record: dict[str, Any]) -> bool:
+    """PRIMARY endpoint: a native think-end reasoning closure was observed.
+
+    EOS alone is deliberately NOT enough: a generation can stop without the
+    model emitting its native reasoning-close token, and that is not reasoning
+    closure.
+    """
+    return bool(record["termination"].get("think_end_reached"))
+
+
+def _is_generation_termination(record: dict[str, Any]) -> bool:
+    """SECONDARY endpoint: the generation terminated via EOS."""
+    return bool(record["termination"].get("terminated_by_eos"))
 
 
 def _time_to_closure(record: dict[str, Any]) -> float:
@@ -503,20 +531,48 @@ def _time_to_closure(record: dict[str, Any]) -> float:
 def _survival_section(by_condition: dict[str, list[dict[str, Any]]], tau: float) -> dict[str, Any]:
     per_condition: dict[str, Any] = {}
     for cid, rs in by_condition.items():
-        summary = survival_summary(
-            [_time_to_closure(r) for r in rs], [_is_closure(r) for r in rs], tau=tau
+        draws = collapse_to_stochastic_draws(rs)
+        # Primary KM/RMST use unique stochastic draws, never technical repeats.
+        primary_records = [d["record"] for d in draws if d["record"] is not None]
+        reasoning = survival_summary(
+            [_time_to_closure(r) for r in primary_records],
+            [_is_reasoning_closure(r) for r in primary_records],
+            tau=tau,
         )
-        summary["by_family"] = survival_by_family(
-            rs, time_key=_time_to_closure, event_key=_is_closure, tau=tau
+        termination = survival_summary(
+            [_time_to_closure(r) for r in primary_records],
+            [_is_generation_termination(r) for r in primary_records],
+            tau=tau,
+        )
+        summary = dict(reasoning)
+        summary.update(
+            {
+                "n_executions": sum(d["n_executions"] for d in draws),
+                "n_unique_draws": len(draws),
+                "n_ambiguous_draws": sum(1 for d in draws if d["ambiguous"]),
+                "n_draws_used": len(primary_records),
+                "generation_termination": termination,
+                "by_family": survival_by_family(
+                    primary_records,
+                    time_key=_time_to_closure,
+                    event_key=_is_reasoning_closure,
+                    tau=tau,
+                ),
+            }
         )
         per_condition[cid] = summary
     return {
         "tau": tau,
         "time_definition": "generated tokens to closure (observation horizon if censored)",
-        "event_definition": "natural native think-end or EOS observed",
+        "event_definition": "PRIMARY: native think-end reasoning closure observed",
+        "secondary_event_definition": "SECONDARY: EOS observed (generation termination)",
         "censoring_definition": "max-token observation horizon reached before closure",
+        "analysis_unit": "unique stochastic draws (same-seed technical repeats collapsed)",
         "per_condition": per_condition,
-        "note": "max_tokens is an observation horizon, not a natural stopping threshold.",
+        "note": (
+            "max_tokens is an observation horizon, not a natural stopping threshold. "
+            "An EOS without a native think-end is not counted as reasoning closure."
+        ),
     }
 
 
@@ -620,8 +676,22 @@ def analyze_run(store: RunStore) -> dict[str, Any]:
         float(spec_max) if spec_max else float(max((r["total_tokens"] for r in traces), default=0))
     )
 
+    draws_per_condition = draws_by_condition(traces)
+    all_draws = [d for ds in draws_per_condition.values() for d in ds]
+    draws_section = {
+        "n_executions": len(traces),
+        "n_unique_draws": len(all_draws),
+        "n_ambiguous_draws": sum(1 for d in all_draws if d["ambiguous"]),
+        "per_condition": {cid: draw_summary(ds) for cid, ds in draws_per_condition.items()},
+        "note": (
+            "Stochastic draw = presentation + condition + seed (no repeat). "
+            "Same-seed technical repeats collapse to one draw iff token-identical; "
+            "divergent draws are flagged ambiguous and excluded from primary summaries."
+        ),
+    }
+
     analysis = {
-        "interpretation": "phase1.3",
+        "interpretation": "phase1.3b",
         "run_id": store.run_id,
         "artifact_id": store.artifact_id,
         "deployment_id": store.deployment_id,
@@ -633,6 +703,7 @@ def analyze_run(store: RunStore) -> dict[str, Any]:
         "n_tasks": len({r["task_id"] for r in traces}),
         "configs": configs,
         "noise_floor": noise_floor(traces),
+        "draws": draws_section,
         "survival": _survival_section(by_condition, tau),
         "loop": _loop_section(by_condition),
         "probes": {

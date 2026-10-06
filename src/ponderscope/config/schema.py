@@ -38,6 +38,7 @@ class ExperimentSpec:
     sampled_min_p: float = 0.0
     sampled_presence_penalty: float = 0.0
     sampled_presence_context_size: int = 20
+    sampled_presence_scope: str = "mlx_window"
     sampled_repetition_penalty: float = 1.0
     sampled_repetition_context_size: int = 20
     sampled_frequency_penalty: float = 0.0
@@ -71,6 +72,7 @@ class ExperimentSpec:
             "sampled_min_p": self.sampled_min_p,
             "sampled_presence_penalty": self.sampled_presence_penalty,
             "sampled_presence_context_size": self.sampled_presence_context_size,
+            "sampled_presence_scope": self.sampled_presence_scope,
             "sampled_repetition_penalty": self.sampled_repetition_penalty,
             "sampled_repetition_context_size": self.sampled_repetition_context_size,
             "sampled_frequency_penalty": self.sampled_frequency_penalty,

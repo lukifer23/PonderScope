@@ -379,47 +379,106 @@ class MlxBackend:
         return sampler, decoding.seed
 
     def _prepare_logits_processors(
-        self, decoding: DecodingPolicy
+        self, decoding: DecodingPolicy, prompt_len: int = 0
     ) -> tuple[list[Any], dict[str, Any]]:
-        """Build MLX-LM logits processors from an explicit decoding policy.
+        """Build logits processors from an explicit decoding policy.
 
-        MLX-LM 0.32.0's ``make_logits_processors`` order is
-        ``[repetition, presence, frequency]``. We record the exact framework,
-        version, context sizes, and an honest equivalence label because MLX's
-        penalty semantics are only an OpenAI-*like* approximation of what Qwen's
-        upstream serving examples assume, not a bit-for-bit guarantee.
+        Canonical order is ``[repetition, presence, frequency]`` (MLX-LM's own
+        ordering). The presence penalty has two *semantics* selected by
+        ``decoding.presence_scope``:
+
+        - ``mlx_window``: MLX-LM's built-in processor (rolling
+          ``presence_context_size`` window over prompt+generated tokens).
+        - ``generated_history``: PonderScope's processor (prompt excluded, full
+          generated history, no rolling window).
+
+        The two are never swapped silently. ``prompt_len`` is the number of
+        leading accumulated tokens that are prompt (or injected prefix), which
+        the generated-history processor must skip.
         """
         import mlx_lm
-        from mlx_lm.sample_utils import make_logits_processors
+        from mlx_lm.sample_utils import (
+            make_frequency_penalty,
+            make_presence_penalty,
+            make_repetition_penalty,
+        )
+
+        from .processors import make_generated_history_presence_penalty
 
         rep_ctx = decoding.repetition_context_size
         pre_ctx = decoding.presence_context_size
         freq_ctx = decoding.frequency_context_size
-        processors = make_logits_processors(
-            repetition_penalty=decoding.repetition_penalty,
-            repetition_context_size=rep_ctx if rep_ctx is not None else 20,
-            presence_penalty=decoding.presence_penalty,
-            presence_context_size=pre_ctx if pre_ctx is not None else 20,
-            frequency_penalty=decoding.frequency_penalty,
-            frequency_context_size=freq_ctx if freq_ctx is not None else 20,
+        processors: list[Any] = []
+        active: list[str] = []
+
+        if decoding.repetition_penalty not in (None, 1.0):
+            processors.append(
+                make_repetition_penalty(
+                    decoding.repetition_penalty, rep_ctx if rep_ctx is not None else 20
+                )
+            )
+            active.append("repetition_penalty")
+
+        presence_semantics = "none"
+        if decoding.presence_penalty:
+            if decoding.presence_scope == "generated_history":
+                processors.append(
+                    make_generated_history_presence_penalty(decoding.presence_penalty, prompt_len)
+                )
+                presence_semantics = "generated_history"
+            else:
+                processors.append(
+                    make_presence_penalty(
+                        decoding.presence_penalty, pre_ctx if pre_ctx is not None else 20
+                    )
+                )
+                presence_semantics = "mlx_window"
+            active.append("presence_penalty")
+
+        if decoding.frequency_penalty:
+            processors.append(
+                make_frequency_penalty(
+                    decoding.frequency_penalty, freq_ctx if freq_ctx is not None else 20
+                )
+            )
+            active.append("frequency_penalty")
+
+        label = (
+            "qwen-generated-history-presence-v1"
+            if presence_semantics == "generated_history"
+            else "qwen-upstream-profile-on-mlx"
         )
+        if presence_semantics == "generated_history":
+            semantics_note = (
+                "PonderScope generated-history presence penalty: prompt tokens do not "
+                "count; every token appearing anywhere in the generated output receives "
+                "the penalty once; history is the full generated sequence, not a rolling "
+                "window. Repetition/frequency remain MLX-LM built-ins."
+            )
+        else:
+            semantics_note = (
+                "MLX-LM implements an OpenAI-like additive presence penalty over the last "
+                "presence_context_size accumulated (prompt-inclusive) positions and a "
+                "sign-aware multiplicative repetition penalty; not claimed bit-identical "
+                "to any OpenAI-compatible serving implementation."
+            )
         meta = {
             "framework": "mlx-lm",
             "framework_version": getattr(mlx_lm, "__version__", "unknown"),
             "processor_order": ["repetition_penalty", "presence_penalty", "frequency_penalty"],
+            "active_processors": active,
             "n_processors": len(processors),
             "repetition_penalty": decoding.repetition_penalty,
             "repetition_context_size": rep_ctx,
             "presence_penalty": decoding.presence_penalty,
             "presence_context_size": pre_ctx,
+            "presence_scope": decoding.presence_scope,
+            "presence_semantics": presence_semantics,
+            "base_prompt_tokens": prompt_len,
             "frequency_penalty": decoding.frequency_penalty,
             "frequency_context_size": freq_ctx,
-            "equivalence_label": "qwen-upstream-profile-on-mlx",
-            "semantics_note": (
-                "MLX-LM implements an OpenAI-like additive presence penalty and a "
-                "sign-aware multiplicative repetition penalty; not claimed bit-identical "
-                "to any OpenAI-compatible serving implementation."
-            ),
+            "equivalence_label": label,
+            "semantics_note": semantics_note,
         }
         return processors, meta
 
@@ -435,14 +494,14 @@ class MlxBackend:
         if self._model is None:
             raise RuntimeError("backend not loaded")
 
-        sampler, seed = self._prepare_sampler(decoding)
-        processors, processor_meta = self._prepare_logits_processors(decoding)
-        if seed is not None:
-            mx.random.seed(seed)
-
         base = list(prompt_ids)
         if extra_tokens:
             base = base + list(extra_tokens)
+
+        sampler, seed = self._prepare_sampler(decoding)
+        processors, processor_meta = self._prepare_logits_processors(decoding, prompt_len=len(base))
+        if seed is not None:
+            mx.random.seed(seed)
 
         prompt = mx.array(base)
         max_tokens = decoding.max_tokens

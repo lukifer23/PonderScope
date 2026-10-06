@@ -38,8 +38,12 @@ PonderScope is intentionally conservative about what its evidence supports.
   observed closure events. With one event the uncertainty is enormous, and the
   observation horizon (`max_tokens`) is not a natural stopping threshold.
 - MLX logits-processor penalties are an OpenAI-*like* approximation. A condition
-  mapping an upstream serving recipe onto MLX is labelled
-  `qwen-upstream-profile-on-mlx`, not claimed bit-for-bit equivalent.
+  that maps upstream *numeric* values onto MLX's 20-token prompt-inclusive
+  presence window is labelled `qwen-upstream-values-mlx-window20`, not claimed
+  bit-for-bit equivalent. A condition using PonderScope's explicit
+  generated-history presence semantics (prompt excluded, full generated history)
+  is labelled `qwen-generated-history-presence-v1`. The two scopes are distinct
+  and participate in condition identity.
 - Entropy and logprobs are only available because MLX-LM exposes them. Other
   backends may not, and would be marked UNSUPPORTED.
 

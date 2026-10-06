@@ -120,10 +120,13 @@ under a defensible decoding policy. Stage 0d therefore:
    revision as a versioned, structured model-policy profile
    (`model_policies/qwen35-08b-thinking-upstream-v1.json`) rather than silently
    promoting upstream values into PonderScope defaults;
-2. reproduces that profile faithfully on MLX-LM through
+2. reproduces that profile's numeric values on MLX-LM through
    `mlx_lm.sample_utils.make_logits_processors` (presence penalty with an
-   explicit context size; the equivalence is labelled
-   `qwen-upstream-profile-on-mlx`, not claimed bit-for-bit);
+   explicit context size; this MLX-window mapping is labelled
+   `qwen-upstream-values-mlx-window20`, not claimed bit-for-bit) and, separately,
+   through PonderScope's explicit generated-history presence processor (prompt
+   excluded, full generated history; labelled
+   `qwen-generated-history-presence-v1`);
 3. treats termination as a right-censored time-to-event problem and reports
    Kaplan-Meier closure survival, median tokens-to-closure, and RMST up to an
    explicit observation horizon (never treating the horizon as a natural stop);

@@ -476,6 +476,7 @@ def _make_record(
         "deployment_id": deployment.deployment_id,
         "condition_id": decoding.condition_id,
         "trial_id": trial.trial_id,
+        "stochastic_draw_id": trial.stochastic_draw_id,
         "deployment": deployment.to_dict(),
         "task_id": task.task_id,
         "presentation_id": trial.presentation_id,

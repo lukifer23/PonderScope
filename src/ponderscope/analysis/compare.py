@@ -44,6 +44,7 @@ def _conditional_accuracy(r: dict[str, Any]) -> float | None:
 
 _METRICS: dict[str, Callable[[dict[str, Any]], float | None]] = {
     "success_at_budget": lambda r: 1.0 if r["correct"] else 0.0,
+    "reasoning_closure_rate": lambda r: 1.0 if r["termination"]["think_end_reached"] else 0.0,
     "completion_rate": lambda r: 1.0 if r["termination"]["terminated_by_eos"] else 0.0,
     "censored_rate": lambda r: 1.0 if natural_final_status_of(r) == "censored" else 0.0,
     "error_rate": lambda r: 1.0 if natural_final_status_of(r) == "error" else 0.0,

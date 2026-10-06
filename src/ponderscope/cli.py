@@ -241,6 +241,66 @@ def _cmd_calibrate_prefix(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_calibrate_replay(args: argparse.Namespace) -> int:
+    from .backends import get_backend
+    from .calibration import run_same_seed_replay_subset
+    from .config.conditions import condition_identities
+    from .config.identity import SourceArtifactIdentity
+    from .config.schema import ExperimentSpec
+    from .evidence.store import atomic_write_json
+    from .tasks import generate_pack
+
+    data = json.loads(Path(args.spec).read_text())
+    spec = ExperimentSpec.from_dict(data)
+    backend = get_backend(args.backend)
+    source = backend.load(SourceArtifactIdentity(repo_id=args.model_repo, revision=args.revision))
+    conds = condition_identities(spec)
+    if len(conds) != 1:
+        raise SystemExit(f"replay needs exactly one condition in the spec, found {len(conds)}")
+    decoding = conds[0]
+    if decoding.mode != "sampled" or decoding.seed is None:
+        raise SystemExit("replay requires a sampled condition with an explicit seed")
+    tasks = generate_pack(
+        families=spec.families or None,
+        n_per_family=spec.n_per_family,
+        pack=spec.task_pack,
+        split=spec.split,
+        seed=spec.task_seed,
+        prompt_policy=spec.prompt_policy,
+    )
+    wanted = list(dict.fromkeys(args.families))
+    selected = []
+    seen: set[str] = set()
+    for task in tasks:
+        if task.family in wanted and task.family not in seen:
+            selected.append(task)
+            seen.add(task.family)
+    prompts = [
+        {
+            "task_id": task.task_id,
+            "family": task.family,
+            "token_ids": backend.tokenize_prompt(
+                [{"role": "user", "content": task.prompt}], enable_thinking=True
+            ),
+        }
+        for task in selected
+    ]
+    result = run_same_seed_replay_subset(backend, prompts, decoding, repeats=args.repeats)
+    result["model"] = {"repo_id": source.repo_id, "revision": source.revision}
+    result["source_artifact_id"] = source.source.source_artifact_id
+    result["prompt_policy"] = spec.prompt_policy
+    result["spec_hash"] = spec.canonical_hash()
+    atomic_write_json(Path(args.out), result)
+    print(
+        f"same-seed replay: scope={result['presence_scope']} seed={result['seed']} "
+        f"all_token_identical={result['all_token_identical']} tasks={result['n_tasks']}"
+    )
+    for p in result["per_task"]:
+        print(f"  {p['family']}/{p['task_id'][:8]} identical={p['token_identical']}")
+    print(f"  saved {args.out}")
+    return 0
+
+
 def _cmd_bundle(args: argparse.Namespace) -> int:
     from .evidence.bundle import bundle_run
     from .evidence.run import RunStore
@@ -400,6 +460,19 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--caps", nargs="+", type=int, default=[256, 512, 1024, 2048])
     p.add_argument("--out", default="runs/calibration-prefix.phase1_2.json")
     p.set_defaults(func=_cmd_calibrate_prefix)
+
+    p = sub.add_parser(
+        "calibrate-replay",
+        help="same-seed technical replay subset (not part of any primary N)",
+    )
+    p.add_argument("--spec", required=True)
+    p.add_argument("--backend", default="mlx")
+    p.add_argument("--model-repo", default=MODEL_REPO_DEFAULT)
+    p.add_argument("--revision", default=REVISION_DEFAULT)
+    p.add_argument("--families", nargs="+", default=["arith", "order", "sm"])
+    p.add_argument("--repeats", type=int, default=3)
+    p.add_argument("--out", default="runs/same-seed-replay.phase1_3b.json")
+    p.set_defaults(func=_cmd_calibrate_replay)
 
     p = sub.add_parser("bundle", help="build a deterministic evidence archive for a sealed run")
     p.add_argument("--run")

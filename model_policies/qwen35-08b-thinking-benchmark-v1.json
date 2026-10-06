@@ -1,0 +1,48 @@
+{
+  "profile_id": "qwen35-08b-thinking-benchmark-v1",
+  "description": "Published non-video benchmark THINKING configuration for Qwen3.5-0.8B at the pinned immutable revision: the same broad sampling configuration as the API profile, but with temperature=0.6 under thinking mode. Mapped with explicit generated-history presence-penalty semantics.",
+  "model": {
+    "repo_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17"
+  },
+  "generation_mode": "text-thinking-benchmark",
+  "provenance": {
+    "source": "Hugging Face model card (README.md), benchmark experimental-settings note",
+    "page_url": "https://huggingface.co/Qwen/Qwen3.5-0.8B/blob/2fc06364715b967f1860aea9cf38778875588b17/README.md",
+    "raw_url": "https://huggingface.co/Qwen/Qwen3.5-0.8B/raw/2fc06364715b967f1860aea9cf38778875588b17/README.md",
+    "retrieved_utc": "2026-10-05T23:56:55Z",
+    "readme_sha256": "87a163af54f32fa608a0f8d3ac67945c53dd2b4a7c96740b3d7fdc28e8458864",
+    "readme_bytes": 61705
+  },
+  "recommended": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "presence_penalty": 1.5,
+    "repetition_penalty": 1.0,
+    "enable_thinking": true
+  },
+  "not_specified_upstream": {
+    "presence_context_size": null,
+    "repetition_context_size": null,
+    "frequency_penalty": null,
+    "frequency_context_size": null
+  },
+  "quotes": {
+    "benchmark_note": "Experimental settings: For the Video benchmarks, we used top_p=0.95, top_k=20, presence_penalty=1.5, and temperature=1.0. All other benchmarks adopted the same sampling configuration but with temperature=0.6 under the thinking mode.",
+    "coding_alternative_note": "A separate, distinct recipe exists for thinking mode on VL or precise coding tasks: `temperature=0.6, top_p=0.95, top_k=20, min_p=0.0, presence_penalty=0.0, repetition_penalty=1.0`. That recipe is NOT this benchmark profile (it sets presence_penalty=0.0).",
+    "loop_warning": "In thinking mode, we have observed that when using the recommended sampling parameters, Qwen3.5-0.8B is more prone to entering thinking loops compared to other Qwen3.5 models, which may prevent it from terminating generation properly."
+  },
+  "mlx_mapping": {
+    "framework": "mlx-lm",
+    "framework_version": "0.32.0",
+    "equivalence_label": "qwen-generated-history-presence-v1",
+    "presence_scope": "generated_history",
+    "logits_processors": ["presence_penalty"],
+    "processor_order": ["repetition_penalty", "presence_penalty", "frequency_penalty"],
+    "presence_context_size": null,
+    "repetition_context_size": 20,
+    "semantics_note": "Same generated-history presence-penalty mapping as the API profile, with temperature lowered to the published non-video benchmark value of 0.6. T=0.6 and T=1.0 must not be collapsed into one 'Qwen recommended' condition."
+  }
+}

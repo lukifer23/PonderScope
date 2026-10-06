@@ -51,8 +51,8 @@ def _fmt(value: Any) -> str:
 
 def _config_table(analysis: dict[str, Any]) -> list[str]:
     lines = [
-        "| condition_id | mode | n | success_at_budget (95% CI) | completion_rate | censored_rate | conditional_acc_given_completed | reasoning tokens mean | tok/s |",
-        "|---|---|---|---|---|---|---|---|---|",
+        "| condition_id | mode | exec | draws | success_at_budget (95% CI) | completion_rate | censored_rate | conditional_acc_given_completed | reasoning tokens mean | tok/s |",
+        "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for cid, c in analysis["configs"].items():
         acc = c["success_at_budget"]
@@ -60,7 +60,8 @@ def _config_table(analysis: dict[str, Any]) -> list[str]:
         ci_txt = f"{_fmt(acc)} [{_fmt(ci[0])}, {_fmt(ci[1])}]" if ci else _fmt(acc)
         o = c["outcomes"]
         lines.append(
-            f"| {cid} | {c['mode']} | {c['n']} | {ci_txt} | "
+            f"| {cid} | {c['mode']} | {c.get('n_executions', c['n'])} | "
+            f"{_fmt(c.get('n_unique_draws'))} | {ci_txt} | "
             f"{_fmt(o['completion_rate'])} | {_fmt(o['censored_rate'])} | "
             f"{_fmt(o['conditional_accuracy_given_completed'])} | "
             f"{_fmt(c['reasoning_tokens']['mean'])} | {_fmt(c['tokens_per_sec']['mean'])} |"
@@ -105,11 +106,17 @@ def _noise_section(analysis: dict[str, Any]) -> list[str]:
     else:
         lines.append(
             f"- task/condition groups: {across['n_task_conditions']}\n"
-            f"- mean distinct observed answers across seeds: {_fmt(across['mean_distinct_answers'])}\n"
+            f"- estimable answer diversity: "
+            f"{across.get('n_task_conditions_with_estimable_answer_diversity')} / "
+            f"{across.get('n_task_conditions_total')} "
+            f"(proportion {_fmt(across.get('proportion_estimable'))})\n"
+            f"- mean distinct observed answers across seeds: {_fmt(across['mean_distinct_answers'])} "
+            f"(support: {across.get('n_task_conditions_with_estimable_answer_diversity')} tasks)\n"
             f"- mean observed-answer accuracy std across seeds: {_fmt(across['mean_accuracy_std_across_seeds'])}\n"
             f"- any ambiguous seeds (divergent same-seed repeats): {across.get('any_ambiguous_seeds')}\n"
             "- note: final-answer diversity/accuracy is defined only over seeds with an "
-            "observed answer; `—` means unobserved, not zero."
+            "observed answer; `—` means unobserved, not zero. No mean is shown without "
+            "its support count."
         )
     tokens = nf.get("cross_seed_tokens", {})
     lines.append("")
@@ -187,14 +194,34 @@ def _survival_section(analysis: dict[str, Any]) -> list[str]:
         "not a natural stopping threshold)"
     )
     lines.append(f"- event: {s['event_definition']}")
+    if s.get("secondary_event_definition"):
+        lines.append(f"- secondary event: {s['secondary_event_definition']}")
+    lines.append(f"- analysis unit: {s.get('analysis_unit', 'unique stochastic draws')}")
     lines.append("")
-    lines.append("| condition | n | events | censored | median tokens | RMST(tau) |")
-    lines.append("|---|---|---|---|---|---|")
+    lines.append(
+        "| condition | exec | draws (used) | events | censored | median tokens | RMST(tau) |"
+    )
+    lines.append("|---|---|---|---|---|---|---|")
     for cid, c in s["per_condition"].items():
-        km = c["kaplan_meier"]
         lines.append(
-            f"| {cid} | {km['n']} | {km['n_events']} | {km['n_censored']} | "
+            f"| {cid} | {c.get('n_executions')} | {c.get('n_unique_draws')} "
+            f"({c.get('n_draws_used')}) | {c['kaplan_meier']['n_events']} | "
+            f"{c['kaplan_meier']['n_censored']} | "
             f"{_fmt(c['median_tokens_to_closure'])} | {_fmt(c['rmst'])} |"
+        )
+    lines.append("")
+    lines.append("Secondary endpoint (generation termination via EOS):")
+    lines.append("")
+    lines.append("| condition | events | censored | median tokens | RMST(tau) |")
+    lines.append("|---|---|---|---|---|")
+    for cid, c in s["per_condition"].items():
+        term = c.get("generation_termination")
+        if not term:
+            continue
+        km = term["kaplan_meier"]
+        lines.append(
+            f"| {cid} | {km['n_events']} | {km['n_censored']} | "
+            f"{_fmt(term['median_tokens_to_closure'])} | {_fmt(term['rmst'])} |"
         )
     lines.append("")
     for cid, c in s["per_condition"].items():
