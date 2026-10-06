@@ -1,0 +1,173 @@
+{
+  "model": {
+    "repo_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17"
+  },
+  "source_artifact_id": "src-52161236e42a",
+  "presence_scope": "generated_history",
+  "temperature": 1.0,
+  "seed": 0,
+  "caps": [
+    2048,
+    8192
+  ],
+  "task_selection": "first easy task per family in tasks-v1 calibration split (predeclared)",
+  "n_tasks": 5,
+  "per_task": [
+    {
+      "task_id": "7566c88a85fc2f5d",
+      "family": "arith",
+      "difficulty": {
+        "operations": 2,
+        "level": "easy"
+      },
+      "caps": {
+        "2048": {
+          "condition_id": "cond-f5e762d3078f",
+          "generated_tokens": 240,
+          "finish_reason": "stop",
+          "think_end": true,
+          "eos": true,
+          "wall_s": 3.88,
+          "longest_run": 1,
+          "repeated_ngram_fraction_4": 0.18565400843881857
+        },
+        "8192": {
+          "condition_id": "cond-b832bd8579e5",
+          "generated_tokens": 240,
+          "finish_reason": "stop",
+          "think_end": true,
+          "eos": true,
+          "wall_s": 3.71,
+          "longest_run": 1,
+          "repeated_ngram_fraction_4": 0.18565400843881857
+        }
+      }
+    },
+    {
+      "task_id": "d7e92c470c95fb09",
+      "family": "logic",
+      "difficulty": {
+        "variables": 2,
+        "clauses": 4,
+        "level": "easy"
+      },
+      "caps": {
+        "2048": {
+          "condition_id": "cond-f5e762d3078f",
+          "generated_tokens": 2048,
+          "finish_reason": "length",
+          "think_end": false,
+          "eos": false,
+          "wall_s": 32.5,
+          "longest_run": 1,
+          "repeated_ngram_fraction_4": 0.28312958435207825
+        },
+        "8192": {
+          "condition_id": "cond-b832bd8579e5",
+          "generated_tokens": 8192,
+          "finish_reason": "length",
+          "think_end": false,
+          "eos": false,
+          "wall_s": 136.55,
+          "longest_run": 1,
+          "repeated_ngram_fraction_4": 0.43363047991207715
+        }
+      }
+    },
+    {
+      "task_id": "061fb724a8cbc229",
+      "family": "order",
+      "difficulty": {
+        "items": 3,
+        "constraints": 2,
+        "level": "easy"
+      },
+      "caps": {
+        "2048": {
+          "condition_id": "cond-f5e762d3078f",
+          "generated_tokens": 2048,
+          "finish_reason": "length",
+          "think_end": false,
+          "eos": false,
+          "wall_s": 33.87,
+          "longest_run": 1,
+          "repeated_ngram_fraction_4": 0.3212713936430318
+        },
+        "8192": {
+          "condition_id": "cond-b832bd8579e5",
+          "generated_tokens": 5311,
+          "finish_reason": "stop",
+          "think_end": true,
+          "eos": true,
+          "wall_s": 89.3,
+          "longest_run": 1,
+          "repeated_ngram_fraction_4": 0.4246420497362472
+        }
+      }
+    },
+    {
+      "task_id": "052f3e33cc75673b",
+      "family": "path",
+      "difficulty": {
+        "nodes": 4,
+        "edges": 3,
+        "level": "easy"
+      },
+      "caps": {
+        "2048": {
+          "condition_id": "cond-f5e762d3078f",
+          "generated_tokens": 2048,
+          "finish_reason": "length",
+          "think_end": false,
+          "eos": false,
+          "wall_s": 31.34,
+          "longest_run": 1,
+          "repeated_ngram_fraction_4": 0.18679706601466992
+        },
+        "8192": {
+          "condition_id": "cond-b832bd8579e5",
+          "generated_tokens": 8192,
+          "finish_reason": "length",
+          "think_end": false,
+          "eos": false,
+          "wall_s": 137.0,
+          "longest_run": 1,
+          "repeated_ngram_fraction_4": 0.39650751007449014
+        }
+      }
+    },
+    {
+      "task_id": "39578687f1081f5e",
+      "family": "sm",
+      "difficulty": {
+        "states": 3,
+        "input_length": 4,
+        "level": "easy"
+      },
+      "caps": {
+        "2048": {
+          "condition_id": "cond-f5e762d3078f",
+          "generated_tokens": 2048,
+          "finish_reason": "length",
+          "think_end": false,
+          "eos": false,
+          "wall_s": 32.47,
+          "longest_run": 3,
+          "repeated_ngram_fraction_4": 0.3672371638141809
+        },
+        "8192": {
+          "condition_id": "cond-b832bd8579e5",
+          "generated_tokens": 8192,
+          "finish_reason": "length",
+          "think_end": false,
+          "eos": false,
+          "wall_s": 133.45,
+          "longest_run": 3,
+          "repeated_ngram_fraction_4": 0.5778483331298083
+        }
+      }
+    }
+  ],
+  "note": "Bounded horizon sensitivity triggered by heavy 2048 censoring. One predeclared seed, one easy task per family, up to 8192 tokens. 2048 is only an observation horizon (upstream recommends 32,768)."
+}
