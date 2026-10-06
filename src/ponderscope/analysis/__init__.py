@@ -20,6 +20,14 @@ from .stats import (
     paired_cluster_bootstrap_delta,
     summarize,
 )
+from .survival import (
+    kaplan_meier,
+    observations_from_records,
+    rmst,
+    rmst_delta_clustered,
+    survival_by_family,
+    survival_summary,
+)
 
 __all__ = [
     "across_seed_variation",
@@ -32,10 +40,16 @@ __all__ = [
     "cross_seed_token_variation",
     "generate_report",
     "greedy_replay_variation",
+    "kaplan_meier",
     "noise_floor",
+    "observations_from_records",
     "paired_bootstrap_delta",
     "paired_cluster_bootstrap_delta",
     "prefix_invariance",
+    "rmst",
+    "rmst_delta_clustered",
     "same_seed_replay_variation",
     "summarize",
+    "survival_by_family",
+    "survival_summary",
 ]

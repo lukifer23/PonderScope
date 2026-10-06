@@ -177,6 +177,65 @@ def _probe_section(analysis: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _survival_section(analysis: dict[str, Any]) -> list[str]:
+    s = analysis.get("survival")
+    if not s:
+        return []
+    lines = ["## Censor-aware time-to-closure (Kaplan-Meier / RMST)", ""]
+    lines.append(
+        f"- observation horizon tau: {s['tau']} tokens (an observation horizon, "
+        "not a natural stopping threshold)"
+    )
+    lines.append(f"- event: {s['event_definition']}")
+    lines.append("")
+    lines.append("| condition | n | events | censored | median tokens | RMST(tau) |")
+    lines.append("|---|---|---|---|---|---|")
+    for cid, c in s["per_condition"].items():
+        km = c["kaplan_meier"]
+        lines.append(
+            f"| {cid} | {km['n']} | {km['n_events']} | {km['n_censored']} | "
+            f"{_fmt(c['median_tokens_to_closure'])} | {_fmt(c['rmst'])} |"
+        )
+    lines.append("")
+    for cid, c in s["per_condition"].items():
+        fam = c.get("by_family") or {}
+        rows = [f for f in fam.values() if not f.get("insufficient_data")]
+        if not rows:
+            continue
+        lines.append(f"### {cid} by family")
+        lines.append("| family | n | events | censored | median | RMST |")
+        lines.append("|---|---|---|---|---|---|")
+        for f in rows:
+            km = f["kaplan_meier"]
+            lines.append(
+                f"| {f['family']} | {f['n']} | {km['n_events']} | {km['n_censored']} | "
+                f"{_fmt(f['median_tokens_to_closure'])} | {_fmt(f['rmst'])} |"
+            )
+        lines.append("")
+    return lines
+
+
+def _loop_section(analysis: dict[str, Any]) -> list[str]:
+    lp = analysis.get("loop")
+    if not lp:
+        return []
+    lines = ["## Loop-structure diagnostics (descriptive)", "", lp.get("note", ""), ""]
+    lines.append(
+        "| condition | n | longest_run median (max) | special longest runs | with degeneration onset |"
+    )
+    lines.append("|---|---|---|---|---|")
+    for cid, c in lp["per_condition"].items():
+        if not c.get("available"):
+            continue
+        lr = c["longest_run_length"]
+        lines.append(
+            f"| {cid} | {c['n']} | {_fmt(lr['median'])} ({_fmt(lr['max'])}) | "
+            f"{c['special_longest_run_count']} | {c['n_with_degeneration_onset']} |"
+        )
+    lines.append("")
+    return lines
+
+
 def _comparison_section(comparison: dict[str, Any]) -> list[str]:
     lines = ["## Deployment comparison", ""]
     lines.append(f"- A: {comparison['description_a']}")
@@ -243,6 +302,12 @@ def render_markdown(store: RunStore, analysis: dict[str, Any]) -> str:
     lines.append(f"- deployment id: `{manifest.get('deployment_id')}`")
     if manifest.get("prompt_policy"):
         lines.append(f"- prompt policy: `{manifest.get('prompt_policy')}`")
+    policy = manifest.get("model_policy")
+    if policy:
+        lines.append(
+            f"- model policy: `{policy.get('profile_id')}` "
+            f"(label `{policy.get('condition_label')}`) recommended=`{policy.get('recommended')}`"
+        )
     conditions = manifest.get("conditions", [])
     lines.append("- condition ids: `" + ", ".join(c["condition_id"] for c in conditions) + "`")
     source = model.get("source", model)
@@ -306,6 +371,8 @@ def render_markdown(store: RunStore, analysis: dict[str, Any]) -> str:
 
     lines.extend(_noise_section(analysis))
     lines.extend(_termination_section(analysis))
+    lines.extend(_survival_section(analysis))
+    lines.extend(_loop_section(analysis))
     lines.extend(_probe_section(analysis))
 
     comp_path = store.path / "comparison.json"

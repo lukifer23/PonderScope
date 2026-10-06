@@ -23,6 +23,7 @@ class ExperimentSpec:
     name: str
     task_pack: str
     prompt_policy: str = "pp-v1"
+    model_policy: str = ""
     families: list[str] = field(default_factory=list)
     n_per_family: int = 4
     task_seed: int = 0
@@ -35,6 +36,12 @@ class ExperimentSpec:
     sampled_top_p: float = 0.95
     sampled_top_k: int = 20
     sampled_min_p: float = 0.0
+    sampled_presence_penalty: float = 0.0
+    sampled_presence_context_size: int = 20
+    sampled_repetition_penalty: float = 1.0
+    sampled_repetition_context_size: int = 20
+    sampled_frequency_penalty: float = 0.0
+    sampled_frequency_context_size: int = 20
     probe: bool = False
     n_probes: int = 4
     probe_max_tokens: int = 64
@@ -49,6 +56,7 @@ class ExperimentSpec:
             "name": self.name,
             "task_pack": self.task_pack,
             "prompt_policy": self.prompt_policy,
+            "model_policy": self.model_policy,
             "families": self.families,
             "n_per_family": self.n_per_family,
             "task_seed": self.task_seed,
@@ -61,6 +69,12 @@ class ExperimentSpec:
             "sampled_top_p": self.sampled_top_p,
             "sampled_top_k": self.sampled_top_k,
             "sampled_min_p": self.sampled_min_p,
+            "sampled_presence_penalty": self.sampled_presence_penalty,
+            "sampled_presence_context_size": self.sampled_presence_context_size,
+            "sampled_repetition_penalty": self.sampled_repetition_penalty,
+            "sampled_repetition_context_size": self.sampled_repetition_context_size,
+            "sampled_frequency_penalty": self.sampled_frequency_penalty,
+            "sampled_frequency_context_size": self.sampled_frequency_context_size,
             "probe": self.probe,
             "n_probes": self.n_probes,
             "probe_max_tokens": self.probe_max_tokens,

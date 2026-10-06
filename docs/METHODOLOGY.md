@@ -26,8 +26,15 @@ being measured:
 - `deployment_id` — weight variant + runtime/version + backend + hardware + OS +
   device; **excludes** decoding.
 - `condition_id` — decoding policy (greedy vs sampled; temperature, top-p,
-  top-k, min-p, budget, thinking context); **excludes** seed.
-- `trial_id` — task id + condition + seed + repeat.
+  top-k, min-p, budget, thinking context, and any *active* logits-processor
+  penalty with its context size); **excludes** seed. Inactive penalties
+  (`None`/`0` additive, `1.0` multiplicative repetition) are normalized away so
+  they reproduce prior decoding identity.
+- `presentation_id` — structural task id + prompt policy + sha256 of the rendered
+  prompt. Structural task ids are wording-independent so the same problem can be
+  paired across prompt policies; the presentation id is what actually identifies
+  the stimulus, so pp-v1 and pp-v2 cannot collide.
+- `trial_id` — presentation id + condition + seed + repeat.
 
 A backend-specific load audit is evidence about how a runtime interpreted an
 artifact, not part of the artifact; it can never change `source_artifact_id` or
@@ -122,13 +129,37 @@ Budget outcomes are separate metrics: `success_at_budget`,
 observed wrong answer, and `conditional_accuracy_given_completed` is `None` when
 nothing completed.
 
+## Logits processors
+
+Sampling conditions may carry explicit `presence_penalty`, `repetition_penalty`,
+and `frequency_penalty` fields with explicit context sizes. They are built with
+`mlx_lm.sample_utils.make_logits_processors` (MLX-LM 0.32.0 order:
+repetition → presence → frequency) and passed to `generate_step`; the framework,
+version, processor order, context sizes, and an honest equivalence label are
+recorded per generation. MLX's penalties are an OpenAI-*like* approximation, so a
+condition that maps an upstream serving recipe onto MLX is labelled
+`qwen-upstream-profile-on-mlx`, never claimed bit-for-bit equivalent.
+
+## Censor-aware time-to-closure
+
+Termination is a right-censored time-to-event problem. The event is a natural
+native think-end/reasoning closure; the time is generated tokens to closure; an
+observation that reaches `max_tokens` first is censored at that horizon. The
+analysis reports Kaplan-Meier closure survival (with number at risk, events, and
+censored), median tokens-to-closure when estimable, and restricted mean survival
+time (RMST) up to an explicit common horizon `tau`. `max_tokens` is an
+observation horizon, never a natural stopping threshold.
+
 ## Metrics
 
 Token-level, deterministic, no LLM judge:
 
 - reasoning / answer / total token counts (split at the think-end token)
 - unique-token ratio; distinct-1/2/4; repeated 4-/8-gram fractions
-- longest identical token run; most-common token count
+- longest identical token run (with token id, decoded piece, span, and whether it
+  is a special/control token); most-common token count
+- most frequent repeated small-n motif; rolling-window unique-token ratio; a
+  descriptive degeneration-onset index with a documented rule
 - line-level text repetition ratio
 - answer extraction success / missing-answer rate
 - TTFT, wall time, tokens/sec
@@ -173,10 +204,18 @@ combined within-deployment noise of **both** compared conditions, not one side.
 
 Before any metric is compared, a canonical configuration-difference report lists
 identical / changed / missing provenance fields, and the requested contrast is
-checked for confounds (task-population mismatch, multiple uncontrolled deployment
-variables, undeclared decoding differences, missing provenance). Confounded or
-under-specified comparisons are **refused** unless explicitly requested as
+checked for confounds. The default contract requires identical structural task
+population, identical presentation/stimulus IDs, identical prompt policy,
+identical decoding condition, identical task-pack/generator version, a compatible
+observation horizon, and a compatible capture lane. A deliberate change to
+prompt policy, horizon, capture lane, or decoding requires its explicit
+`*_intentional` flag; otherwise the contrast is **refused** so that e.g. pp-v1 vs
+pp-v2 cannot masquerade as a clean deployment contrast. Confounded or
+under-specified comparisons are refused unless explicitly requested as
 exploratory, in which case they are labelled as such. No causal language is used.
+Cross-run budget metrics are censor-aware (`success_at_budget`, `completion_rate`,
+`censored_rate`, `error_rate`, `answer_observation_rate`, and
+`conditional_accuracy_given_completed`, which is `None` when not estimable).
 
 ## Policy-transfer contract (future scope, documented now)
 

@@ -21,7 +21,7 @@ def run_cap_prefix_invariance(
     caps: list[int],
 ) -> dict[str, Any]:
     """Generate each prompt greedily at every cap and check prefix nesting."""
-    caps = sorted(int(c) for c in caps)
+    caps = sorted({int(c) for c in caps})
     per_task: list[dict[str, Any]] = []
     for prompt in prompts:
         sequences: dict[int, list[int]] = {}
@@ -40,13 +40,21 @@ def run_cap_prefix_invariance(
                 "invariance": prefix_invariance(sequences),
             }
         )
+    n_comparisons = sum(t["invariance"]["n_comparisons"] for t in per_task)
+    sufficient = len(caps) >= 2 and all(t["invariance"]["n_comparisons"] >= 1 for t in per_task)
+    all_exact = bool(sufficient and all(t["invariance"]["exact_prefix"] for t in per_task))
     return {
         "caps": caps,
         "n_prompts": len(prompts),
-        "all_exact_prefix": all(t["invariance"]["exact_prefix"] for t in per_task),
+        "n_comparisons": n_comparisons,
+        "sufficient": sufficient,
+        "status": "ok" if sufficient else "insufficient_data",
+        "all_exact_prefix": all_exact if sufficient else None,
         "per_task": per_task,
         "note": (
-            "If all_exact_prefix is True, closure and lower-cap censoring can be "
-            "derived from one generous greedy run without re-running each cap."
+            "A single cap yields zero comparisons and is NOT a validation; "
+            "all_exact_prefix is only meaningful with at least two distinct caps. "
+            "If True, closure and lower-cap censoring can be derived from one "
+            "generous greedy run without re-running each cap."
         ),
     }

@@ -2,6 +2,21 @@
 
 Censoring correctness, clean evidence, and termination calibration.
 
+> **Phase 1.3 annotation (annotated, not erased).** All measured facts in this
+> report are preserved unchanged. Three interpretive statements were too strong
+> and are superseded by Phase 1.3 (see `PHASE1_3_REPORT.md`):
+> (1) "prompt wording is not the cause" → the pp-v1 vs pp-v2 answer-format
+> ablation did not produce a detectable large termination improvement in this
+> 10-task greedy calibration;
+> (2) "long reasoning is caused by looping, not task complexity" → the censored
+> trajectories are dominated by severe exact repetition and looping occurs even
+> on structurally trivial tasks; structural difficulty alone does not explain
+> the observed nontermination;
+> (3) "termination-stress model" → **termination stress under the tested greedy
+> thinking condition**, until upstream-recommended sampling is measured.
+> The 0.8B looping observation is also **not novel**: upstream Qwen
+> documentation already warns that 0.8B is unusually prone to thinking loops.
+
 ## Starting state
 
 - Starting `main` SHA: `688b54d236395c757560792461caac106f7d64c4` (matched
@@ -188,8 +203,11 @@ trajectories ran the full cap (2048 / 4096).
 Censored traces show degenerate repetition: `unique_token_ratio` 0.04–0.12 and
 `repeated_ngram_fraction_4` 0.61–0.90; one pp-v2 run had `max_token_run=1201`
 (a single token repeated 1201 times). Completed arith traces were much healthier
-(`unique_token_ratio` 0.32, `repeated_ngram_fraction_4` 0.34–0.35). Long reasoning
-is associated with looping, **not** task complexity.
+(`unique_token_ratio` 0.32, `repeated_ngram_fraction_4` 0.34–0.35). The censored
+trajectories are dominated by severe exact repetition, and looping occurs even on
+structurally trivial tasks; structural difficulty alone does not explain the
+observed nontermination. (Phase 1.3 correction; the original wording said "long
+reasoning is caused by looping, not task complexity".)
 
 ### Forced-prefix observations
 
@@ -199,10 +217,13 @@ No `harmful_overthinking_observed` in any trajectory.
 
 ### Does prompt wording explain the long reasoning?
 
-**No.** pp-v1 and pp-v2 are essentially identical (1/10 completed, 0.9 censored
-each; completion at 295 vs 385 reasoning tokens). The explicit `Answer:` cue is
-not the cause. Therefore no `tasks-v2` is justified on this evidence, and
-`tasks-v1` is unchanged.
+The pp-v1 vs pp-v2 answer-format ablation **did not produce a detectable large
+termination improvement** in this 10-task greedy calibration: both completed
+1/10 and censored 0.9, with completion at 295 vs 385 reasoning tokens. This does
+not establish that prompt wording is irrelevant in general, only that this
+answer-format change did not rescue termination here. Therefore no `tasks-v2` is
+justified on this evidence, and `tasks-v1` is unchanged. (Phase 1.3 correction;
+the original wording said the explicit `Answer:` cue "is not the cause".)
 
 ## Recommended uniform research cap
 
@@ -213,12 +234,15 @@ follow-up showed no recovery, so the cap is not raised further.
 
 ## Model classification
 
-**TERMINATION-STRESS MODEL (B).** `Qwen/Qwen3.5-0.8B`@`2fc06364…` exhibits
-pathological, highly repetitive long reasoning on trivial tasks and rarely closes
-naturally. It is retained because that behavior is scientifically useful.
-**Recommendation:** use one larger open reasoning model that fits the M3 Pro as
-the primary baseline for future cross-deployment study. That model is **not**
-implemented or run in this pass.
+**Termination stress under the tested greedy thinking condition.** Under the
+greedy, no-penalty thinking condition, `Qwen/Qwen3.5-0.8B`@`2fc06364…` exhibits
+highly repetitive long reasoning on trivial tasks and rarely closes naturally. It
+is retained because that behavior is scientifically useful. This is **not** a
+claim about the model under its upstream-recommended sampling policy, which
+Phase 1.3 measures; upstream already warns that 0.8B is unusually prone to
+thinking loops. **Recommendation:** if the upstream-recommended condition still
+fails to terminate, use one larger same-family model as the primary baseline for
+future cross-deployment study.
 
 ## Evidence bundle
 

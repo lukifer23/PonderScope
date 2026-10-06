@@ -378,6 +378,51 @@ class MlxBackend:
         )
         return sampler, decoding.seed
 
+    def _prepare_logits_processors(
+        self, decoding: DecodingPolicy
+    ) -> tuple[list[Any], dict[str, Any]]:
+        """Build MLX-LM logits processors from an explicit decoding policy.
+
+        MLX-LM 0.32.0's ``make_logits_processors`` order is
+        ``[repetition, presence, frequency]``. We record the exact framework,
+        version, context sizes, and an honest equivalence label because MLX's
+        penalty semantics are only an OpenAI-*like* approximation of what Qwen's
+        upstream serving examples assume, not a bit-for-bit guarantee.
+        """
+        import mlx_lm
+        from mlx_lm.sample_utils import make_logits_processors
+
+        rep_ctx = decoding.repetition_context_size
+        pre_ctx = decoding.presence_context_size
+        freq_ctx = decoding.frequency_context_size
+        processors = make_logits_processors(
+            repetition_penalty=decoding.repetition_penalty,
+            repetition_context_size=rep_ctx if rep_ctx is not None else 20,
+            presence_penalty=decoding.presence_penalty,
+            presence_context_size=pre_ctx if pre_ctx is not None else 20,
+            frequency_penalty=decoding.frequency_penalty,
+            frequency_context_size=freq_ctx if freq_ctx is not None else 20,
+        )
+        meta = {
+            "framework": "mlx-lm",
+            "framework_version": getattr(mlx_lm, "__version__", "unknown"),
+            "processor_order": ["repetition_penalty", "presence_penalty", "frequency_penalty"],
+            "n_processors": len(processors),
+            "repetition_penalty": decoding.repetition_penalty,
+            "repetition_context_size": rep_ctx,
+            "presence_penalty": decoding.presence_penalty,
+            "presence_context_size": pre_ctx,
+            "frequency_penalty": decoding.frequency_penalty,
+            "frequency_context_size": freq_ctx,
+            "equivalence_label": "qwen-upstream-profile-on-mlx",
+            "semantics_note": (
+                "MLX-LM implements an OpenAI-like additive presence penalty and a "
+                "sign-aware multiplicative repetition penalty; not claimed bit-identical "
+                "to any OpenAI-compatible serving implementation."
+            ),
+        }
+        return processors, meta
+
     def _run(
         self,
         prompt_ids: list[int],
@@ -391,6 +436,7 @@ class MlxBackend:
             raise RuntimeError("backend not loaded")
 
         sampler, seed = self._prepare_sampler(decoding)
+        processors, processor_meta = self._prepare_logits_processors(decoding)
         if seed is not None:
             mx.random.seed(seed)
 
@@ -411,7 +457,13 @@ class MlxBackend:
         think_end_reached = False
 
         try:
-            gen = generate_step(prompt, self._model, max_tokens=max_tokens, sampler=sampler)
+            gen = generate_step(
+                prompt,
+                self._model,
+                max_tokens=max_tokens,
+                sampler=sampler,
+                logits_processors=processors or None,
+            )
             for token, logprobs in gen:
                 now = time.perf_counter()
                 tid = int(token)  # type: ignore[arg-type]
@@ -467,6 +519,7 @@ class MlxBackend:
                 "extra_tokens": len(extra_tokens) if extra_tokens else 0,
                 "capture": capture.to_dict(),
                 "seed": seed,
+                "logits_processors": processor_meta,
             },
         )
 

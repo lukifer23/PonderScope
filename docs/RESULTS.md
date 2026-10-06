@@ -2,6 +2,15 @@
 
 **Generated from saved evidence; no numbers are hand-entered.** Regenerate with `ponderscope analyze`/`report`; this table is produced by reading the run's `analysis.json`.
 
+> **Phase 1.3 annotation.** The measured numbers below are unchanged. The
+> classification language is corrected: the looping observed here is
+> **termination stress under the tested greedy thinking condition**, not a
+> property of the model under its upstream-recommended sampling policy. The
+> pp-v1 vs pp-v2 ablation did not produce a detectable large termination
+> improvement, and looping occurs on structurally trivial tasks, so structural
+> difficulty alone does not explain the nontermination. See
+> `PHASE1_3_REPORT.md`.
+
 ## Run identity
 
 - run id: `runs/20261005T221943Z-smoke-v2-live-smoke-2-dep-8b5f653b14f6`

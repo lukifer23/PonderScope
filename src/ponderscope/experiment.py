@@ -21,10 +21,13 @@ from .config.identity import (
     SourceArtifactIdentity,
     TrialIdentity,
 )
+from .config.identity import (
+    presentation_id as make_presentation_id,
+)
 from .config.schema import ExperimentSpec
 from .evidence.environment import capture_code_state
 from .evidence.run import RunStore
-from .reasoning.metrics import compute_repetition
+from .reasoning.metrics import compute_loop_diagnostics, compute_repetition
 from .reasoning.parse import parse_trace, reasoning_prefix_ids
 from .reasoning.probes import run_prefix_probes
 from .reasoning.transitions import (
@@ -56,12 +59,15 @@ def verify_capture_equivalence(
     prompt_token_ids: list[int],
     *,
     max_tokens: int = 64,
+    sampled: DecodingPolicy | None = None,
 ) -> dict[str, Any]:
     """Check that capture level does not change the decoded token sequence.
 
     Greedy and same-seed sampled decoding are deterministic; if the minimal and
     research lanes ever diverge, that is an instrumentation effect and must be
-    reported, not silently averaged into performance.
+    reported, not silently averaged into performance. When ``sampled`` is given
+    (e.g. the upstream penalty condition), it is used verbatim for the sampled
+    lane so equivalence is confirmed *under the logits processors actually used*.
     """
 
     def _first_divergence(a: list[int], b: list[int]) -> int | None:
@@ -73,14 +79,15 @@ def verify_capture_equivalence(
         return None
 
     greedy = DecodingPolicy(mode="greedy", max_tokens=max_tokens)
-    sampled = DecodingPolicy(
-        mode="sampled",
-        max_tokens=max_tokens,
-        temperature=0.6,
-        top_p=0.95,
-        top_k=20,
-        seed=7,
-    )
+    if sampled is None:
+        sampled = DecodingPolicy(
+            mode="sampled",
+            max_tokens=max_tokens,
+            temperature=0.6,
+            top_p=0.95,
+            top_k=20,
+            seed=7,
+        )
     result: dict[str, Any] = {}
     for label, decoding in (("greedy", greedy), ("sampled_same_seed", sampled)):
         minimal = backend.generate(prompt_token_ids, decoding, CaptureSpec.minimal())
@@ -233,6 +240,19 @@ def run_experiment(
         "publication_grade": not tracked_dirty,
     }
 
+    model_policy_record: dict[str, Any] | None = None
+    if spec.model_policy:
+        from .config.policies import load_model_policy
+
+        profile = load_model_policy(spec.model_policy)
+        if profile.repo_id != model_repo or profile.revision != model_revision:
+            raise ValueError(
+                f"model policy {profile.profile_id!r} is for "
+                f"{profile.repo_id}@{profile.revision}, not "
+                f"{model_repo}@{model_revision}; refusing to misattribute the policy"
+            )
+        model_policy_record = profile.provenance_record()
+
     backend = get_backend(backend_name)
     request = SourceArtifactIdentity(repo_id=model_repo, revision=model_revision)
     loaded = backend.load(request)
@@ -254,10 +274,18 @@ def run_experiment(
         code_state=code_state,
         prompt_policy=spec.prompt_policy,
     )
+    if model_policy_record is not None:
+        store.manifest["model_policy"] = model_policy_record
     store.add_observation(
         f"model loaded; precision={loaded.precision}; quantization={loaded.quantization}; "
         f"load_audit_ok={loaded.load_audit.get('ok')}"
     )
+    if model_policy_record is not None:
+        store.add_observation(
+            f"model policy {model_policy_record['profile_id']} "
+            f"({model_policy_record['condition_label']}) recorded; "
+            f"recommended={model_policy_record['recommended']}"
+        )
     store.update_status("RUNNING")
 
     tasks = generate_pack(
@@ -294,6 +322,7 @@ def run_experiment(
         _progress(f"run {store.run_id}: {len(tasks)} tasks, {len(conditions)} conditions each")
         for task in tasks:
             _progress(f"task {task.family}/{task.task_id[:8]} starting")
+            pres_id = make_presentation_id(task.task_id, task.prompt_policy, task.prompt)
             prompt_ids = backend.tokenize_prompt(
                 [{"role": "user", "content": task.prompt}], enable_thinking=True
             )
@@ -307,6 +336,7 @@ def run_experiment(
                     condition=decoding,
                     seed=condition.get("seed"),
                     repeat=condition["repeat"],
+                    presentation_id=pres_id,
                 )
                 record = _make_record(
                     backend=backend,
@@ -420,6 +450,12 @@ def _make_record(
         answer_norm is not None and score(task.family, parsed.answer_raw or "", task.answer)
     )
     rep = compute_repetition(trace.token_ids, trace.text)
+    special_ids = set(eos_ids)
+    if think_end_id is not None:
+        special_ids.add(think_end_id)
+    loop = compute_loop_diagnostics(
+        trace.token_ids, decode=backend.decode, special_token_ids=special_ids
+    )
     error_type = None
     if trace.error:
         error_type = trace.error.split(":", 1)[0]
@@ -442,6 +478,8 @@ def _make_record(
         "trial_id": trial.trial_id,
         "deployment": deployment.to_dict(),
         "task_id": task.task_id,
+        "presentation_id": trial.presentation_id,
+        "prompt_policy": task.prompt_policy,
         "family": task.family,
         "split": task.split,
         "difficulty": task.difficulty,
@@ -458,6 +496,7 @@ def _make_record(
         "answer_tokens": len(parsed.final_token_ids),
         "total_tokens": len(trace.token_ids),
         "metrics": rep.to_dict(),
+        "loop": loop.to_dict(),
         "termination": {
             "finish_reason": trace.finish_reason,
             "terminated_by_eos": trace.terminated_by_eos,

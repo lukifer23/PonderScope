@@ -1,0 +1,47 @@
+{
+  "profile_id": "qwen35-08b-thinking-upstream-v1",
+  "description": "Upstream-recommended TEXT THINKING sampling profile for Qwen3.5-0.8B at the pinned immutable revision, recorded structurally (not as prose).",
+  "model": {
+    "repo_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17"
+  },
+  "generation_mode": "text-thinking",
+  "provenance": {
+    "source": "Hugging Face model card (README.md)",
+    "page_url": "https://huggingface.co/Qwen/Qwen3.5-0.8B/blob/2fc06364715b967f1860aea9cf38778875588b17/README.md",
+    "raw_url": "https://huggingface.co/Qwen/Qwen3.5-0.8B/raw/2fc06364715b967f1860aea9cf38778875588b17/README.md",
+    "retrieved_utc": "2026-10-05T23:56:55Z",
+    "readme_sha256": "87a163af54f32fa608a0f8d3ac67945c53dd2b4a7c96740b3d7fdc28e8458864",
+    "readme_bytes": 61705
+  },
+  "recommended": {
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "presence_penalty": 1.5,
+    "repetition_penalty": 1.0,
+    "enable_thinking": true
+  },
+  "not_specified_upstream": {
+    "presence_context_size": null,
+    "repetition_context_size": null,
+    "frequency_penalty": null,
+    "frequency_context_size": null
+  },
+  "quotes": {
+    "thinking_text_profile": "Thinking mode for text tasks: `temperature=1.0, top_p=0.95, top_k=20, min_p=0.0, presence_penalty=1.5, repetition_penalty=1.0`",
+    "loop_warning": "In thinking mode, we have observed that when using the recommended sampling parameters, Qwen3.5-0.8B is more prone to entering thinking loops compared to other Qwen3.5 models, which may prevent it from terminating generation properly.",
+    "presence_penalty_guidance": "For supported frameworks, you can adjust the `presence_penalty` parameter between 0 and 2 to reduce endless repetitions. However, using a higher value may occasionally result in language mixing and a slight decrease in model performance."
+  },
+  "mlx_mapping": {
+    "framework": "mlx-lm",
+    "framework_version": "0.32.0",
+    "equivalence_label": "qwen-upstream-profile-on-mlx",
+    "logits_processors": ["repetition_penalty", "presence_penalty"],
+    "processor_order": ["repetition_penalty", "presence_penalty", "frequency_penalty"],
+    "presence_context_size": 20,
+    "repetition_context_size": 20,
+    "semantics_note": "MLX-LM's make_logits_processors implements an OpenAI-like presence penalty (subtract a constant from the logits of tokens seen in the last presence_context_size positions) and a sign-aware multiplicative repetition penalty. This is a faithful mapping of the upstream parameter values onto MLX-LM, but it is not claimed to be bit-for-bit identical to any OpenAI-compatible serving implementation."
+  }
+}

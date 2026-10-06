@@ -111,6 +111,31 @@ if not, the finding stands that this deployment naturally deliberates for
 hundreds/thousands of tokens on trivial tasks. Curating tasks to hit an arbitrary
 closure rate is explicitly not done.
 
+## Stage 0d — decoding validity and censored-termination analysis (Phase 1.3)
+
+A decoding pathology is not a model property until the model has been tested
+under a defensible decoding policy. Stage 0d therefore:
+
+1. records the exact upstream generation recommendation for the pinned 0.8B
+   revision as a versioned, structured model-policy profile
+   (`model_policies/qwen35-08b-thinking-upstream-v1.json`) rather than silently
+   promoting upstream values into PonderScope defaults;
+2. reproduces that profile faithfully on MLX-LM through
+   `mlx_lm.sample_utils.make_logits_processors` (presence penalty with an
+   explicit context size; the equivalence is labelled
+   `qwen-upstream-profile-on-mlx`, not claimed bit-for-bit);
+3. treats termination as a right-censored time-to-event problem and reports
+   Kaplan-Meier closure survival, median tokens-to-closure, and RMST up to an
+   explicit observation horizon (never treating the horizon as a natural stop);
+4. adds descriptive loop-structure diagnostics with a documented onset rule;
+5. enforces presentation/stimulus identity and a strict comparison contract
+   (prompt policy, presentation IDs, task-pack version, horizon, capture lane)
+   before any deployment contrast is computed.
+
+Only after this stage is a same-family BF16 model-size control (Stage B)
+considered. The central deployment-drift experiment (BF16 vs a controlled Q4
+derived from the same source revision) remains **NOT YET TESTED**.
+
 ## Task-pack registry and prompt policy
 
 `tasks-v1` is defined by an explicit registry entry (generator version, default

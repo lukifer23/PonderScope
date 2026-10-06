@@ -31,6 +31,15 @@ PonderScope is intentionally conservative about what its evidence supports.
   natural stops. Censoring is reported, never treated as termination.
 - Semantic trace similarity is **NOT YET TESTED**; only exact/token-level and
   lexical measures are implemented. No proprietary cloud judge is used.
+- Loop-structure diagnostics (longest run, repeated motif, rolling-window ratio,
+  degeneration onset) are **descriptive**, with an explicitly documented onset
+  rule; they are not a validated universal loop detector.
+- Kaplan-Meier and RMST estimates are only as trustworthy as the number of
+  observed closure events. With one event the uncertainty is enormous, and the
+  observation horizon (`max_tokens`) is not a natural stopping threshold.
+- MLX logits-processor penalties are an OpenAI-*like* approximation. A condition
+  mapping an upstream serving recipe onto MLX is labelled
+  `qwen-upstream-profile-on-mlx`, not claimed bit-for-bit equivalent.
 - Entropy and logprobs are only available because MLX-LM exposes them. Other
   backends may not, and would be marked UNSUPPORTED.
 

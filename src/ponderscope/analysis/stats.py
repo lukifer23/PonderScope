@@ -205,10 +205,18 @@ def within_cluster_std(values_by_cluster: dict[str, list[float]]) -> float | Non
 def group_values_by_task(
     records: list[dict[str, Any]],
     key: str,
-    extract: Callable[[dict[str, Any]], float],
+    extract: Callable[[dict[str, Any]], float | None],
 ) -> dict[str, list[float]]:
-    """Group extracted metric values by ``key`` (usually 'task_id')."""
+    """Group extracted metric values by ``key`` (usually 'task_id').
+
+    ``None`` extractions are dropped, not coerced to zero: a metric that is not
+    estimable (e.g. conditional accuracy with no completed answer) must not be
+    silently treated as an observed value.
+    """
     out: dict[str, list[float]] = defaultdict(list)
     for r in records:
-        out[r[key]].append(float(extract(r)))
+        value = extract(r)
+        if value is None:
+            continue
+        out[r[key]].append(float(value))
     return dict(out)

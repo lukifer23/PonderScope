@@ -70,7 +70,7 @@ def test_compare_identical_runs(tmp_path, fake_backend, monkeypatch):
     cmp = compare_configs(a.store, b.store, mode="greedy")
     assert cmp["refused"] is False
     assert cmp["n_matched_trials"] == 4  # 2 tasks x 2 greedy repeats
-    acc = cmp["metrics"]["accuracy"]["delta"]
+    acc = cmp["metrics"]["success_at_budget"]["delta"]
     assert acc["mean"] == 0.0
 
 

@@ -16,6 +16,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..config.identity import presentation_id as make_presentation_id
 from .families import (
     ALL_FAMILIES,
     DEFAULT_PROMPT_POLICY,
@@ -183,6 +184,10 @@ def generate_pack_metadata(
     pack_spec = get_pack(pack)
     task_ids = sorted(t.task_id for t in tasks)
     digest = hashlib.sha256("\n".join(task_ids).encode("utf-8")).hexdigest()
+    presentation_ids = sorted(
+        make_presentation_id(t.task_id, t.prompt_policy, t.prompt) for t in tasks
+    )
+    presentation_digest = hashlib.sha256("\n".join(presentation_ids).encode("utf-8")).hexdigest()
     actual_families = sorted({t.family for t in tasks})
     actual_policies = sorted({t.prompt_policy for t in tasks})
     return {
@@ -198,5 +203,12 @@ def generate_pack_metadata(
         "split": split,
         "seed": seed,
         "n_tasks": len(tasks),
+        # Structural identity (wording-independent) and rendered presentation
+        # identity (wording-sensitive) are recorded separately.
+        "structural_task_ids": task_ids,
         "task_ids_sha256": digest,
+        "structural_task_ids_sha256": digest,
+        "presentation_ids": presentation_ids,
+        "presentation_ids_sha256": presentation_digest,
+        "n_presentations": len(presentation_ids),
     }

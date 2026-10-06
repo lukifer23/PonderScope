@@ -73,6 +73,7 @@ def _load_spec(args: argparse.Namespace) -> ExperimentSpec:
         name=args.name,
         task_pack=args.task_pack,
         prompt_policy=args.prompt_policy,
+        model_policy=args.model_policy,
         families=args.families or [],
         n_per_family=args.n_per_family,
         task_seed=args.task_seed,
@@ -148,6 +149,9 @@ def _cmd_compare(args: argparse.Namespace) -> int:
         mode=args.mode,
         allow_confounded=args.allow_confounded,
         decoding_intentional=args.decoding_intentional,
+        prompt_policy_intentional=args.prompt_policy_intentional,
+        horizon_intentional=args.horizon_intentional,
+        capture_intentional=args.capture_intentional,
     )
     ts = _dt.datetime.now(_dt.UTC).strftime("%Y%m%dT%H%M%SZ")
     out_path = (
@@ -223,7 +227,11 @@ def _cmd_calibrate_prefix(args: argparse.Namespace) -> int:
     result["source_artifact_id"] = source.source.source_artifact_id
     result["prompt_policy"] = args.prompt_policy
     atomic_write_json(Path(args.out), result)
-    print(f"cap-prefix invariance: all_exact_prefix={result['all_exact_prefix']}")
+    print(
+        f"cap-prefix invariance: status={result['status']} "
+        f"all_exact_prefix={result['all_exact_prefix']} "
+        f"comparisons={result['n_comparisons']}"
+    )
     print(f"  caps={result['caps']} prompts={result['n_prompts']}")
     for t in result["per_task"]:
         print(
@@ -259,6 +267,43 @@ def _cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_model_policy(args: argparse.Namespace) -> int:
+    from .config.policies import load_model_policy
+
+    profile = load_model_policy(args.id)
+    if args.json:
+        print(json.dumps(profile.to_dict(), indent=2))
+    else:
+        print(
+            f"{profile.profile_id}: {profile.repo_id}@{profile.revision} "
+            f"({profile.generation_mode})"
+        )
+        print(f"  equivalence label: {profile.condition_label}")
+        print(f"  recommended: {profile.sampling_kwargs()}")
+        print(f"  provenance: {profile.provenance}")
+    return 0
+
+
+def _cmd_survival(args: argparse.Namespace) -> int:
+    from .analysis import analyze_run
+    from .evidence.run import RunStore
+
+    store = RunStore.latest(args.runs_dir) if args.latest else RunStore.load(args.run)
+    analysis = analyze_run(store)
+    print(json.dumps(analysis["survival"], indent=2, default=str))
+    return 0
+
+
+def _cmd_loop_diagnostics(args: argparse.Namespace) -> int:
+    from .analysis import analyze_run
+    from .evidence.run import RunStore
+
+    store = RunStore.latest(args.runs_dir) if args.latest else RunStore.load(args.run)
+    analysis = analyze_run(store)
+    print(json.dumps(analysis["loop"], indent=2, default=str))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ponderscope", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -289,6 +334,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--name")
     p.add_argument("--task-pack", default="tasks-v1")
     p.add_argument("--prompt-policy", default="pp-v1")
+    p.add_argument("--model-policy", default="")
     p.add_argument("--families", nargs="*", default=None)
     p.add_argument("--n-per-family", type=int, default=4)
     p.add_argument("--task-seed", type=int, default=0)
@@ -323,6 +369,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--mode", default="greedy", choices=["greedy", "sampled"])
     p.add_argument("--allow-confounded", action="store_true")
     p.add_argument("--decoding-intentional", action="store_true")
+    p.add_argument("--prompt-policy-intentional", action="store_true")
+    p.add_argument("--horizon-intentional", action="store_true")
+    p.add_argument("--capture-intentional", action="store_true")
     p.set_defaults(func=_cmd_compare)
 
     p = sub.add_parser("report", help="regenerate Markdown/HTML from saved evidence")
@@ -358,6 +407,23 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--runs-dir", default="runs")
     p.add_argument("--output", required=True)
     p.set_defaults(func=_cmd_bundle)
+
+    p = sub.add_parser("model-policy", help="show a versioned model-policy profile")
+    p.add_argument("--id", required=True)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_model_policy)
+
+    p = sub.add_parser("survival", help="censor-aware time-to-closure for a saved run")
+    p.add_argument("--run")
+    p.add_argument("--latest", action="store_true")
+    p.add_argument("--runs-dir", default="runs")
+    p.set_defaults(func=_cmd_survival)
+
+    p = sub.add_parser("loop-diagnostics", help="descriptive loop structure for a saved run")
+    p.add_argument("--run")
+    p.add_argument("--latest", action="store_true")
+    p.add_argument("--runs-dir", default="runs")
+    p.set_defaults(func=_cmd_loop_diagnostics)
 
     return parser
 

@@ -32,6 +32,7 @@ from .stats import (
     summarize,
     within_cluster_std,
 )
+from .survival import survival_by_family, survival_summary
 
 NULLABLE_FLOAT = float | None
 
@@ -41,10 +42,13 @@ def prefix_invariance(traces_by_cap: dict[int, list[int]]) -> dict[str, Any]:
 
     If this holds, closure can be discovered with a single generous run and the
     censoring a smaller cap would have caused derived without re-running it.
+
+    A single cap yields **zero** comparisons, which is not evidence of anything:
+    that case is reported as ``status="insufficient_data"`` with
+    ``exact_prefix=None`` rather than a vacuous ``True``.
     """
     caps = sorted(traces_by_cap)
     checks = []
-    ok = True
     for short, long in zip(caps, caps[1:], strict=False):
         a = traces_by_cap[short]
         b = traces_by_cap[long]
@@ -58,8 +62,23 @@ def prefix_invariance(traces_by_cap: dict[int, list[int]]) -> dict[str, Any]:
                 "exact_prefix": is_prefix,
             }
         )
-        ok = ok and is_prefix
-    return {"caps": caps, "exact_prefix": ok, "checks": checks}
+    n_comparisons = len(checks)
+    if n_comparisons == 0:
+        return {
+            "caps": caps,
+            "n_comparisons": 0,
+            "exact_prefix": None,
+            "status": "insufficient_data",
+            "checks": checks,
+        }
+    ok = all(c["exact_prefix"] for c in checks)
+    return {
+        "caps": caps,
+        "n_comparisons": n_comparisons,
+        "exact_prefix": ok,
+        "status": "ok" if ok else "divergent",
+        "checks": checks,
+    }
 
 
 def natural_final_status_of(record: dict[str, Any]) -> str:
@@ -470,6 +489,69 @@ def noise_floor(traces: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _is_closure(record: dict[str, Any]) -> bool:
+    """A natural native think-end / reasoning closure was observed."""
+    term = record["termination"]
+    return bool(term.get("think_end_reached") or term.get("terminated_by_eos"))
+
+
+def _time_to_closure(record: dict[str, Any]) -> float:
+    """Generated tokens to closure (or to the observation horizon if censored)."""
+    return float(record["total_tokens"])
+
+
+def _survival_section(by_condition: dict[str, list[dict[str, Any]]], tau: float) -> dict[str, Any]:
+    per_condition: dict[str, Any] = {}
+    for cid, rs in by_condition.items():
+        summary = survival_summary(
+            [_time_to_closure(r) for r in rs], [_is_closure(r) for r in rs], tau=tau
+        )
+        summary["by_family"] = survival_by_family(
+            rs, time_key=_time_to_closure, event_key=_is_closure, tau=tau
+        )
+        per_condition[cid] = summary
+    return {
+        "tau": tau,
+        "time_definition": "generated tokens to closure (observation horizon if censored)",
+        "event_definition": "natural native think-end or EOS observed",
+        "censoring_definition": "max-token observation horizon reached before closure",
+        "per_condition": per_condition,
+        "note": "max_tokens is an observation horizon, not a natural stopping threshold.",
+    }
+
+
+def _loop_section(by_condition: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+    per_condition: dict[str, Any] = {}
+    for cid, rs in by_condition.items():
+        loops = [r["loop"] for r in rs if r.get("loop")]
+        if not loops:
+            per_condition[cid] = {"available": False}
+            continue
+        onsets = [
+            loop["degeneration_onset_index"]
+            for loop in loops
+            if loop.get("degeneration_onset_index") is not None
+        ]
+        per_condition[cid] = {
+            "available": True,
+            "n": len(loops),
+            "longest_run_length": summarize([loop["longest_run_length"] for loop in loops]),
+            "degeneration_onset_index": summarize(onsets),
+            "n_with_degeneration_onset": len(onsets),
+            "special_longest_run_count": sum(
+                1 for loop in loops if loop.get("longest_run_is_special")
+            ),
+            "top_motif_count": summarize([loop["top_motif_count"] for loop in loops]),
+        }
+    return {
+        "per_condition": per_condition,
+        "note": (
+            "Descriptive loop structure with an explicitly documented onset rule; "
+            "not a validated universal loop detector."
+        ),
+    }
+
+
 def _noise_scale_for(records: list[dict[str, Any]], mode: str) -> NULLABLE_FLOAT:
     """Mean within-task std for repeated observations under a mode."""
     groups: dict[tuple[str, Any], list[float]] = defaultdict(list)
@@ -533,8 +615,13 @@ def analyze_run(store: RunStore) -> dict[str, Any]:
             }
         )
 
+    spec_max = store.manifest.get("spec", {}).get("max_tokens")
+    tau = (
+        float(spec_max) if spec_max else float(max((r["total_tokens"] for r in traces), default=0))
+    )
+
     analysis = {
-        "interpretation": "phase1.2",
+        "interpretation": "phase1.3",
         "run_id": store.run_id,
         "artifact_id": store.artifact_id,
         "deployment_id": store.deployment_id,
@@ -546,6 +633,8 @@ def analyze_run(store: RunStore) -> dict[str, Any]:
         "n_tasks": len({r["task_id"] for r in traces}),
         "configs": configs,
         "noise_floor": noise_floor(traces),
+        "survival": _survival_section(by_condition, tau),
+        "loop": _loop_section(by_condition),
         "probes": {
             "n": len(probes),
             "supported": store.manifest.get("probe_supported"),

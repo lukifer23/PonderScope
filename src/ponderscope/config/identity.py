@@ -198,8 +198,14 @@ class DecodingPolicy:
     """Decoding/sampling/context configuration.
 
     ``seed`` is trial state, not condition identity: it is excluded from
-    :attr:`condition_id`. Changing temperature/top-p/top-k/min-p/budget does
-    change condition identity.
+    :attr:`condition_id`. Changing temperature/top-p/top-k/min-p/budget, or an
+    *active* logits-processor penalty (and its context size), changes condition
+    identity. Inactive penalties (``None``/``0`` for additive penalties, ``1.0``
+    for the multiplicative repetition penalty) are normalized away so that they
+    reproduce prior decoding identity exactly.
+
+    The penalty fields mirror ``mlx_lm.sample_utils.make_logits_processors`` and
+    are recorded explicitly rather than being treated as framework defaults.
     """
 
     mode: str  # "greedy" | "sampled"
@@ -208,6 +214,12 @@ class DecodingPolicy:
     top_p: float | None = None
     top_k: int | None = None
     min_p: float | None = None
+    presence_penalty: float | None = None
+    presence_context_size: int | None = None
+    repetition_penalty: float | None = None
+    repetition_context_size: int | None = None
+    frequency_penalty: float | None = None
+    frequency_context_size: int | None = None
     seed: int | None = None
     stop_on_eos: bool = True
     context: dict[str, Any] = field(default_factory=dict)
@@ -215,6 +227,16 @@ class DecodingPolicy:
     def identity_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d.pop("seed", None)
+        # Inactive penalties must not change condition identity.
+        if not self.presence_penalty:
+            d.pop("presence_penalty", None)
+            d.pop("presence_context_size", None)
+        if not self.frequency_penalty:
+            d.pop("frequency_penalty", None)
+            d.pop("frequency_context_size", None)
+        if self.repetition_penalty in (None, 1.0):
+            d.pop("repetition_penalty", None)
+            d.pop("repetition_context_size", None)
         return d
 
     def to_dict(self) -> dict[str, Any]:
@@ -225,18 +247,45 @@ class DecodingPolicy:
         return configuration_id(self.identity_dict(), prefix="cond")
 
 
+def presentation_id(structural_task_id: str, prompt_policy: str, prompt_text: str) -> str:
+    """Identity of an exact rendered presentation (stimulus).
+
+    The structural task id deliberately ignores prompt wording so the same
+    structural problem can be paired across prompt policies. The presentation id
+    captures the *rendered* stimulus, so two policies over one structural task
+    share ``structural_task_id`` but MUST differ here. The prompt text itself is
+    still saved verbatim in evidence.
+    """
+    return configuration_id(
+        {
+            "structural_task_id": structural_task_id,
+            "prompt_policy": prompt_policy,
+            "prompt_sha256": _sha256_text(prompt_text),
+        },
+        prefix="pres",
+    )
+
+
 @dataclass(frozen=True)
 class TrialIdentity:
-    """Identity of a single generation: task + condition + seed + repeat."""
+    """Identity of a single generation: presentation + condition + seed + repeat.
+
+    ``presentation_id`` (not merely the structural ``task_id``) is part of trial
+    identity, so pp-v1 and pp-v2 cannot collide. Legacy evidence without a
+    presentation id reproduces its historical trial id (the field is dropped
+    when unset).
+    """
 
     task_id: str
     condition: DecodingPolicy
     seed: int | None
     repeat: int
+    presentation_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "task_id": self.task_id,
+            "presentation_id": self.presentation_id,
             "condition": self.condition.to_dict(),
             "seed": self.seed,
             "repeat": self.repeat,
