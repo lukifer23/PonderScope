@@ -281,12 +281,12 @@ class MlxBackend:
         """
         from pathlib import Path
 
-        from .audit import audit_derived_load
-        from .conversion import (
+        from ..conversion import (
             load_variant_provenance,
             variant_identity,
             verify_variant_artifact,
         )
+        from .audit import audit_derived_load
 
         snapshot = Path(artifact_path)
         if not snapshot.exists():

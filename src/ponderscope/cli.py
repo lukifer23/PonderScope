@@ -463,6 +463,53 @@ def _cmd_convert(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_variant_audit(args: argparse.Namespace) -> int:
+    from .conversion import audit_variant_load
+    from .evidence.store import atomic_write_json
+
+    report = audit_variant_load(
+        args.source_repo,
+        args.revision,
+        args.path,
+        prompt=args.prompt,
+        max_tokens=args.max_tokens,
+    )
+    if args.out:
+        atomic_write_json(Path(args.out), report)
+    if args.json:
+        print(json.dumps(report, indent=2))
+        return 0
+    print(f"variant audit: {report['artifact_path']}")
+    print(
+        f"  representation={report['representation']} precision={report['precision']} "
+        f"quant={report['quantization']} bits={report['quantization_bits']} "
+        f"group={report['quantization_group_size']}"
+    )
+    print(f"  bits_per_weight={report.get('bits_per_weight')}")
+    print(
+        f"  source={report['source_artifact_id']} variant={report['weight_variant_id']} "
+        f"derived_from={report['derived_from_source_artifact_id']}"
+    )
+    print(
+        f"  load_audit_ok={report['load_audit'].get('ok')} "
+        f"quantized_modules={report['load_audit'].get('n_quantized_modules')}"
+    )
+    print(f"  tokenizer semantic match: {report['tokenizer']['semantic_match']}")
+    g = report["generation"]
+    print(
+        f"  generation: tokens={g['generated_tokens']} finish={g['finish_reason']} "
+        f"think_end={g['think_end_reached']} eos={g['eos_observed']} error={g['error']}"
+    )
+    print(
+        f"  load_seconds={report['load_seconds']:.2f} "
+        f"peak_load={report['mlx_peak_after_load_bytes']} "
+        f"peak_generate={report['mlx_peak_after_generate_bytes']}"
+    )
+    if args.out:
+        print(f"  saved {args.out}")
+    return 0 if report["ok"] else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ponderscope", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -616,6 +663,19 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--dry-run", action="store_true", help="check source/storage without converting")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_convert)
+
+    p = sub.add_parser(
+        "variant-audit",
+        help="real load + short-generation audit of a derived weight variant",
+    )
+    p.add_argument("--path", required=True, help="derived artifact directory")
+    p.add_argument("--source-repo", default="Qwen/Qwen3.5-4B")
+    p.add_argument("--revision", required=True)
+    p.add_argument("--prompt", default="What is 17 + 25? Answer with the integer only.")
+    p.add_argument("--max-tokens", type=int, default=32)
+    p.add_argument("--out", default=None)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_variant_audit)
 
     return parser
 
