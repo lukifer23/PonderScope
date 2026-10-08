@@ -197,3 +197,43 @@ def test_active_generated_history_presence_builds_one_processor():
     assert meta["presence_semantics"] == "generated_history"
     assert meta["equivalence_label"] == "qwen-generated-history-presence-v1"
     assert meta["base_prompt_tokens"] == 7
+
+
+# --------------------------------------------------------------------------- #
+# Phase 4.1: the Q4 spec matches the frozen BF16 baseline on controlled dims
+# --------------------------------------------------------------------------- #
+def test_q4_specs_match_bf16_baseline_except_name():
+    import dataclasses
+    import json
+    from pathlib import Path
+
+    from ponderscope.config.schema import ExperimentSpec
+
+    root = Path(__file__).resolve().parents[1]
+    bf16 = ExperimentSpec.from_dict(
+        json.loads((root / "specs" / "calibration-4b-generated-history-api.json").read_text())
+    )
+
+    # Full primary spec: identical on every controlled dimension.
+    full = ExperimentSpec.from_dict(
+        json.loads((root / "specs" / "phase1_4-4b-q4-calibration.json").read_text())
+    )
+    assert full.sampled_presence_scope == "generated_history"
+    for field in dataclasses.fields(ExperimentSpec):
+        if field.name in ("name", "notes"):
+            continue
+        assert getattr(full, field.name) == getattr(bf16, field.name), (
+            f"phase1_4-4b-q4-calibration.{field.name} differs from the BF16 baseline"
+        )
+
+    # Pilot spec: identical except a bounded seed subset.
+    pilot = ExperimentSpec.from_dict(
+        json.loads((root / "specs" / "phase1_4-4b-q4-pilot.json").read_text())
+    )
+    assert set(pilot.sampled_seeds) <= set(bf16.sampled_seeds)
+    for field in dataclasses.fields(ExperimentSpec):
+        if field.name in ("name", "notes", "sampled_seeds"):
+            continue
+        assert getattr(pilot, field.name) == getattr(bf16, field.name), (
+            f"phase1_4-4b-q4-pilot.{field.name} differs from the BF16 baseline"
+        )
