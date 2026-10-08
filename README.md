@@ -129,6 +129,7 @@ ponderscope doctor                       # environment / runtime / model capabil
 ponderscope generate --pack tasks-v1     # generate and validate a task pack
 ponderscope convert --revision <sha> --out models/<artifact> --bits 4
 ponderscope variant-audit --path models/<artifact> --revision <sha>
+ponderscope preflight --spec specs/<spec>.json   # preconditions, no inference
 ponderscope run --spec specs/<spec>.json # run a declared deployment/task experiment
 ponderscope run --spec specs/<spec>.json --artifact-path models/<artifact>
 ponderscope analyze --run runs/<id>      # analyze immutable saved evidence

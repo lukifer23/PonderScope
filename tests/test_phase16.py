@@ -373,3 +373,94 @@ def test_report_labels_closures_and_eos_distinctly(tmp_path, fake_backend, monke
     # The ALL row must carry the native-closure count, not the EOS count.
     c = next(iter(analysis["configs"].values()))
     assert c["categories"]["native_reasoning_closures"] == 4  # FakeBackend always closes
+
+
+# --------------------------------------------------------------------------- #
+# Stage 5/6: replication specs, frozen population, preflight
+# --------------------------------------------------------------------------- #
+import dataclasses  # noqa: E402
+import json  # noqa: E402
+
+from ponderscope.preflight import run_preflight  # noqa: E402
+from ponderscope.tasks import generate_pack  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[1]
+ALL5 = ["arith", "path", "order", "logic", "sm"]
+
+
+def test_replication_specs_identical_controlled_dimensions():
+    bf16 = ExperimentSpec.from_dict(
+        json.loads((ROOT / "specs" / "phase1_6-replication-bf16.json").read_text())
+    )
+    q4 = ExperimentSpec.from_dict(
+        json.loads((ROOT / "specs" / "phase1_6-replication-q4.json").read_text())
+    )
+    for field in dataclasses.fields(ExperimentSpec):
+        if field.name in ("name", "notes"):
+            continue
+        assert getattr(bf16, field.name) == getattr(q4, field.name), field.name
+    # 5 families x 6 tasks x 2 seeds = 60 draws per arm.
+    assert bf16.split == "test" and bf16.task_seed == 1729
+    assert bf16.n_per_family == 6 and bf16.sampled_seeds == [0, 1]
+
+
+def test_replication_population_is_disjoint_and_frozen():
+    primary = generate_pack(
+        families=ALL5,
+        n_per_family=6,
+        pack="tasks-v1",
+        split="test",
+        seed=1729,
+        prompt_policy="pp-v1",
+    )
+    calibration = generate_pack(
+        families=ALL5,
+        n_per_family=2,
+        pack="tasks-v1",
+        split="calibration",
+        seed=0,
+        prompt_policy="pp-v1",
+    )
+    assert len(primary) == 30
+    assert {t.task_id for t in primary}.isdisjoint({t.task_id for t in calibration})
+    # deterministic regeneration
+    again = generate_pack(
+        families=ALL5,
+        n_per_family=6,
+        pack="tasks-v1",
+        split="test",
+        seed=1729,
+        prompt_policy="pp-v1",
+    )
+    assert [t.task_id for t in primary] == [t.task_id for t in again]
+
+
+def test_preflight_reports_population_and_expected_generations(tmp_path):
+    spec = ExperimentSpec(
+        name="pf",
+        task_pack="tasks-v1",
+        families=ALL5,
+        n_per_family=6,
+        task_seed=1729,
+        split="test",
+        greedy_repeats=0,
+        sampled_seeds=[0, 1],
+        max_tokens=2048,
+    )
+    report = run_preflight(
+        spec,
+        model_repo="fake/model",
+        model_revision="deadbeef",
+        runs_dir=tmp_path,
+        per_generation_seconds=33.0,
+        comparison_population=("calibration", 0, 2),
+    )
+    tp = report["checks"]["task_population"]
+    assert tp["n_tasks"] == 30
+    assert report["checks"]["expected_generations"]["total_executions"] == 60
+    assert report["checks"]["expected_generations"]["sampled_draws"] == 60
+    assert report["checks"]["disjointness"]["task_id_overlap"] == 0
+    assert report["checks"]["disjointness"]["structural_overlap"] == 0
+    assert report["checks"]["compute_estimate"]["total_hours"] == round(60 * 33.0 / 3600, 2)
+    # fake source is not cached -> advisory problem, but checks still reported
+    assert report["checks"]["source_cache"]["available"] is False

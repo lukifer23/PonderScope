@@ -533,6 +533,61 @@ def _cmd_variant_audit(args: argparse.Namespace) -> int:
     return 0 if report["ok"] else 1
 
 
+def _cmd_preflight(args: argparse.Namespace) -> int:
+    from .preflight import run_preflight
+
+    spec = _load_spec(args)
+    comparison_population = None
+    if args.compare_split is not None:
+        comparison_population = (args.compare_split, args.compare_seed, args.compare_n_per_family)
+    report = run_preflight(
+        spec,
+        model_repo=args.model_repo,
+        model_revision=args.revision,
+        artifact_path=args.artifact_path,
+        runs_dir=args.runs_dir,
+        per_generation_seconds=args.per_generation_seconds,
+        comparison_population=comparison_population,
+    )
+    if args.json:
+        print(json.dumps(report, indent=2, default=str))
+        return 0 if report["ok"] else 1
+    checks = report["checks"]
+    print(f"preflight: {spec.name} (spec_hash {report['spec_hash'][:12]})")
+    tp = checks.get("task_population", {})
+    print(
+        f"  tasks: {tp.get('n_tasks')} families={tp.get('family_counts')} "
+        f"difficulty={tp.get('difficulty_counts')}"
+    )
+    print(f"  task_ids_sha256        {str(tp.get('task_ids_sha256'))[:16]}")
+    print(f"  presentation_ids_sha256 {str(tp.get('presentation_ids_sha256'))[:16]}")
+    if "disjointness" in checks:
+        d = checks["disjointness"]
+        print(
+            f"  disjointness vs {d['comparison']}: id_overlap={d['task_id_overlap']} "
+            f"structural_overlap={d['structural_overlap']} clean={d['collision_clean']}"
+        )
+    print(f"  source cache: {checks.get('source_cache')}")
+    if "artifact" in checks:
+        print(f"  artifact: {checks['artifact']}")
+    print(f"  disk free: {checks.get('disk', {}).get('free_bytes')} bytes")
+    print(f"  memory: {checks.get('memory_bytes')} bytes")
+    print(f"  runtime: {checks.get('runtime')}")
+    eg = checks.get("expected_generations", {})
+    print(
+        f"  expected generations: tasks={eg.get('n_tasks')} sampled_draws={eg.get('sampled_draws')} "
+        f"greedy={eg.get('greedy_executions')} total={eg.get('total_executions')}"
+    )
+    if "compute_estimate" in checks:
+        print(f"  compute estimate: {checks['compute_estimate']}")
+    print(f"  duplicate runs: {checks.get('duplicate_runs')}")
+    print(f"  active/incomplete runs: {checks.get('active_or_incomplete_runs')}")
+    print(f"  OK: {report['ok']}")
+    for problem in report["problems"]:
+        print(f"  PROBLEM: {problem}")
+    return 0 if report["ok"] else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ponderscope", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -708,6 +763,22 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out", default=None)
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_variant_audit)
+
+    p = sub.add_parser(
+        "preflight",
+        help="verify experiment preconditions (no model inference)",
+    )
+    p.add_argument("--spec", required=True)
+    p.add_argument("--model-repo", default=MODEL_REPO_DEFAULT)
+    p.add_argument("--revision", default=REVISION_DEFAULT)
+    p.add_argument("--artifact-path", default=None)
+    p.add_argument("--runs-dir", default="runs")
+    p.add_argument("--per-generation-seconds", type=float, default=None)
+    p.add_argument("--compare-split", default=None)
+    p.add_argument("--compare-seed", type=int, default=0)
+    p.add_argument("--compare-n-per-family", type=int, default=2)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_preflight)
 
     return parser
 

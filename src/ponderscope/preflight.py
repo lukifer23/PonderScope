@@ -1,0 +1,222 @@
+"""Experiment preflight: verify preconditions before a real run.
+
+A small, reusable validation function (not an orchestration framework). It
+performs no model inference: it checks cached source availability, derived
+artifact provenance, disk and memory headroom, runtime versions, the frozen task
+population (including disjointness from an earlier population), the expected
+generation count, a compute estimate, duplicate runs, and any active/incomplete
+run directories. It is advisory: a failed check is reported, never silently
+ignored, and never mutates anything.
+"""
+
+from __future__ import annotations
+
+import platform
+import shutil
+from pathlib import Path
+from typing import Any
+
+from .config.schema import ExperimentSpec
+from .tasks import generate_pack, generate_pack_metadata
+from .tasks.invariants import collision_audit, signature_hash
+
+
+def _expected_generations(spec: ExperimentSpec) -> dict[str, int]:
+    sampled = len(spec.families or []) or 5
+    n_tasks = sampled * spec.n_per_family
+    greedy = n_tasks * spec.greedy_repeats
+    draws = n_tasks * len(spec.sampled_seeds) * spec.sampled_repeats_per_seed
+    return {
+        "n_tasks": n_tasks,
+        "greedy_executions": greedy,
+        "sampled_draws": draws,
+        "total_executions": greedy + draws,
+    }
+
+
+def run_preflight(
+    spec: ExperimentSpec,
+    *,
+    model_repo: str,
+    model_revision: str,
+    artifact_path: str | None = None,
+    runs_dir: str | Path = "runs",
+    per_generation_seconds: float | None = None,
+    comparison_population: tuple[str, int, int] | None = None,
+) -> dict[str, Any]:
+    """Return a preflight report. ``comparison_population`` = (split, seed, n_per_family)."""
+    checks: dict[str, Any] = {}
+    problems: list[str] = []
+
+    # 1. Task population (deterministic, frozen).
+    tasks = generate_pack(
+        families=spec.families or None,
+        n_per_family=spec.n_per_family,
+        pack=spec.task_pack,
+        split=spec.split,
+        seed=spec.task_seed,
+        prompt_policy=spec.prompt_policy,
+    )
+    meta = generate_pack_metadata(
+        tasks,
+        families=spec.families or None,
+        n_per_family=spec.n_per_family,
+        split=spec.split,
+        seed=spec.task_seed,
+        pack=spec.task_pack,
+        prompt_policy=spec.prompt_policy,
+    )
+    family_counts: dict[str, int] = {}
+    difficulty_counts: dict[str, int] = {}
+    for t in tasks:
+        family_counts[t.family] = family_counts.get(t.family, 0) + 1
+        level = str(t.difficulty.get("level", "?"))
+        difficulty_counts[level] = difficulty_counts.get(level, 0) + 1
+    checks["task_population"] = {
+        "n_tasks": meta["n_tasks"],
+        "family_counts": family_counts,
+        "difficulty_counts": difficulty_counts,
+        "task_ids_sha256": meta["task_ids_sha256"],
+        "presentation_ids_sha256": meta["presentation_ids_sha256"],
+    }
+    if comparison_population is not None:
+        split, seed, n = comparison_population
+        other = generate_pack(
+            families=spec.families or None,
+            n_per_family=n,
+            pack=spec.task_pack,
+            split=split,
+            seed=seed,
+            prompt_policy=spec.prompt_policy,
+        )
+        id_overlap = {t.task_id for t in tasks} & {t.task_id for t in other}
+        sig_overlap = {signature_hash(t) for t in tasks} & {signature_hash(t) for t in other}
+        audit = collision_audit({"primary": tasks, "comparison": other})
+        checks["disjointness"] = {
+            "comparison": {"split": split, "seed": seed, "n_per_family": n},
+            "task_id_overlap": len(id_overlap),
+            "structural_overlap": len(sig_overlap),
+            "collision_clean": audit["clean"],
+        }
+        if id_overlap or sig_overlap:
+            problems.append("task population overlaps the comparison population")
+
+    # 2. Cached source availability.
+    snapshot = None
+    try:
+        from .backends.mlx_backend import resolve_local_snapshot
+
+        snapshot = resolve_local_snapshot(model_repo, model_revision)
+        checks["source_cache"] = {"available": True, "path": str(snapshot)}
+    except Exception as exc:
+        checks["source_cache"] = {"available": False, "error": str(exc)}
+        problems.append(f"source snapshot not cached: {exc}")
+
+    # 3. Derived artifact provenance.
+    if artifact_path is not None:
+        from .conversion import (
+            load_variant_provenance,
+            verify_variant_artifact,
+        )
+
+        try:
+            prov = load_variant_provenance(artifact_path)
+            verified = verify_variant_artifact(artifact_path, prov)
+            src = prov["source_artifact"]
+            lineage_ok = src.get("repo_id") == model_repo and src.get("revision") == model_revision
+            checks["artifact"] = {
+                "representation": prov.get("representation"),
+                "precision": prov.get("precision"),
+                "quantization": prov.get("quantization"),
+                "bits_per_weight": prov.get("bits_per_weight"),
+                "source_lineage_ok": lineage_ok,
+                "derived_hashes_ok": verified["ok"],
+            }
+            if not lineage_ok:
+                problems.append("derived artifact source lineage does not match the request")
+            if not verified["ok"]:
+                problems.append("derived artifact hashes do not verify")
+        except Exception as exc:
+            checks["artifact"] = {"error": str(exc)}
+            problems.append(f"derived artifact provenance invalid: {exc}")
+
+    # 4. Disk and memory.
+    disk = shutil.disk_usage(str(Path(runs_dir).resolve().parent))
+    checks["disk"] = {"free_bytes": disk.free, "total_bytes": disk.total}
+    checks["memory_bytes"] = _physical_memory()
+
+    # 5. Runtime versions.
+    try:
+        import mlx_lm
+
+        checks["runtime"] = {
+            "mlx_lm": getattr(mlx_lm, "__version__", "unknown"),
+            "python": platform.python_version(),
+            "platform": platform.platform(),
+        }
+    except Exception as exc:  # pragma: no cover - host dependent
+        checks["runtime"] = {"error": str(exc)}
+        problems.append(f"runtime not importable: {exc}")
+
+    # 6. Expected generations and compute estimate.
+    expected = _expected_generations(spec)
+    checks["expected_generations"] = expected
+    if per_generation_seconds is not None:
+        seconds = expected["total_executions"] * per_generation_seconds
+        checks["compute_estimate"] = {
+            "per_generation_seconds": per_generation_seconds,
+            "total_seconds": seconds,
+            "total_hours": round(seconds / 3600, 2),
+        }
+
+    # 7. Duplicate and active/incomplete runs.
+    runs_path = Path(runs_dir)
+    duplicates: list[str] = []
+    active: list[str] = []
+    if runs_path.exists():
+        for manifest_path in runs_path.glob("*/manifest.json"):
+            try:
+                import json
+
+                manifest = json.loads(manifest_path.read_text())
+            except Exception:
+                continue
+            run_id = manifest.get("run_id", manifest_path.parent.name)
+            status = manifest.get("status", {}).get("run")
+            if status in ("RUNNING", "IN_PROGRESS", "PARTIAL", "FAILED"):
+                active.append(f"{run_id} ({status})")
+            same_spec = manifest.get("spec_hash") == spec.canonical_hash()
+            recorded_path = manifest.get("weight_variant", {}).get("local_path") or manifest.get(
+                "artifact", {}
+            ).get("local_path")
+            same_variant = (artifact_path is None and recorded_path is None) or (
+                artifact_path is not None
+                and recorded_path is not None
+                and Path(recorded_path) == Path(artifact_path)
+            )
+            if same_spec and same_variant:
+                duplicates.append(run_id)
+    checks["duplicate_runs"] = duplicates
+    checks["active_or_incomplete_runs"] = active
+    if duplicates:
+        problems.append(f"a run with the same spec and variant already exists: {duplicates}")
+
+    return {
+        "ok": not problems,
+        "problems": problems,
+        "checks": checks,
+        "spec_hash": spec.canonical_hash(),
+        "spec_name": spec.name,
+    }
+
+
+def _physical_memory() -> int | None:
+    import subprocess
+
+    try:
+        out = subprocess.run(
+            ["sysctl", "-n", "hw.memsize"], capture_output=True, text=True, timeout=5, check=False
+        )
+        return int(out.stdout.strip()) if out.returncode == 0 else None
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
