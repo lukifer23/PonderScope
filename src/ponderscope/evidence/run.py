@@ -121,6 +121,7 @@ class RunStore:
             "source_artifact_id": deployment.source_artifact_id,
             "weight_variant": deployment.model.to_dict(),
             "weight_variant_id": deployment.weight_variant_id,
+            "derived_from_source_artifact_id": deployment.model.derived_from_source_artifact_id,
             # Backwards-compatible alias for the executable variant.
             "artifact": deployment.model.to_dict(),
             "artifact_id": deployment.artifact_id,
