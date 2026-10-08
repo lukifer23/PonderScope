@@ -122,3 +122,28 @@ classification; a confounded contrast is refused with reasons.
 - `status.run != "EVIDENCE_COMPLETE"` (e.g. `PARTIAL`, `FAILED`) means no seal.
 - `verify` FAIL means the raw evidence or final manifest is inconsistent.
 - A sealed run with no local raw traces cannot be analyzed (analyze refuses).
+
+## Interruption and resume
+
+There is **no silent resume**. Raw evidence is create-once and the manifest is
+sealed once at completion, so an interrupted process can never append into a
+sealed run:
+
+- If the process is interrupted or a generation raises, `run_experiment` marks the
+  run `PARTIAL`/`FAILED`, publishes the partial traces/probes, and writes **no
+  seal**. `verify` fails on such a run (no evidence seal).
+- Starting a new run with the same name/deployment in the same second raises
+  `FileExistsError` rather than overwriting.
+- Disk exhaustion or a partial write surfaces as a failed/partial run; the
+  verifier's structural checks fail closed on truncated JSONL.
+- Re-running a failed experiment creates a **new** run directory; completed trials
+  are never counted twice. Robust mid-run resumption is not implemented and is
+  documented here rather than faked.
+
+## Weight-hash cache caveat
+
+Snapshot file hashes are cached by `(path, size, mtime)` under
+`~/.cache/ponderscope/` so repeated runs do not re-hash gigabytes of weights. If a
+file were replaced with identical size and mtime the cached hash could be stale;
+in practice HF cache blobs are content-addressed and immutable. Delete the cache
+to force a full re-hash.
