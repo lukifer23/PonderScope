@@ -224,6 +224,15 @@ def _survival_section(analysis: dict[str, Any]) -> list[str]:
             f"{_fmt(term['median_tokens_to_closure'])} | {_fmt(term['rmst'])} |"
         )
     lines.append("")
+    competing = {
+        cid: c.get("n_competing_terminated_no_closure", 0) for cid, c in s["per_condition"].items()
+    }
+    if any(competing.values()):
+        lines.append(
+            "- competing EOS-without-native-close terminal events (treated as "
+            f"noninformative censoring in the primary closure KM): {competing}"
+        )
+        lines.append("")
     for cid, c in s["per_condition"].items():
         fam = c.get("by_family") or {}
         rows = [f for f in fam.values() if not f.get("insufficient_data")]
@@ -272,18 +281,32 @@ def _comparison_section(comparison: dict[str, Any]) -> list[str]:
         f"(changed: {comparison.get('validity', {}).get('contrast_changed_fields')})"
     )
     lines.append(f"- matched observations ({comparison['mode']}): {comparison['n_matched_trials']}")
+    pop = comparison.get("trial_population", {})
+    if pop:
+        lines.append(
+            f"- trial population: matched={pop.get('matched_pairs')} "
+            f"observed A={pop.get('observed_executions_a')} B={pop.get('observed_executions_b')} "
+            f"unmatched A={pop.get('unmatched_a')} B={pop.get('unmatched_b')} "
+            f"duplicates A={pop.get('duplicate_keys_a')} B={pop.get('duplicate_keys_b')} "
+            f"complete={pop.get('complete')}"
+        )
+    ver = comparison.get("verification", {})
+    if ver.get("checked"):
+        lines.append(
+            f"- evidence seal verified: A={bool(ver.get('a', {}).get('pass'))} "
+            f"B={bool(ver.get('b', {}).get('pass'))}"
+        )
     validity = comparison.get("validity", {})
+    reasons = comparison.get("refusal_reasons", validity.get("reasons"))
     if comparison.get("refused"):
         lines.append(
-            "- **REFUSED: requested contrast is confounded or under-specified. "
-            f"Reasons: {validity.get('reasons')}**"
+            "- **REFUSED: contrast is confounded, under-specified, unverified, or "
+            f"incomplete. Reasons: {reasons}**"
         )
         lines.append("")
         return lines
     if comparison.get("exploratory"):
-        lines.append(
-            f"- **EXPLORATORY / CONFOUNDED (override applied). Reasons: {validity.get('reasons')}**"
-        )
+        lines.append(f"- **EXPLORATORY / CONFOUNDED (override applied). Reasons: {reasons}**")
     lines.append("")
     lines.append(
         "| metric | delta (A−B) | 95% CI | noise A | noise B | combined | classification |"

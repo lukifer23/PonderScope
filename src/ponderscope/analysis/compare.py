@@ -23,11 +23,12 @@ from typing import Any
 
 import numpy as np
 
-from ..evidence.run import RunStore
+from ..evidence.run import RunStore, verify_run
 from .analyze import (
     _is_generation_termination,
     _is_reasoning_closure,
     _time_to_closure,
+    _time_to_termination,
     natural_final_status_of,
 )
 from .stats import (
@@ -170,8 +171,22 @@ def classify_contrast(
 
 
 def _key(r: dict[str, Any]) -> tuple:
+    """Canonical matched-trial key.
+
+    Includes the rendered presentation (so two prompt policies over one
+    structural task cannot be paired as if identical), the structural task, the
+    decoding mode, the sampling seed, and the technical repetition. Deployment
+    identity is deliberately excluded: pairing a BF16 trial with its Q4
+    counterpart requires that they share everything except the weight variant.
+    """
     c = r["condition"]
-    return (r["task_id"], c["mode"], c.get("seed"), c.get("repeat"))
+    return (
+        str(r.get("presentation_id") or r["task_id"]),
+        str(r["task_id"]),
+        str(c["mode"]),
+        c.get("seed"),
+        c.get("repeat"),
+    )
 
 
 def _index(traces: list[dict[str, Any]]) -> dict[tuple, dict[str, Any]]:
@@ -364,6 +379,40 @@ def _noise_scale(run: RunStore, metric: str, mode: str) -> float | None:
     return float(np.mean(stds))
 
 
+def _matched_draw_observations(
+    run: RunStore,
+    matched_keys: set[tuple],
+    *,
+    time_key: Any,
+    event_key: Any,
+) -> tuple[dict[str, list[tuple[float, bool]]], dict[str, int]]:
+    """Collapse matched executions to one observation per stochastic draw.
+
+    Only executions whose canonical trial key is in ``matched_keys`` are used, so
+    unmatched seeds/repetitions (or other decoding modes) can never enter a paired
+    survival analysis. Same-seed technical repeats collapse to one draw iff every
+    execution is token-identical; divergent (ambiguous) draws are excluded from
+    the primary estimate.
+    """
+    groups: dict[tuple[str, str, Any], list[dict[str, Any]]] = defaultdict(list)
+    for r in run.read_traces():
+        if _key(r) in matched_keys:
+            presentation = str(r.get("presentation_id") or r["task_id"])
+            groups[(presentation, str(r["task_id"]), r["condition"].get("seed"))].append(r)
+    by_task: dict[str, list[tuple[float, bool]]] = defaultdict(list)
+    n_ambiguous = 0
+    for executions in groups.values():
+        executions = sorted(executions, key=lambda r: r["condition"].get("repeat", 0))
+        base = executions[0]["trace"]["token_ids"]
+        identical = all(e["trace"]["token_ids"] == base for e in executions[1:])
+        if not identical:
+            n_ambiguous += 1
+            continue
+        r = executions[0]
+        by_task[str(r["task_id"])].append((float(time_key(r)), bool(event_key(r))))
+    return dict(by_task), {"n_draws": len(groups), "n_ambiguous_draws": n_ambiguous}
+
+
 def _rmst_section(
     run_a: RunStore,
     run_b: RunStore,
@@ -374,34 +423,98 @@ def _rmst_section(
 ) -> dict[str, Any]:
     """Task-clustered bootstrap of the censor-aware RMST difference A - B.
 
-    Reported separately for the primary endpoint (native reasoning closure) and
-    the secondary endpoint (EOS generation termination). Positive favors A.
+    Reported separately for the primary endpoint (native reasoning closure,
+    timed at the think-end token) and the secondary endpoint (EOS generation
+    termination, timed at the terminal token). Both arms are restricted to the
+    matched stochastic draws, so an unbalanced seed/repeat population cannot
+    silently enter the estimate. Positive favors A.
     """
-    matched_tasks = {k[0] for k in keys}
+    matched = set(keys)
     tau = float(run_a.manifest.get("spec", {}).get("max_tokens") or 0)
     out: dict[str, Any] = {"tau": tau or None, "endpoints": {}}
-    if not tau or not matched_tasks:
+    if not tau or not matched:
         return out
 
-    def _by_task(run: RunStore, event_key: Any) -> dict[str, list[tuple[float, bool]]]:
-        by_task: dict[str, list[tuple[float, bool]]] = defaultdict(list)
-        for r in run.read_traces():
-            if r["task_id"] in matched_tasks:
-                by_task[r["task_id"]].append((_time_to_closure(r), bool(event_key(r))))
-        return dict(by_task)
-
-    for label, event_key in (
-        ("reasoning_closure", _is_reasoning_closure),
-        ("generation_termination", _is_generation_termination),
-    ):
-        out["endpoints"][label] = rmst_delta_clustered(
-            _by_task(run_a, event_key),
-            _by_task(run_b, event_key),
-            tau=tau,
-            n_resamples=n_resamples,
-            seed=seed,
+    endpoint_specs = (
+        ("reasoning_closure", _time_to_closure, _is_reasoning_closure),
+        ("generation_termination", _time_to_termination, _is_generation_termination),
+    )
+    for label, time_key, event_key in endpoint_specs:
+        a_by_task, a_meta = _matched_draw_observations(
+            run_a, matched, time_key=time_key, event_key=event_key
         )
+        b_by_task, b_meta = _matched_draw_observations(
+            run_b, matched, time_key=time_key, event_key=event_key
+        )
+        delta = rmst_delta_clustered(
+            a_by_task, b_by_task, tau=tau, n_resamples=n_resamples, seed=seed
+        )
+        delta["a"] = a_meta
+        delta["b"] = b_meta
+        out["endpoints"][label] = delta
     return out
+
+
+def _expected_executions(run: RunStore, mode: str) -> int | None:
+    """Preregistered execution count for a mode, from the run's declared spec."""
+    spec = run.manifest.get("spec", {})
+    n_tasks = run.manifest.get("task_pack", {}).get("n_tasks")
+    if not n_tasks:
+        return None
+    if mode == "greedy":
+        reps = int(spec.get("greedy_repeats", 0))
+    elif mode == "sampled":
+        reps = len(spec.get("sampled_seeds", [])) * int(spec.get("sampled_repeats_per_seed", 1))
+    else:
+        return None
+    return int(n_tasks) * reps
+
+
+def _trial_population(
+    run_a: RunStore,
+    run_b: RunStore,
+    traces_a: list[dict[str, Any]],
+    traces_b: list[dict[str, Any]],
+    keys: list[tuple],
+    mode: str,
+) -> dict[str, Any]:
+    """Account for the matched-trial population of a comparison.
+
+    Reports expected vs observed executions, unique keys, matched pairs,
+    unmatched and missing pairs, and duplicate logical identities per arm, and
+    whether the comparison is population-complete (both arms have identical
+    unique trial-key sets with no duplicates).
+    """
+    idx_a = _index(traces_a)
+    idx_b = _index(traces_b)
+    matched = len(keys)
+    dup_a = len(traces_a) - len(idx_a)
+    dup_b = len(traces_b) - len(idx_b)
+    exp_a = _expected_executions(run_a, mode)
+    exp_b = _expected_executions(run_b, mode)
+    complete = dup_a == 0 and dup_b == 0 and len(idx_a) == len(idx_b) == matched
+    return {
+        "mode": mode,
+        "expected_executions_a": exp_a,
+        "expected_executions_b": exp_b,
+        "observed_executions_a": len(traces_a),
+        "observed_executions_b": len(traces_b),
+        "unique_trial_keys_a": len(idx_a),
+        "unique_trial_keys_b": len(idx_b),
+        "matched_pairs": matched,
+        "unmatched_a": len(idx_a) - matched,
+        "unmatched_b": len(idx_b) - matched,
+        "missing_a": max(0, (exp_a or 0) - len(idx_a)),
+        "missing_b": max(0, (exp_b or 0) - len(idx_b)),
+        "duplicate_keys_a": dup_a,
+        "duplicate_keys_b": dup_b,
+        "complete": complete,
+        "note": (
+            "complete means both arms share an identical unique trial-key set "
+            "(presentation, task, mode, seed, repeat) with no duplicate identities. "
+            "Matched pairs are the intersection actually used for paired estimates."
+        ),
+    }
 
 
 def compare_configs(
@@ -416,12 +529,21 @@ def compare_configs(
     horizon_intentional: bool = False,
     capture_intentional: bool = False,
     allow_confounded: bool = False,
+    require_complete: bool = False,
+    verify: bool = True,
+    allow_unverified: bool = False,
 ) -> dict[str, Any]:
     traces_a = [r for r in run_a.read_traces() if r["condition"]["mode"] == mode]
     traces_b = [r for r in run_b.read_traces() if r["condition"]["mode"] == mode]
     idx_a = _index(traces_a)
     idx_b = _index(traces_b)
     keys = sorted(set(idx_a) & set(idx_b))
+
+    verification: dict[str, Any] = {
+        "checked": bool(verify),
+        "a": verify_run(run_a.path) if verify else None,
+        "b": verify_run(run_b.path) if verify else None,
+    }
 
     diff = config_diff(run_a, run_b)
     structural_a = {r["task_id"] for r in traces_a}
@@ -440,6 +562,39 @@ def compare_configs(
         horizon_intentional=horizon_intentional,
         capture_intentional=capture_intentional,
     )
+    population = _trial_population(run_a, run_b, traces_a, traces_b, keys, mode)
+
+    verification_failed = bool(
+        verify
+        and not (
+            verification["a"]
+            and verification["a"].get("pass")
+            and verification["b"]
+            and verification["b"].get("pass")
+        )
+    )
+    refusal_reasons: list[str] = list(validity["reasons"])
+    overrides_applied: list[str] = []
+    if verification_failed:
+        if allow_unverified:
+            overrides_applied.append("unverified_evidence")
+        else:
+            refusal_reasons.append(
+                "evidence seal does not verify; pass allow_unverified=True only for "
+                "labelled exploratory/forensic analysis"
+            )
+    if require_complete and not population["complete"]:
+        if allow_confounded:
+            overrides_applied.append("incomplete_population")
+        else:
+            refusal_reasons.append(
+                "trial population is not complete "
+                f"(matched={population['matched_pairs']}, "
+                f"unmatched A={population['unmatched_a']} B={population['unmatched_b']}, "
+                f"duplicates A={population['duplicate_keys_a']} B={population['duplicate_keys_b']})"
+            )
+    if not validity["clean"] and allow_confounded:
+        overrides_applied.append("confounded")
 
     result: dict[str, Any] = {
         "mode": mode,
@@ -452,14 +607,34 @@ def compare_configs(
         "description_a": run_a.manifest.get("deployment_description"),
         "description_b": run_b.manifest.get("deployment_description"),
         "n_matched_trials": len(keys),
-        "n_matched_tasks": len({k[0] for k in keys}),
+        "n_matched_tasks": len({k[1] for k in keys}),
+        "trial_population": population,
+        "verification": verification,
         "configuration_diff": diff,
         "validity": validity,
         "contrast": validity["contrast"],
-        "exploratory": bool(not validity["clean"] and allow_confounded),
+        "refusal_reasons": refusal_reasons,
+        "overrides_applied": overrides_applied,
+        "exploratory": bool(overrides_applied),
         "metrics": {},
     }
-    if not validity["clean"] and not allow_confounded:
+    verified_all = bool(
+        not verify
+        or (
+            verification["a"]
+            and verification["a"].get("pass")
+            and verification["b"]
+            and verification["b"].get("pass")
+        )
+    )
+    result["publication_grade"] = bool(
+        not refusal_reasons
+        and validity["clean"]
+        and population["complete"]
+        and verified_all
+        and not overrides_applied
+    )
+    if refusal_reasons and not allow_confounded:
         result["refused"] = True
         return result
     result["refused"] = False

@@ -125,9 +125,13 @@ def _cmd_analyze(args: argparse.Namespace) -> int:
     from .evidence.run import RunStore
 
     store = RunStore.latest(args.runs_dir) if args.latest else RunStore.load(args.run)
-    analysis = analyze_run(store)
+    analysis = analyze_run(store, allow_unverified=args.allow_unverified)
     print(
         f"analyzed {store.run_id}: {analysis['n_generations']} generations, {analysis['n_probes']} probes"
+    )
+    print(
+        f"  evidence_verified={analysis['evidence_verified']} "
+        f"publication_grade={analysis['publication_grade']}"
     )
     if args.report:
         generate_report(store, analysis)
@@ -153,6 +157,8 @@ def _cmd_compare(args: argparse.Namespace) -> int:
         prompt_policy_intentional=args.prompt_policy_intentional,
         horizon_intentional=args.horizon_intentional,
         capture_intentional=args.capture_intentional,
+        require_complete=args.require_complete,
+        allow_unverified=args.allow_unverified,
     )
     ts = _dt.datetime.now(_dt.UTC).strftime("%Y%m%dT%H%M%SZ")
     out_path = (
@@ -166,20 +172,34 @@ def _cmd_compare(args: argparse.Namespace) -> int:
         f"  contrast: {comparison.get('contrast')} "
         f"(changed: {validity.get('contrast_changed_fields')})"
     )
+    pop = comparison.get("trial_population", {})
+    print(
+        f"  trial population: matched={pop.get('matched_pairs')} "
+        f"observed A={pop.get('observed_executions_a')} B={pop.get('observed_executions_b')} "
+        f"unmatched A={pop.get('unmatched_a')} B={pop.get('unmatched_b')} "
+        f"duplicates A={pop.get('duplicate_keys_a')} B={pop.get('duplicate_keys_b')} "
+        f"complete={pop.get('complete')}"
+    )
+    ver = comparison.get("verification", {})
+    if ver.get("checked"):
+        print(
+            f"  evidence verified: A={bool(ver.get('a', {}).get('pass'))} "
+            f"B={bool(ver.get('b', {}).get('pass'))}"
+        )
     if comparison.get("refused"):
-        print("  REFUSED: requested contrast is confounded or under-specified.")
-        for reason in validity["reasons"]:
+        print("  REFUSED: contrast is confounded, under-specified, unverified, or incomplete.")
+        for reason in comparison.get("refusal_reasons", validity["reasons"]):
             print(f"    - {reason}")
         print("  expected: controlled dimensions identical; only the manipulated dimension differs")
         print(
             "  correct by aligning the listed fields, or pass the matching "
-            "*_intentional flag, or use --allow-confounded for a labelled "
-            "exploratory run"
+            "*_intentional flag, or use --allow-confounded / --allow-unverified for a "
+            "labelled exploratory run"
         )
         return 1
     if comparison.get("exploratory"):
         print("  EXPLORATORY / CONFOUNDED (override applied)")
-        for reason in validity["reasons"]:
+        for reason in comparison.get("refusal_reasons", validity["reasons"]):
             print(f"    - {reason}")
     print(
         f"  matched trials={comparison['n_matched_trials']} tasks={comparison['n_matched_tasks']}"
@@ -373,7 +393,7 @@ def _cmd_survival(args: argparse.Namespace) -> int:
     from .evidence.run import RunStore
 
     store = RunStore.latest(args.runs_dir) if args.latest else RunStore.load(args.run)
-    analysis = analyze_run(store)
+    analysis = analyze_run(store, allow_unverified=args.allow_unverified)
     print(json.dumps(analysis["survival"], indent=2, default=str))
     return 0
 
@@ -383,7 +403,7 @@ def _cmd_loop_diagnostics(args: argparse.Namespace) -> int:
     from .evidence.run import RunStore
 
     store = RunStore.latest(args.runs_dir) if args.latest else RunStore.load(args.run)
-    analysis = analyze_run(store)
+    analysis = analyze_run(store, allow_unverified=args.allow_unverified)
     print(json.dumps(analysis["loop"], indent=2, default=str))
     return 0
 
@@ -571,6 +591,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--run")
     p.add_argument("--latest", action="store_true")
     p.add_argument("--runs-dir", default="runs")
+    p.add_argument(
+        "--allow-unverified",
+        action="store_true",
+        help="analyze a run whose evidence seal does not verify (labelled forensic)",
+    )
     p.add_argument("--report", action="store_true")
     p.set_defaults(func=_cmd_analyze)
 
@@ -579,6 +604,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--b", required=True)
     p.add_argument("--mode", default="greedy", choices=["greedy", "sampled"])
     p.add_argument("--allow-confounded", action="store_true")
+    p.add_argument("--require-complete", action="store_true")
+    p.add_argument("--allow-unverified", action="store_true")
     p.add_argument("--decoding-intentional", action="store_true")
     p.add_argument("--prompt-policy-intentional", action="store_true")
     p.add_argument("--horizon-intentional", action="store_true")
@@ -641,12 +668,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--run")
     p.add_argument("--latest", action="store_true")
     p.add_argument("--runs-dir", default="runs")
+    p.add_argument("--allow-unverified", action="store_true")
     p.set_defaults(func=_cmd_survival)
 
     p = sub.add_parser("loop-diagnostics", help="descriptive loop structure for a saved run")
     p.add_argument("--run")
     p.add_argument("--latest", action="store_true")
     p.add_argument("--runs-dir", default="runs")
+    p.add_argument("--allow-unverified", action="store_true")
     p.set_defaults(func=_cmd_loop_diagnostics)
 
     p = sub.add_parser(

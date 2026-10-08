@@ -541,6 +541,27 @@ def _time_to_closure(record: dict[str, Any]) -> float:
     return float(record["total_tokens"])
 
 
+def _time_to_termination(record: dict[str, Any]) -> float:
+    """Generated tokens up to and including the terminal (EOS) token.
+
+    This is the time axis for the *secondary* generation-termination endpoint
+    and is independent of the reasoning-closure endpoint. ``total_tokens`` is the
+    position of the final generated token, which for an EOS-terminated record is
+    the EOS token itself; for a censored record it is the observation horizon. It
+    must never be conflated with :func:`_time_to_closure`, which stops at the
+    native think-end even though the model then generates a final answer.
+    """
+    return float(record["total_tokens"])
+
+
+def _is_competing_no_closure(record: dict[str, Any]) -> bool:
+    """EOS without a native close: a competing terminal event for closure."""
+    return bool(
+        record["termination"].get("terminated_by_eos")
+        and not record["termination"].get("think_end_reached")
+    )
+
+
 def _survival_section(by_condition: dict[str, list[dict[str, Any]]], tau: float) -> dict[str, Any]:
     per_condition: dict[str, Any] = {}
     for cid, rs in by_condition.items():
@@ -552,8 +573,10 @@ def _survival_section(by_condition: dict[str, list[dict[str, Any]]], tau: float)
             [_is_reasoning_closure(r) for r in primary_records],
             tau=tau,
         )
+        # Secondary endpoint: EOS termination is timed at the terminal token, NOT
+        # at the reasoning-closure token.
         termination = survival_summary(
-            [_time_to_closure(r) for r in primary_records],
+            [_time_to_termination(r) for r in primary_records],
             [_is_generation_termination(r) for r in primary_records],
             tau=tau,
         )
@@ -564,6 +587,9 @@ def _survival_section(by_condition: dict[str, list[dict[str, Any]]], tau: float)
                 "n_unique_draws": len(draws),
                 "n_ambiguous_draws": sum(1 for d in draws if d["ambiguous"]),
                 "n_draws_used": len(primary_records),
+                "n_competing_terminated_no_closure": sum(
+                    1 for r in primary_records if _is_competing_no_closure(r)
+                ),
                 "generation_termination": termination,
                 "by_family": survival_by_family(
                     primary_records,
@@ -581,13 +607,24 @@ def _survival_section(by_condition: dict[str, list[dict[str, Any]]], tau: float)
             "(reasoning_tokens + 1); observation horizon if censored"
         ),
         "event_definition": "PRIMARY: native think-end reasoning closure observed",
-        "secondary_event_definition": "SECONDARY: EOS observed (generation termination)",
+        "secondary_event_definition": (
+            "SECONDARY: EOS observed (generation termination), timed at the "
+            "terminal token, independent of the reasoning-closure time"
+        ),
+        "competing_event_definition": (
+            "EOS without a native close ('terminated_no_closure'): a competing "
+            "terminal event for reasoning closure"
+        ),
         "censoring_definition": "max-token observation horizon reached before closure",
         "analysis_unit": "unique stochastic draws (same-seed technical repeats collapsed)",
         "per_condition": per_condition,
         "note": (
             "max_tokens is an observation horizon, not a natural stopping threshold. "
-            "An EOS without a native think-end is not counted as reasoning closure."
+            "An EOS without a native think-end is not counted as reasoning closure. "
+            "The primary closure KM is cause-specific: an EOS-without-close is a "
+            "competing terminal event and is currently treated as noninformative "
+            "censoring at the terminal token; the count is reported per condition as "
+            "n_competing_terminated_no_closure and this is a documented limitation."
         ),
     }
 
@@ -635,13 +672,25 @@ def _noise_scale_for(records: list[dict[str, Any]], mode: str) -> NULLABLE_FLOAT
     return within_cluster_std({f"{k[0]}|{k[1]}": v for k, v in groups.items()})
 
 
-def analyze_run(store: RunStore) -> dict[str, Any]:
+def analyze_run(store: RunStore, *, allow_unverified: bool = False) -> dict[str, Any]:
     if store.is_sealed and not (store.path / TRACES).exists():
         raise FileNotFoundError(
             f"{store.run_id} is sealed but has no raw {TRACES}; refusing to "
             "produce an analysis with no measurements (raw evidence is required "
             "and is never regenerated automatically)"
         )
+    verification: dict[str, Any] | None = None
+    if store.is_sealed:
+        from ..evidence.run import verify_run
+
+        verification = verify_run(store.path)
+        if not verification["pass"] and not allow_unverified:
+            raise RuntimeError(
+                f"{store.run_id}: evidence seal does not verify "
+                f"({'; '.join(verification['errors'])}); refusing to analyze. Pass "
+                "allow_unverified=True only for labelled forensic reanalysis of "
+                "historical evidence."
+            )
     traces = store.read_traces()
     probes = store.read_probes()
     by_condition: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -713,7 +762,7 @@ def analyze_run(store: RunStore) -> dict[str, Any]:
     }
 
     analysis = {
-        "interpretation": "phase1.4",
+        "interpretation": "phase1.5",
         "run_id": store.run_id,
         "artifact_id": store.artifact_id,
         "deployment_id": store.deployment_id,
@@ -737,6 +786,14 @@ def analyze_run(store: RunStore) -> dict[str, Any]:
             "per_task": probe_per_task,
         },
         "status": store.manifest.get("status", {}),
+        "evidence_verified": bool(verification and verification["pass"]),
+        "publication_grade": bool(
+            store.is_sealed
+            and verification
+            and verification["pass"]
+            and store.manifest.get("code", {}).get("publication_grade", True)
+        ),
+        "verification": verification,
     }
     store.write_analysis(analysis)
     return analysis
