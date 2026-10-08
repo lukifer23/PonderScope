@@ -281,6 +281,117 @@ class RunStore:
         }
 
 
+def _structural_evidence_errors(path: Path, manifest: dict[str, Any]) -> list[str]:
+    """Structural (not merely byte-level) checks of sealed raw evidence.
+
+    A file can be byte-identical to what the seal hashed and still be
+    semantically corrupt if it was written that way before sealing (truncated
+    JSONL, duplicate trial identifiers, undeclared conditions). These checks fail
+    closed so such evidence can never be reported as valid. They are read-only
+    and never repair anything.
+    """
+    errors: list[str] = []
+    required_trace_fields = (
+        "task_id",
+        "condition_id",
+        "condition",
+        "trial_id",
+        "termination",
+        "trace",
+    )
+
+    conds = manifest.get("conditions")
+    cond_ids: set[str] = set()
+    if not isinstance(conds, list) or not conds:
+        errors.append("manifest: no conditions declared")
+    else:
+        for c in conds:
+            if not isinstance(c, dict) or "condition_id" not in c or "decoding" not in c:
+                errors.append(f"manifest: condition missing condition_id/decoding: {c!r}")
+            else:
+                cond_ids.add(str(c["condition_id"]))
+
+    deployment_id = manifest.get("deployment_id")
+    source_artifact_id = manifest.get("source_artifact_id")
+    weight_variant_id = manifest.get("weight_variant_id")
+
+    traces_path = path / TRACES
+    if traces_path.exists():
+        seen_trial_ids: set[str] = set()
+        seen_trial_keys: set[tuple[Any, ...]] = set()
+        try:
+            with open(traces_path, encoding="utf-8") as fh:
+                for lineno, line in enumerate(fh, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        record = json.loads(line)
+                    except ValueError as exc:
+                        errors.append(f"{TRACES}:{lineno}: malformed/truncated JSONL ({exc})")
+                        break
+                    missing = [k for k in required_trace_fields if k not in record]
+                    if missing:
+                        errors.append(f"{TRACES}:{lineno}: missing required fields {missing}")
+                        continue
+                    trial_id = record.get("trial_id")
+                    if trial_id in seen_trial_ids:
+                        errors.append(f"{TRACES}:{lineno}: duplicate trial_id {trial_id!r}")
+                    seen_trial_ids.add(trial_id)
+                    condition = record.get("condition")
+                    if not isinstance(condition, dict) or "mode" not in condition:
+                        errors.append(f"{TRACES}:{lineno}: missing condition metadata")
+                        continue
+                    trial_key = (
+                        record.get("task_id"),
+                        condition.get("mode"),
+                        condition.get("seed"),
+                        condition.get("repeat"),
+                    )
+                    if trial_key in seen_trial_keys:
+                        errors.append(
+                            f"{TRACES}:{lineno}: duplicate trial (task, mode, seed, repeat) {trial_key!r}"
+                        )
+                    seen_trial_keys.add(trial_key)
+                    if cond_ids and str(record.get("condition_id")) not in cond_ids:
+                        errors.append(
+                            f"{TRACES}:{lineno}: condition_id {record.get('condition_id')!r} "
+                            "not declared in manifest"
+                        )
+                    if deployment_id and record.get("deployment_id") not in (None, deployment_id):
+                        errors.append(f"{TRACES}:{lineno}: deployment_id mismatch")
+                    if source_artifact_id and record.get("source_artifact_id") not in (
+                        None,
+                        source_artifact_id,
+                    ):
+                        errors.append(f"{TRACES}:{lineno}: source_artifact_id mismatch")
+                    if weight_variant_id and record.get("weight_variant_id") not in (
+                        None,
+                        weight_variant_id,
+                    ):
+                        errors.append(f"{TRACES}:{lineno}: weight_variant_id mismatch")
+        except OSError as exc:  # pragma: no cover - unreadable file
+            errors.append(f"{TRACES}: unreadable ({exc})")
+
+    probes_path = path / PROBES
+    if probes_path.exists():
+        try:
+            with open(probes_path, encoding="utf-8") as fh:
+                for lineno, line in enumerate(fh, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        json.loads(line)
+                    except ValueError as exc:
+                        errors.append(f"{PROBES}:{lineno}: malformed/truncated JSONL ({exc})")
+                        break
+        except OSError as exc:  # pragma: no cover - unreadable file
+            errors.append(f"{PROBES}: unreadable ({exc})")
+
+    return errors
+
+
 def verify_run(path: str | Path) -> dict[str, Any]:
     """Recompute every raw evidence hash and the final manifest hash.
 
@@ -291,8 +402,8 @@ def verify_run(path: str | Path) -> dict[str, Any]:
     path = Path(path)
     errors: list[str] = []
     checks: list[dict[str, Any]] = []
-    evidence_path = path / EVIDENCE
-    if not evidence_path.exists():
+    seal_path = path / EVIDENCE
+    if not seal_path.exists():
         return {
             "path": str(path),
             "run_id": None,
@@ -300,7 +411,18 @@ def verify_run(path: str | Path) -> dict[str, Any]:
             "errors": ["no evidence seal (evidence.json missing)"],
             "checks": [],
         }
-    seal = read_json(evidence_path)
+    try:
+        seal = read_json(seal_path)
+    except ValueError as exc:
+        return {
+            "path": str(path),
+            "run_id": None,
+            "pass": False,
+            "errors": [f"evidence.json: corrupt or malformed seal ({exc})"],
+            "checks": [],
+            "structural_ok": False,
+            "structural_errors": [f"evidence.json: corrupt or malformed ({exc})"],
+        }
     for name in RAW_FILES:
         p = path / name
         expected = seal.get("files", {}).get(name)
@@ -328,12 +450,24 @@ def verify_run(path: str | Path) -> dict[str, Any]:
             "manifest.json: hash mismatch — seal does not cover the final manifest "
             f"(expected={manifest_expected}, actual={manifest_actual})"
         )
+
+    structural_errors: list[str] = []
+    if manifest_path.exists():
+        try:
+            manifest = read_json(manifest_path)
+            structural_errors = _structural_evidence_errors(path, manifest)
+        except ValueError as exc:
+            structural_errors = [f"manifest.json: malformed ({exc})"]
+    errors.extend(structural_errors)
+
     return {
         "path": str(path),
         "run_id": seal.get("run_id"),
         "pass": not errors,
         "errors": errors,
         "checks": checks,
+        "structural_ok": not structural_errors,
+        "structural_errors": structural_errors,
     }
 
 

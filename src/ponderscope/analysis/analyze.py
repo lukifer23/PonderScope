@@ -21,7 +21,7 @@ from typing import Any
 
 import numpy as np
 
-from ..evidence.run import RunStore
+from ..evidence.run import TRACES, RunStore
 from ..reasoning.transitions import (
     classify_transitions,
     natural_final_status_for_record,
@@ -636,6 +636,12 @@ def _noise_scale_for(records: list[dict[str, Any]], mode: str) -> NULLABLE_FLOAT
 
 
 def analyze_run(store: RunStore) -> dict[str, Any]:
+    if store.is_sealed and not (store.path / TRACES).exists():
+        raise FileNotFoundError(
+            f"{store.run_id} is sealed but has no raw {TRACES}; refusing to "
+            "produce an analysis with no measurements (raw evidence is required "
+            "and is never regenerated automatically)"
+        )
     traces = store.read_traces()
     probes = store.read_probes()
     by_condition: dict[str, list[dict[str, Any]]] = defaultdict(list)

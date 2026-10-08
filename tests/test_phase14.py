@@ -146,3 +146,54 @@ def test_survival_summary_reports_counts():
     s = survival_summary([10, 20, 30], [True, False, True], tau=30)
     assert s["n_events"] == 2 and s["n_censored"] == 1
     assert s["n_at_risk_initial"] == 3
+
+
+# --------------------------------------------------------------------------- #
+# Sampler fidelity (Phase 2.2)
+# --------------------------------------------------------------------------- #
+def _policy(**kw):
+    from ponderscope.config.identity import DecodingPolicy
+
+    base = {"mode": "sampled", "max_tokens": 16, "temperature": 1.0, "top_p": 0.95, "top_k": 20}
+    base.update(kw)
+    return DecodingPolicy(**base)
+
+
+def test_greedy_uses_no_sampler_and_sampled_requires_seed():
+    from ponderscope.backends.mlx_backend import MlxBackend
+    from ponderscope.config.identity import DecodingPolicy
+
+    backend = MlxBackend()
+    sampler, seed = backend._prepare_sampler(DecodingPolicy(mode="greedy", max_tokens=8))
+    assert sampler is None and seed is None
+    with pytest.raises(ValueError):
+        backend._prepare_sampler(_policy(seed=None))
+    sampler, seed = backend._prepare_sampler(_policy(seed=3))
+    assert callable(sampler) and seed == 3
+
+
+def test_inactive_penalties_build_no_processors():
+    from ponderscope.backends.mlx_backend import MlxBackend
+
+    backend = MlxBackend()
+    processors, meta = backend._prepare_logits_processors(
+        _policy(seed=0, presence_penalty=0.0, repetition_penalty=1.0, frequency_penalty=0.0),
+        prompt_len=4,
+    )
+    assert processors == []
+    assert meta["active_processors"] == []
+    assert meta["n_processors"] == 0
+
+
+def test_active_generated_history_presence_builds_one_processor():
+    from ponderscope.backends.mlx_backend import MlxBackend
+
+    backend = MlxBackend()
+    processors, meta = backend._prepare_logits_processors(
+        _policy(seed=0, presence_penalty=1.5, presence_scope="generated_history"),
+        prompt_len=7,
+    )
+    assert len(processors) == 1
+    assert meta["presence_semantics"] == "generated_history"
+    assert meta["equivalence_label"] == "qwen-generated-history-presence-v1"
+    assert meta["base_prompt_tokens"] == 7

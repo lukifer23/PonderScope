@@ -151,6 +151,21 @@ def test_sealed_manifest_cannot_be_mutated(tmp_path: Path):
         store.update_status("RUNNING")
 
 
+def _valid_trace(store: RunStore, *, trial_id: str = "trial-1", task_id: str = "x") -> dict:
+    return {
+        "record_type": "generation",
+        "task_id": task_id,
+        "condition_id": store.condition_ids[0],
+        "deployment_id": store.deployment_id,
+        "source_artifact_id": store.source_artifact_id,
+        "weight_variant_id": store.weight_variant_id,
+        "trial_id": trial_id,
+        "condition": {"mode": "greedy", "seed": None, "repeat": 0},
+        "termination": {"think_end_reached": True, "terminated_by_eos": True, "capped": False},
+        "trace": {"token_ids": [1, 2, 3]},
+    }
+
+
 def _sealed_store(tmp_path: Path, name: str = "ver") -> RunStore:
     spec = ExperimentSpec(name=name, task_pack="tasks-v1")
     store = RunStore.create(
@@ -158,7 +173,7 @@ def _sealed_store(tmp_path: Path, name: str = "ver") -> RunStore:
     )
     store.write_tasks([{"task_id": "x"}])
     with store.open_traces() as w:
-        w.append({"task_id": "x"})
+        w.append(_valid_trace(store))
     with store.open_probes() as w:
         w.append({"task_id": "x"})
     store.seal()
@@ -215,3 +230,129 @@ def test_failed_run_lifecycle_preserves_partial_evidence(tmp_path: Path):
     assert store.manifest["timestamps"]["completed_utc"] is not None
     assert store.is_sealed is False  # never labelled EVIDENCE_COMPLETE
     assert store.read_tasks() == [{"task_id": "x"}]  # partial evidence preserved
+
+
+def _store_with_raw_traces(tmp_path: Path, name: str, raw: str) -> RunStore:
+    """Create a sealed run whose traces.jsonl content is supplied verbatim."""
+    spec = ExperimentSpec(name=name, task_pack="tasks-v1")
+    store = RunStore.create(
+        _deployment(), spec, runs_dir=tmp_path, created_utc=f"20260101T0002{name[:2]}"
+    )
+    store.write_tasks([{"task_id": "x"}])
+    (store.path / "traces.jsonl").write_text(raw)
+    with store.open_probes() as w:
+        w.append({"task_id": "x"})
+    store.seal()
+    return store
+
+
+def test_truncated_jsonl_fails_structural_verify(tmp_path: Path):
+    store = _sealed_store(tmp_path, "trunc")
+    raw = (store.path / "traces.jsonl").read_text() + '{"task_id": "x", "con'
+    (store.path / "traces.jsonl").write_text(raw)
+    # Re-seal so the byte hash matches the corrupt content; structural check
+    # must still fail closed.
+    (store.path / "evidence.json").unlink()
+    store.manifest["status"]["run"] = "EVIDENCE_COMPLETE"
+    store.seal()
+    report = verify_run(store.path)
+    assert report["pass"] is False
+    assert report["structural_ok"] is False
+    assert any("malformed" in e for e in report["structural_errors"])
+
+
+def test_duplicate_trial_id_fails_structural_verify(tmp_path: Path):
+    seed_store = _sealed_store(tmp_path, "dupseed")
+    rec = _valid_trace(seed_store, trial_id="trial-dup")
+    raw = json.dumps(rec) + "\n" + json.dumps(rec) + "\n"
+    child = tmp_path / "dup"
+    child.mkdir()
+    store = _store_with_raw_traces(child, "dupx", raw)
+    report = verify_run(store.path)
+    assert report["pass"] is False
+    assert any("duplicate trial_id" in e for e in report["structural_errors"])
+
+
+def test_undeclared_condition_fails_structural_verify(tmp_path: Path):
+    seed_store = _sealed_store(tmp_path, "undec0")
+    rec = _valid_trace(seed_store)
+    rec["condition_id"] = "cond-deadbeef"
+    child = tmp_path / "undecl"
+    child.mkdir()
+    store = _store_with_raw_traces(child, "undec", json.dumps(rec) + "\n")
+    report = verify_run(store.path)
+    assert report["pass"] is False
+    assert any("not declared in manifest" in e for e in report["structural_errors"])
+
+
+def test_missing_condition_metadata_fails_structural_verify(tmp_path: Path):
+    seed_store = _sealed_store(tmp_path, "nocond0")
+    rec = _valid_trace(seed_store)
+    del rec["condition"]
+    child = tmp_path / "nocond"
+    child.mkdir()
+    store = _store_with_raw_traces(child, "nocond", json.dumps(rec) + "\n")
+    report = verify_run(store.path)
+    assert report["pass"] is False
+    assert report["structural_ok"] is False
+    assert any("condition" in e for e in report["structural_errors"])
+
+
+def test_deployment_mismatch_fails_structural_verify(tmp_path: Path):
+    seed_store = _sealed_store(tmp_path, "depmis0")
+    rec = _valid_trace(seed_store)
+    rec["deployment_id"] = "dep-ffffffffffff"
+    child = tmp_path / "depmis"
+    child.mkdir()
+    store = _store_with_raw_traces(child, "depmis", json.dumps(rec) + "\n")
+    report = verify_run(store.path)
+    assert report["pass"] is False
+    assert any("deployment_id mismatch" in e for e in report["structural_errors"])
+
+
+def test_reordered_records_fail_verify(tmp_path: Path):
+    seed_store = _sealed_store(tmp_path, "reord0")
+    r0 = _valid_trace(seed_store, trial_id="trial-a", task_id="a")
+    r1 = _valid_trace(seed_store, trial_id="trial-b", task_id="b")
+    raw = json.dumps(r0) + "\n" + json.dumps(r1) + "\n"
+    child = tmp_path / "reorder"
+    child.mkdir()
+    store = _store_with_raw_traces(child, "reorder", raw)
+    assert verify_run(store.path)["pass"] is True
+    lines = (store.path / "traces.jsonl").read_text().strip().splitlines()
+    (store.path / "traces.jsonl").write_text("\n".join(reversed(lines)) + "\n")
+    report = verify_run(store.path)
+    assert report["pass"] is False  # byte hash no longer matches the seal
+    assert any("traces.jsonl" in e for e in report["errors"])
+
+
+def test_corrupt_seal_fails_verify(tmp_path: Path):
+    store = _sealed_store(tmp_path, "corrupt")
+    (store.path / "evidence.json").write_text("{not json")
+    report = verify_run(store.path)
+    assert report["pass"] is False
+
+
+def test_missing_seal_fails_verify(tmp_path: Path):
+    store = _sealed_store(tmp_path, "noseal")
+    (store.path / "evidence.json").unlink()
+    report = verify_run(store.path)
+    assert report["pass"] is False
+    assert any("no evidence seal" in e for e in report["errors"])
+
+
+def test_reanalysis_without_raw_traces_refuses(tmp_path: Path):
+    from ponderscope.analysis.analyze import analyze_run
+
+    store = _sealed_store(tmp_path, "noraw")
+    (store.path / "traces.jsonl").unlink()
+    with pytest.raises(FileNotFoundError):
+        analyze_run(store)
+
+
+def test_raw_evidence_overwrite_refused(tmp_path: Path):
+    store = _sealed_store(tmp_path, "overwrite")
+    with pytest.raises(FileExistsError):
+        store.open_traces()
+    with pytest.raises(FileExistsError):
+        store.write_tasks([{"task_id": "y"}])

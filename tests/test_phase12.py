@@ -377,7 +377,19 @@ def _sealed(tmp_path: Path, name="bundle"):
     )
     store.write_tasks([{"task_id": "x"}])
     with store.open_traces() as w:
-        w.append({"task_id": "x"})
+        w.append(
+            {
+                "task_id": "x",
+                "condition_id": store.condition_ids[0],
+                "deployment_id": store.deployment_id,
+                "source_artifact_id": store.source_artifact_id,
+                "weight_variant_id": store.weight_variant_id,
+                "trial_id": "trial-1",
+                "condition": {"mode": "greedy", "seed": None, "repeat": 0},
+                "termination": {"think_end_reached": True, "terminated_by_eos": True},
+                "trace": {"token_ids": [1, 2, 3]},
+            }
+        )
     with store.open_probes() as w:
         w.append({"task_id": "x"})
     store.seal()
