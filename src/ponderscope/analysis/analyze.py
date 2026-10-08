@@ -793,6 +793,16 @@ def analyze_run(store: RunStore, *, allow_unverified: bool = False) -> dict[str,
             and verification["pass"]
             and store.manifest.get("code", {}).get("publication_grade", True)
         ),
+        "analysis_class": (
+            "publication_grade"
+            if (
+                store.is_sealed
+                and verification
+                and verification["pass"]
+                and store.manifest.get("code", {}).get("publication_grade", True)
+            )
+            else ("exploratory" if store.is_sealed else "unsealed")
+        ),
         "verification": verification,
     }
     store.write_analysis(analysis)

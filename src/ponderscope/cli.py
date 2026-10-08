@@ -175,9 +175,12 @@ def _cmd_compare(args: argparse.Namespace) -> int:
     pop = comparison.get("trial_population", {})
     print(
         f"  trial population: matched={pop.get('matched_pairs')} "
+        f"expected A={pop.get('expected_trials_a')} B={pop.get('expected_trials_b')} "
         f"observed A={pop.get('observed_executions_a')} B={pop.get('observed_executions_b')} "
-        f"unmatched A={pop.get('unmatched_a')} B={pop.get('unmatched_b')} "
+        f"missing A={pop.get('missing_trials_a')} B={pop.get('missing_trials_b')} "
+        f"unexpected A={pop.get('unexpected_trials_a')} B={pop.get('unexpected_trials_b')} "
         f"duplicates A={pop.get('duplicate_keys_a')} B={pop.get('duplicate_keys_b')} "
+        f"ambiguous A={pop.get('ambiguous_draws_a')} B={pop.get('ambiguous_draws_b')} "
         f"complete={pop.get('complete')}"
     )
     ver = comparison.get("verification", {})

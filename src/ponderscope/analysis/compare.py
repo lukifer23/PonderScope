@@ -175,6 +175,7 @@ def _key(r: dict[str, Any]) -> tuple:
 
     Includes the rendered presentation (so two prompt policies over one
     structural task cannot be paired as if identical), the structural task, the
+    **decoding condition id** (so two sampled policies cannot collide), the
     decoding mode, the sampling seed, and the technical repetition. Deployment
     identity is deliberately excluded: pairing a BF16 trial with its Q4
     counterpart requires that they share everything except the weight variant.
@@ -183,10 +184,85 @@ def _key(r: dict[str, Any]) -> tuple:
     return (
         str(r.get("presentation_id") or r["task_id"]),
         str(r["task_id"]),
+        str(r["condition_id"]),
         str(c["mode"]),
         c.get("seed"),
         c.get("repeat"),
     )
+
+
+def _trial_projection(record: dict[str, Any]) -> tuple:
+    """Trial identity without the structural task id (task is 1:1 with pres)."""
+    c = record["condition"]
+    return (
+        str(record.get("presentation_id") or record["task_id"]),
+        str(record["condition_id"]),
+        str(c["mode"]),
+        c.get("seed"),
+        c.get("repeat"),
+    )
+
+
+def _expected_trial_keys(run: RunStore, mode: str) -> tuple[set[tuple] | None, dict[str, Any]]:
+    """Declared trial-identity set for a run/mode, from the frozen declaration.
+
+    Derived from the frozen task presentations, the declared decoding
+    conditions, the declared seed list, and the repetition counts. Returns
+    ``(keys, meta)``; ``keys`` is ``None`` when the declaration is incomplete, so
+    callers fail closed rather than assuming completeness.
+    """
+    pack = run.manifest.get("task_pack", {})
+    presentations = pack.get("presentation_ids") or []
+    spec = run.manifest.get("spec", {})
+    conditions = [
+        c for c in run.manifest.get("conditions", []) if c.get("decoding", {}).get("mode") == mode
+    ]
+    if not presentations:
+        return None, {"reason": "no declared presentation population"}
+    if not conditions:
+        return None, {"reason": f"no declared {mode!r} condition"}
+    if mode == "sampled":
+        seeds = spec.get("sampled_seeds")
+        repeats = spec.get("sampled_repeats_per_seed")
+    elif mode == "greedy":
+        seeds = [None]
+        repeats = spec.get("greedy_repeats")
+    else:
+        return None, {"reason": f"unknown mode {mode!r}"}
+    if seeds is None or repeats is None:
+        return None, {"reason": "declared seeds/repeats missing from spec"}
+    keys: set[tuple] = set()
+    for condition in conditions:
+        cid = str(condition["condition_id"])
+        for presentation in presentations:
+            for seed in seeds:
+                for repeat in range(int(repeats)):
+                    keys.add((str(presentation), cid, mode, seed, repeat))
+    return keys, {
+        "n_conditions": len(conditions),
+        "n_presentations": len(presentations),
+        "n_seeds": len(seeds),
+        "repeats_per_seed": int(repeats),
+        "expected_total": len(keys),
+    }
+
+
+def _ambiguous_draw_count(traces: list[dict[str, Any]]) -> int:
+    """Same-seed technical-repeat groups whose executions are not identical."""
+    groups: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
+    for r in traces:
+        c = r["condition"]
+        groups[
+            (str(r.get("presentation_id") or r["task_id"]), str(r["condition_id"]), c.get("seed"))
+        ].append(r)
+    ambiguous = 0
+    for executions in groups.values():
+        if len(executions) < 2:
+            continue
+        base = executions[0]["trace"]["token_ids"]
+        if not all(e["trace"]["token_ids"] == base for e in executions[1:]):
+            ambiguous += 1
+    return ambiguous
 
 
 def _index(traces: list[dict[str, Any]]) -> dict[tuple, dict[str, Any]]:
@@ -455,21 +531,6 @@ def _rmst_section(
     return out
 
 
-def _expected_executions(run: RunStore, mode: str) -> int | None:
-    """Preregistered execution count for a mode, from the run's declared spec."""
-    spec = run.manifest.get("spec", {})
-    n_tasks = run.manifest.get("task_pack", {}).get("n_tasks")
-    if not n_tasks:
-        return None
-    if mode == "greedy":
-        reps = int(spec.get("greedy_repeats", 0))
-    elif mode == "sampled":
-        reps = len(spec.get("sampled_seeds", [])) * int(spec.get("sampled_repeats_per_seed", 1))
-    else:
-        return None
-    return int(n_tasks) * reps
-
-
 def _trial_population(
     run_a: RunStore,
     run_b: RunStore,
@@ -478,25 +539,90 @@ def _trial_population(
     keys: list[tuple],
     mode: str,
 ) -> dict[str, Any]:
-    """Account for the matched-trial population of a comparison.
+    """Account for the matched-trial population against the **declared** design.
 
-    Reports expected vs observed executions, unique keys, matched pairs,
-    unmatched and missing pairs, and duplicate logical identities per arm, and
-    whether the comparison is population-complete (both arms have identical
-    unique trial-key sets with no duplicates).
+    Completeness requires that each arm's observed trial-identity set equals the
+    set declared by its own frozen spec (presentations x conditions x seeds x
+    repetitions), that neither arm has duplicate logical identities or ambiguous
+    same-seed repeats, that both arms declare and observe the *same* population,
+    and that the matched intersection equals it. A total count that happens to
+    match is not sufficient: a missing seed replaced by an unexpected seed is
+    detected because the declared identity set is compared exactly.
     """
+    expected_a, meta_a = _expected_trial_keys(run_a, mode)
+    expected_b, meta_b = _expected_trial_keys(run_b, mode)
     idx_a = _index(traces_a)
     idx_b = _index(traces_b)
-    matched = len(keys)
+    proj_a = {_trial_projection(r) for r in traces_a}
+    proj_b = {_trial_projection(r) for r in traces_b}
     dup_a = len(traces_a) - len(idx_a)
     dup_b = len(traces_b) - len(idx_b)
-    exp_a = _expected_executions(run_a, mode)
-    exp_b = _expected_executions(run_b, mode)
-    complete = dup_a == 0 and dup_b == 0 and len(idx_a) == len(idx_b) == matched
+    amb_a = _ambiguous_draw_count(traces_a)
+    amb_b = _ambiguous_draw_count(traces_b)
+    matched = len(keys)
+
+    declared_a = {str(p) for p in run_a.manifest.get("task_pack", {}).get("presentation_ids", [])}
+    declared_b = {str(p) for p in run_b.manifest.get("task_pack", {}).get("presentation_ids", [])}
+    observed_pres_a = {str(r.get("presentation_id") or r["task_id"]) for r in traces_a}
+    observed_pres_b = {str(r.get("presentation_id") or r["task_id"]) for r in traces_b}
+    presentation_match_a = bool(declared_a) and observed_pres_a == declared_a
+    presentation_match_b = bool(declared_b) and observed_pres_b == declared_b
+
+    missing_a = sorted((expected_a or set()) - proj_a)
+    unexpected_a = sorted(proj_a - (expected_a or set()))
+    missing_b = sorted((expected_b or set()) - proj_b)
+    unexpected_b = sorted(proj_b - (expected_b or set()))
+
+    same_expected = expected_a is not None and expected_a == expected_b
+    arm_a_ok = bool(
+        expected_a is not None
+        and proj_a == expected_a
+        and dup_a == 0
+        and amb_a == 0
+        and presentation_match_a
+    )
+    arm_b_ok = bool(
+        expected_b is not None
+        and proj_b == expected_b
+        and dup_b == 0
+        and amb_b == 0
+        and presentation_match_b
+    )
+    complete = bool(
+        same_expected
+        and arm_a_ok
+        and arm_b_ok
+        and expected_a is not None
+        and matched == len(expected_a)
+    )
+
+    reasons: list[str] = []
+    if expected_a is None or expected_b is None:
+        reasons.append(
+            f"declared population unavailable (A: {meta_a.get('reason')}, B: {meta_b.get('reason')})"
+        )
+    if expected_a is not None and expected_b is not None and not same_expected:
+        reasons.append("the two arms declare different trial populations")
+    for side, missing, unexpected, dup, amb, pres_ok, ok in (
+        ("A", missing_a, unexpected_a, dup_a, amb_a, presentation_match_a, arm_a_ok),
+        ("B", missing_b, unexpected_b, dup_b, amb_b, presentation_match_b, arm_b_ok),
+    ):
+        if not ok:
+            reasons.append(
+                f"arm {side} incomplete "
+                f"(missing={len(missing)} unexpected={len(unexpected)} "
+                f"duplicates={dup} ambiguous_draws={amb} presentations_match={pres_ok})"
+            )
+    if expected_a is not None and matched != len(expected_a):
+        reasons.append(f"matched intersection {matched} != declared population {len(expected_a)}")
+
     return {
         "mode": mode,
-        "expected_executions_a": exp_a,
-        "expected_executions_b": exp_b,
+        "expected_known": expected_a is not None and expected_b is not None,
+        "expected_trials_a": len(expected_a) if expected_a is not None else None,
+        "expected_trials_b": len(expected_b) if expected_b is not None else None,
+        "expected_meta_a": meta_a,
+        "expected_meta_b": meta_b,
         "observed_executions_a": len(traces_a),
         "observed_executions_b": len(traces_b),
         "unique_trial_keys_a": len(idx_a),
@@ -504,15 +630,28 @@ def _trial_population(
         "matched_pairs": matched,
         "unmatched_a": len(idx_a) - matched,
         "unmatched_b": len(idx_b) - matched,
-        "missing_a": max(0, (exp_a or 0) - len(idx_a)),
-        "missing_b": max(0, (exp_b or 0) - len(idx_b)),
+        "missing_trials_a": len(missing_a),
+        "missing_trials_b": len(missing_b),
+        "unexpected_trials_a": len(unexpected_a),
+        "unexpected_trials_b": len(unexpected_b),
+        "missing_examples_a": [list(k) for k in missing_a[:3]],
+        "missing_examples_b": [list(k) for k in missing_b[:3]],
+        "unexpected_examples_a": [list(k) for k in unexpected_a[:3]],
+        "unexpected_examples_b": [list(k) for k in unexpected_b[:3]],
         "duplicate_keys_a": dup_a,
         "duplicate_keys_b": dup_b,
+        "ambiguous_draws_a": amb_a,
+        "ambiguous_draws_b": amb_b,
+        "presentation_population_match_a": presentation_match_a,
+        "presentation_population_match_b": presentation_match_b,
         "complete": complete,
+        "incomplete_reasons": reasons,
         "note": (
-            "complete means both arms share an identical unique trial-key set "
-            "(presentation, task, mode, seed, repeat) with no duplicate identities. "
-            "Matched pairs are the intersection actually used for paired estimates."
+            "complete requires each arm's observed trial identities to equal its "
+            "declared population (presentation x condition_id x seed x repeat), no "
+            "duplicate identities, no ambiguous same-seed repeats, matching "
+            "presentation populations, and a matched intersection equal to the "
+            "declared population."
         ),
     }
 
@@ -575,7 +714,11 @@ def compare_configs(
     )
     refusal_reasons: list[str] = list(validity["reasons"])
     overrides_applied: list[str] = []
-    if verification_failed:
+    if not verify:
+        # Skipping verification is an explicit override and can never be
+        # publication-grade, even if everything else looks clean.
+        overrides_applied.append("verification_skipped")
+    elif verification_failed:
         if allow_unverified:
             overrides_applied.append("unverified_evidence")
         else:
@@ -619,19 +762,17 @@ def compare_configs(
         "metrics": {},
     }
     verified_all = bool(
-        not verify
-        or (
-            verification["a"]
-            and verification["a"].get("pass")
-            and verification["b"]
-            and verification["b"].get("pass")
-        )
+        verify
+        and verification["a"]
+        and verification["a"].get("pass")
+        and verification["b"]
+        and verification["b"].get("pass")
     )
     result["publication_grade"] = bool(
-        not refusal_reasons
+        verified_all
+        and not refusal_reasons
         and validity["clean"]
         and population["complete"]
-        and verified_all
         and not overrides_applied
     )
     if refusal_reasons and not allow_confounded:
