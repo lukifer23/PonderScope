@@ -149,6 +149,7 @@ def _budget_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
     n_censored = sum(1 for s in statuses if s == "censored")
     n_error = sum(1 for s in statuses if s == "error")
     n_unparseable = sum(1 for s in statuses if s == "unparseable")
+    n_terminated_no_closure = sum(1 for s in statuses if s == "terminated_no_closure")
     return {
         "n_attempted": n,
         "n_completed": len(completed),
@@ -156,6 +157,7 @@ def _budget_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
         "n_censored": n_censored,
         "n_error": n_error,
         "n_unparseable": n_unparseable,
+        "n_terminated_no_closure": n_terminated_no_closure,
         "success_at_budget": len(correct) / n,
         "completion_rate": len(completed) / n,
         "conditional_accuracy_given_completed": (
@@ -524,7 +526,18 @@ def _is_generation_termination(record: dict[str, Any]) -> bool:
 
 
 def _time_to_closure(record: dict[str, Any]) -> float:
-    """Generated tokens to closure (or to the observation horizon if censored)."""
+    """Generated tokens up to and including the reasoning-closure token.
+
+    Closure is defined by the **native think-end token**, so the event time is
+    the number of generated tokens through that token (``reasoning_tokens + 1``)
+    — never ``total_tokens``, which also counts the post-closure final-answer
+    channel and would bias the time-to-event endpoint by the answer length. A
+    record with no think-end is censored at the observation horizon
+    (``total_tokens``). This semantic is versioned ``phase1.4``; the historical
+    total-token definition is preserved in the Phase 1.1-1.3B derived artifacts.
+    """
+    if record["termination"].get("think_end_reached"):
+        return float(record["reasoning_tokens"]) + 1.0
     return float(record["total_tokens"])
 
 
@@ -563,7 +576,10 @@ def _survival_section(by_condition: dict[str, list[dict[str, Any]]], tau: float)
         per_condition[cid] = summary
     return {
         "tau": tau,
-        "time_definition": "generated tokens to closure (observation horizon if censored)",
+        "time_definition": (
+            "generated tokens through the native think-end closure token "
+            "(reasoning_tokens + 1); observation horizon if censored"
+        ),
         "event_definition": "PRIMARY: native think-end reasoning closure observed",
         "secondary_event_definition": "SECONDARY: EOS observed (generation termination)",
         "censoring_definition": "max-token observation horizon reached before closure",
@@ -691,7 +707,7 @@ def analyze_run(store: RunStore) -> dict[str, Any]:
     }
 
     analysis = {
-        "interpretation": "phase1.3b",
+        "interpretation": "phase1.4",
         "run_id": store.run_id,
         "artifact_id": store.artifact_id,
         "deployment_id": store.deployment_id,

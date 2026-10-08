@@ -3,7 +3,8 @@
 Termination is treated as a time-to-event problem:
 
 - **event**: a natural native think-end / reasoning closure was observed;
-- **time**: generated token count to closure (or to the observation horizon);
+- **time**: generated tokens through that closure token (or to the observation
+  horizon when censored);
 - **censoring**: the max-token observation horizon was reached before closure.
 
 ``max_tokens`` is an *observation horizon*, never a natural stopping threshold.
@@ -89,8 +90,8 @@ def kaplan_meier(times: Iterable[float], events: Iterable[bool]) -> dict[str, An
         "median": median,
         "max_time": max(t for t, _ in ordered),
         "note": (
-            "Product-limit closure survival; time is generated tokens to native "
-            "think-end closure; censored at the observation horizon."
+            "Product-limit closure survival; time is generated tokens through the "
+            "native think-end closure token; censored at the observation horizon."
         ),
     }
 

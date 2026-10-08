@@ -23,11 +23,17 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 # Natural final outcome categories. ``censored`` means the final answer channel
-# was never observed; correctness is unknown, NOT false.
+# was never observed because the observation horizon was reached; correctness is
+# unknown, NOT false. ``terminated_no_closure`` means generation stopped (EOS)
+# without ever emitting the native reasoning-close token: there was no final
+# channel and the end was not the observation horizon. ``unparseable`` means a
+# final-answer channel WAS observed (or the stop cause was neither horizon nor
+# EOS) but no answer could be extracted from it.
 NATURAL_FINAL_STATUSES = (
     "correct",
     "incorrect",
     "censored",
+    "terminated_no_closure",
     "unparseable",
     "error",
 )
@@ -63,11 +69,16 @@ def natural_final_status_from_termination(
     """
     if error_type or finish_reason == "error":
         return "error"
-    if not answer_observed:
-        if not think_end_reached:
-            return "censored" if (capped or finish_reason == "length") else "unparseable"
-        return "unparseable"
-    return "correct" if correct else "incorrect"
+    if answer_observed:
+        return "correct" if correct else "incorrect"
+    # No parseable answer was observed. The three stop causes are distinct:
+    # horizon reached (censored), EOS without a native close (no final channel),
+    # or a close/final channel from which no answer could be parsed.
+    if capped or finish_reason == "length":
+        return "unparseable" if think_end_reached else "censored"
+    if finish_reason == "stop" and not think_end_reached:
+        return "terminated_no_closure"
+    return "unparseable"
 
 
 def natural_final_status_for_record(record: dict[str, Any]) -> str:
