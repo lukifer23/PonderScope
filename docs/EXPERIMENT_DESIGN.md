@@ -70,6 +70,16 @@ delta; answer-transition delta; prefix-sufficiency delta where measured. Effect
 sizes are compared to the within-condition noise and classified
 `below_noise` / `comparable` / `clearly_larger`. **No causal claims.**
 
+**Phase 1.4 implementation.** The reproducible MLX low-bit conversion now exists
+(`ponderscope convert`), records the actual per-module quantization scheme and
+full source→derived lineage, and is validated by a real load audit
+(`ponderscope variant-audit`). The controlled Q4 artifact is derived from the
+identical pinned BF16 source revision, so BF16 and Q4 share one
+`source_artifact_id` and differ only in `weight_variant_id`. The 10-draw pilot is
+clean; the full 30-draw contrast is the next experiment. Because the primary
+design has one execution per stochastic draw, within-deployment noise is not
+estimable and uncertainty is the task-clustered bootstrap only.
+
 ## Capture settings
 
 - Capture has three explicit levels: **minimal** (token ids + termination only),

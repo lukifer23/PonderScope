@@ -1,0 +1,29 @@
+{
+  "run_id": "20261006T024435Z-calibration-4b-generated-history-api-dep-e1c20569173a",
+  "interpretation": "phase1.4",
+  "source_artifact_id": "src-6209ef70e318",
+  "weight_variant_id": "wvar-9b6f9b40b789",
+  "deployment_id": "dep-e1c20569173a",
+  "n_executions": 30,
+  "n_unique_draws": 30,
+  "n_ambiguous_draws": 0,
+  "primary_endpoint": "native think-end reasoning closure",
+  "time_definition": "generated tokens through the native think-end (reasoning_tokens + 1); horizon if censored",
+  "historical_total_token_definition": {
+    "n_events": 20,
+    "n_censored": 10,
+    "median_tokens_to_closure": 1718.0,
+    "rmst": 1511.9333333333336,
+    "generation_termination_events": 19,
+    "generation_termination_rmst": 1511.9333333333336
+  },
+  "corrected_think_end_definition": {
+    "n_events": 20,
+    "n_censored": 10,
+    "median_tokens_to_closure": 1569.0,
+    "rmst": 1368.7666666666664,
+    "generation_termination_events": 19,
+    "generation_termination_rmst": 1374.6999999999998
+  },
+  "note": "Derived reanalysis of the frozen Phase 1.3B baseline raw traces under the corrected phase1.4 time-to-closure endpoint. The original on-disk analysis.json (phase1.3b, total-token time) is preserved unchanged. Raw evidence untouched."
+}

@@ -113,7 +113,9 @@ EOS marker can never become answer content. PonderScope records:
 Prefix states (over **observed** forced probes only): `initially_correct`,
 `wrong_to_correct`, `correct_to_wrong`, `multiple_flips`, `stable_correct`,
 `never_correct`. The natural final outcome is a separate category: `correct`,
-`incorrect`, `censored` (no final channel observed), `unparseable`, or `error`.
+`incorrect`, `censored` (no final channel observed before the horizon),
+`terminated_no_closure` (generation stopped via EOS without ever emitting the
+native close), `unparseable`, or `error`.
 
 A censored trajectory has unknown final correctness: it contributes no
 correctness transition and cannot be evidence of harmful overthinking. Two
@@ -148,12 +150,15 @@ silently.
 ## Censor-aware time-to-closure
 
 Termination is a right-censored time-to-event problem. The event is a natural
-native think-end/reasoning closure; the time is generated tokens to closure; an
-observation that reaches `max_tokens` first is censored at that horizon. The
-analysis reports Kaplan-Meier closure survival (with number at risk, events, and
-censored), median tokens-to-closure when estimable, and restricted mean survival
-time (RMST) up to an explicit common horizon `tau`. `max_tokens` is an
-observation horizon, never a natural stopping threshold.
+native think-end/reasoning closure; the time is generated tokens **through the
+native think-end token** (`reasoning_tokens + 1`) — never the total generated
+tokens, which would include the post-closure final-answer channel; an observation
+that reaches `max_tokens` first is censored at that horizon. The analysis reports
+Kaplan-Meier closure survival (with number at risk, events, and censored), median
+tokens-to-closure when estimable, and restricted mean survival time (RMST) up to
+an explicit common horizon `tau`. `max_tokens` is an observation horizon, never a
+natural stopping threshold. This endpoint is versioned `phase1.4`; the historical
+total-token definition is preserved in the Phase 1.1–1.3B derived artifacts.
 
 ## Metrics
 
@@ -198,6 +203,18 @@ Distributions are computed for accuracy, reasoning tokens, latency, repetition,
 answer flips, and termination failures. Deployment effects are only interpreted
 relative to this floor.
 
+## Quantization provenance (derived weight variants)
+
+A derived (quantized) variant is created only by the first-party conversion
+workflow, which resolves the exact source revision, hashes the source weights/
+tokenizer/template, checks storage, converts, and records the tool version, the
+requested parameters, and the **actual** per-module quantization scheme. A
+nominal "Q4" artifact is never claimed to be uniformly four-bit unless the loaded
+modules confirm it. The derived variant's `weight_variant_id` differs from the
+source's while both share the same `source_artifact_id`, and
+`derived_from_source_artifact_id` records lineage. Local filesystem paths and the
+backend load audit are excluded from scientific identity.
+
 ## Comparison and statistics
 
 The statistical unit is the **task**, not the generation. Repeated seeds/repeats
@@ -209,7 +226,13 @@ combined within-deployment noise of **both** compared conditions, not one side.
 
 Before any metric is compared, a canonical configuration-difference report lists
 identical / changed / missing provenance fields, and the requested contrast is
-checked for confounds. The default contract requires identical structural task
+checked for confounds and **classified by hypothesis** (e.g.
+`weight_representation`, `different_source_model`, `runtime_hardware`,
+`decoding`, `same_deployment`) rather than by a raw field count. A same-source
+precision/quantization change is accepted as one controlled manipulation even
+though several model-metadata fields change together; a source-artifact change at
+the same repo/revision is refused as inconsistent provenance. The default
+contract requires identical structural task
 population, identical presentation/stimulus IDs, identical prompt policy,
 identical decoding condition, identical task-pack/generator version, a compatible
 observation horizon, and a compatible capture lane. A deliberate change to

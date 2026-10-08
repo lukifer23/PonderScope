@@ -7,8 +7,9 @@ PonderScope is intentionally conservative about what its evidence supports.
 - **Single machine, single runtime device.** This pass measures one Apple
   Silicon machine under MLX/MLX-LM. Results are properties of *this deployment*,
   not of the model alone.
-- **Single model revision.** `Qwen/Qwen3.5-0.8B` at an exact revision. No
-  generalization to other weights or sizes.
+- **Single model family.** `Qwen/Qwen3.5-4B` (primary BF16 baseline) and
+  `Qwen/Qwen3.5-0.8B` (termination-stress model) at exact revisions. No
+  generalization to other weights, sizes, or families.
 - **Small procedural tasks.** The `tasks-v1` pack validates methodology. It is
   not a universal intelligence benchmark and its difficulty scale is structural,
   not semantic.
@@ -46,6 +47,15 @@ PonderScope is intentionally conservative about what its evidence supports.
   and participate in condition identity.
 - Entropy and logprobs are only available because MLX-LM exposes them. Other
   backends may not, and would be marked UNSUPPORTED.
+- **Time-to-closure endpoint.** The event time is generated tokens through the
+  native think-end token (versioned `phase1.4`). The historical Phase 1.1–1.3B
+  endpoint used total generated tokens (including the post-closure answer
+  channel); those values are preserved and superseded, not erased.
+- **Quantization provenance.** A derived variant records its *actual* per-module
+  scheme; a nominal "Q4" artifact may include non-quantized embedding/norm weights
+  and is reported as e.g. 4.503 bits per weight, not uniformly four-bit. Tokenizer
+  files are re-serialized by the conversion and are verified *semantically*
+  (vocab size, special ids, probe encode/decode), not byte-for-byte.
 
 ## Statistics
 
@@ -56,6 +66,9 @@ PonderScope is intentionally conservative about what its evidence supports.
 - Bootstrap CIs do not account for multiple comparisons across every reported
   metric.
 - With few tasks per family, seed-driven variance estimates are coarse.
+- When a design has one execution per stochastic draw, within-deployment noise is
+  **not estimable**; such effects are classified `ci_only` (task-clustered
+  bootstrap only) and are never described as noise-floor-calibrated.
 
 ## Not yet implemented / tested
 
