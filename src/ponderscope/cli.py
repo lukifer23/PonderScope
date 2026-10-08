@@ -100,6 +100,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         model_repo=args.model_repo,
         model_revision=args.revision,
         backend_name=args.backend,
+        artifact_path=args.artifact_path,
         runs_dir=args.runs_dir,
         run_suffix=args.suffix,
         allow_dirty=args.allow_dirty,
@@ -387,6 +388,81 @@ def _cmd_loop_diagnostics(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_convert(args: argparse.Namespace) -> int:
+    from .backends.mlx_backend import resolve_local_snapshot
+    from .conversion import (
+        check_storage,
+        convert_q4_variant,
+        source_identity_from_snapshot,
+    )
+
+    if args.dry_run:
+        snapshot = resolve_local_snapshot(args.source_repo, args.revision)
+        source = source_identity_from_snapshot(args.source_repo, args.revision, snapshot)
+        storage = check_storage(snapshot, args.out)
+        report = {
+            "dry_run": True,
+            "source_repo": args.source_repo,
+            "revision": args.revision,
+            "snapshot": str(snapshot),
+            "source_artifact_id": source.source_artifact_id,
+            "source_weight_files": source.weight_files,
+            "chat_template_sha256": source.chat_template_sha256,
+            "storage": storage,
+            "requested": {
+                "bits": args.bits,
+                "group_size": args.group_size,
+                "mode": args.mode,
+                "dtype": args.dtype,
+            },
+            "output": str(args.out),
+        }
+        if args.json:
+            print(json.dumps(report, indent=2))
+        else:
+            print(
+                f"convert dry-run: {args.source_repo}@{args.revision[:12]} "
+                f"src={source.source_artifact_id} -> {args.out}"
+            )
+            print(
+                f"  source bytes={storage['source_bytes']} free={storage['free_bytes']} "
+                f"required>={storage['required_bytes']}"
+            )
+            print(
+                f"  requested Q{args.bits} group={args.group_size} mode={args.mode} dtype={args.dtype}"
+            )
+        return 0
+
+    provenance = convert_q4_variant(
+        args.source_repo,
+        args.revision,
+        args.out,
+        bits=args.bits,
+        group_size=args.group_size,
+        mode=args.mode,
+        dtype=args.dtype,
+    )
+    if args.json:
+        print(json.dumps(provenance, indent=2))
+        return 0
+    quant = provenance["quantization_params"]
+    print(f"converted {args.source_repo}@{args.revision[:12]} -> {args.out}")
+    print(
+        f"  source artifact: {provenance['source_artifact']['repo_id']}"
+        f"@{provenance['source_artifact']['revision'][:12]}"
+    )
+    print(f"  representation:  {provenance['representation']} precision={provenance['precision']}")
+    print(
+        f"  quantization:    {provenance['quantization']} bits={provenance['quantization_bits']} "
+        f"group={provenance['quantization_group_size']}"
+    )
+    if quant.get("layer_schemes"):
+        print(f"  actual schemes:  {quant['layer_schemes']}")
+    print(f"  think-end id:    {provenance['think_end_token_id']}")
+    print(f"  provenance:      {args.out}/ponderscope_variant.json")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ponderscope", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -433,6 +509,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--backend", default="mlx")
     p.add_argument("--model-repo", default=MODEL_REPO_DEFAULT)
     p.add_argument("--revision", default=REVISION_DEFAULT)
+    p.add_argument(
+        "--artifact-path",
+        default=None,
+        help="load a derived weight variant (e.g. a controlled Q4) from this directory",
+    )
     p.add_argument("--runs-dir", default="runs")
     p.add_argument("--suffix", default=None)
     p.add_argument("--allow-dirty", action="store_true")
@@ -520,6 +601,21 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--latest", action="store_true")
     p.add_argument("--runs-dir", default="runs")
     p.set_defaults(func=_cmd_loop_diagnostics)
+
+    p = sub.add_parser(
+        "convert",
+        help="convert a pinned source snapshot to a derived MLX quantized weight variant",
+    )
+    p.add_argument("--source-repo", default="Qwen/Qwen3.5-4B")
+    p.add_argument("--revision", required=True)
+    p.add_argument("--out", required=True, help="new output directory for the derived artifact")
+    p.add_argument("--bits", type=int, default=4)
+    p.add_argument("--group-size", type=int, default=64)
+    p.add_argument("--mode", default="affine", choices=["affine", "mxfp4", "nvfp4", "mxfp8"])
+    p.add_argument("--dtype", default="bfloat16", choices=["float16", "bfloat16", "float32"])
+    p.add_argument("--dry-run", action="store_true", help="check source/storage without converting")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_convert)
 
     return parser
 

@@ -42,7 +42,10 @@ class FakeBackend:
         )
 
     def load(
-        self, request: SourceArtifactIdentity, declared_precision: str = "unknown"
+        self,
+        request: SourceArtifactIdentity,
+        declared_precision: str = "unknown",
+        artifact_path: str | None = None,
     ) -> ModelIdentity:
         self._loaded = True
         source = SourceArtifactIdentity(
@@ -51,6 +54,18 @@ class FakeBackend:
             weight_files={"fake.safetensors": "0" * 64},
             tokenizer_files={"tokenizer.json": "1" * 64},
         )
+        if artifact_path is not None:
+            return WeightVariantIdentity(
+                source=source,
+                representation="derived",
+                variant_weight_files={"model.safetensors": "d" * 64},
+                local_path=artifact_path,
+                precision="4bit",
+                quantization="mlx-affine",
+                quantization_bits=4,
+                quantization_group_size=64,
+                conversion={"tool": "fake", "params": {"q_bits": 4}},
+            )
         return WeightVariantIdentity(
             source=source,
             representation="original",

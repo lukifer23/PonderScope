@@ -23,6 +23,63 @@ def _category(key: str) -> str:
     return parts[0] if parts else key
 
 
+def audit_derived_load(model: Any, expected_quantization: dict[str, Any] | None) -> dict[str, Any]:
+    """Validate a *derived* (quantized) artifact load.
+
+    For a derived artifact the source-key rename accounting used for native
+    checkpoints does not apply. Instead this proves the artifact really is a
+    quantized representation and that the actual per-module scheme matches the
+    recorded conversion provenance. A nominal "Q4" claim is never accepted unless
+    the loaded modules confirm it.
+    """
+    import mlx.nn as nn
+
+    scheme_counts: dict[tuple[int, int, str], int] = {}
+    n_quantized = 0
+    for module in model.modules():
+        if isinstance(module, nn.QuantizedLinear):
+            n_quantized += 1
+            key = (int(module.bits), int(module.group_size), str(module.mode))
+            scheme_counts[key] = scheme_counts.get(key, 0) + 1
+
+    actual = sorted(
+        (
+            {"bits": b, "group_size": g, "mode": m, "layers": n}
+            for (b, g, m), n in scheme_counts.items()
+        ),
+        key=lambda d: (d["bits"], d["group_size"], d["mode"]),
+    )
+    expected = None
+    if expected_quantization and expected_quantization.get("quantized"):
+        expected = sorted(
+            (
+                {
+                    "bits": int(s["bits"]),
+                    "group_size": int(s["group_size"]),
+                    "mode": str(s["mode"]),
+                    "layers": int(s["layers"]),
+                }
+                for s in expected_quantization.get("layer_schemes", [])
+            ),
+            key=lambda d: (d["bits"], d["group_size"], d["mode"]),
+        )
+
+    mismatches: list[str] = []
+    if n_quantized == 0:
+        mismatches.append("no QuantizedLinear modules found in a derived artifact")
+    if expected is not None and expected != actual:
+        mismatches.append(f"actual quant schemes {actual} != recorded {expected}")
+
+    return {
+        "ok": not mismatches,
+        "kind": "derived",
+        "n_quantized_modules": n_quantized,
+        "actual_schemes": actual,
+        "expected_schemes": expected,
+        "mismatches": mismatches,
+    }
+
+
 def audit_model_load(model: Any, snapshot: Path) -> dict[str, Any]:
     import glob
 

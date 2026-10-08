@@ -150,7 +150,10 @@ class Backend(Protocol):
     def capabilities(self) -> BackendCapabilities: ...
 
     def load(
-        self, request: SourceArtifactIdentity, declared_precision: str = "unknown"
+        self,
+        request: SourceArtifactIdentity,
+        declared_precision: str = "unknown",
+        artifact_path: str | None = None,
     ) -> WeightVariantIdentity: ...
 
     def runtime_identity(self) -> Any: ...

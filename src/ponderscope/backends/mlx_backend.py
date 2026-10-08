@@ -196,8 +196,14 @@ class MlxBackend:
 
     # -- loading -------------------------------------------------------------
     def load(
-        self, request: SourceArtifactIdentity, declared_precision: str = "unknown"
+        self,
+        request: SourceArtifactIdentity,
+        declared_precision: str = "unknown",
+        artifact_path: str | None = None,
     ) -> WeightVariantIdentity:
+        if artifact_path is not None:
+            return self._load_derived(request, artifact_path, declared_precision)
+
         from mlx_lm.utils import load_model, load_tokenizer
 
         snapshot = resolve_local_snapshot(request.repo_id, request.revision)
@@ -257,6 +263,85 @@ class MlxBackend:
                 f"{actual.precision!r}; refusing to mislabel the deployment"
             )
 
+        self._install(model, tokenizer, snapshot, actual)
+        return actual
+
+    def _load_derived(
+        self,
+        request: SourceArtifactIdentity,
+        artifact_path: str,
+        declared_precision: str,
+    ) -> WeightVariantIdentity:
+        """Load a locally converted weight variant with verified lineage.
+
+        The artifact must carry a ``ponderscope_variant.json`` provenance record
+        whose source artifact matches the requested repo/revision. Derived hashes
+        are recomputed and compared; the actual quantized scheme is validated
+        against the recorded conversion. Any inconsistency fails closed.
+        """
+        from pathlib import Path
+
+        from .audit import audit_derived_load
+        from .conversion import (
+            load_variant_provenance,
+            variant_identity,
+            verify_variant_artifact,
+        )
+
+        snapshot = Path(artifact_path)
+        if not snapshot.exists():
+            raise FileNotFoundError(f"derived artifact path does not exist: {snapshot}")
+        provenance = load_variant_provenance(snapshot)
+        recorded_source = provenance["source_artifact"]
+        if (
+            recorded_source.get("repo_id") != request.repo_id
+            or recorded_source.get("revision") != request.revision
+        ):
+            raise ValueError(
+                "derived artifact lineage does not match the requested source "
+                f"({recorded_source.get('repo_id')}@{recorded_source.get('revision')} "
+                f"!= {request.repo_id}@{request.revision}); refusing to misattribute it"
+            )
+        verified = verify_variant_artifact(snapshot, provenance)
+        if not verified["ok"]:
+            raise RuntimeError(
+                "derived-artifact verification failed: " + "; ".join(verified["errors"])
+            )
+
+        from mlx_lm.utils import load_model, load_tokenizer
+
+        model, config = load_model(snapshot, lazy=False, strict=False)
+        tokenizer = load_tokenizer(snapshot, eos_token_ids=config.get("eos_token_id"))
+
+        load_audit = audit_derived_load(model, provenance.get("quantization_params"))
+        if not load_audit["ok"]:
+            raise RuntimeError(
+                "derived model-load audit failed: " + "; ".join(load_audit["mismatches"])
+            )
+
+        actual = variant_identity(provenance, local_path=str(snapshot), load_audit=load_audit)
+        if declared_precision not in ("unknown", actual.precision):
+            raise ValueError(
+                f"declared precision {declared_precision!r} != detected "
+                f"{actual.precision!r}; refusing to mislabel the deployment"
+            )
+
+        think_end = getattr(tokenizer, "think_end_id", None)
+        if provenance.get("think_end_token_id") is not None and think_end != provenance.get(
+            "think_end_token_id"
+        ):
+            raise RuntimeError(
+                "derived tokenizer think-end token differs from provenance "
+                f"({think_end} != {provenance.get('think_end_token_id')}); refusing to run"
+            )
+        eos_ids = set(tokenizer.eos_token_ids)
+        if provenance.get("eos_token_ids") and eos_ids != set(provenance["eos_token_ids"]):
+            raise RuntimeError("derived tokenizer EOS ids differ from provenance; refusing to run")
+
+        self._install(model, tokenizer, snapshot, actual)
+        return actual
+
+    def _install(self, model: Any, tokenizer: Any, snapshot: Any, actual: ModelIdentity) -> None:
         self._model = model
         self._tokenizer = tokenizer
         self._snapshot = snapshot
@@ -264,7 +349,6 @@ class MlxBackend:
         self._think_end_id = getattr(tokenizer, "think_end_id", None)
         self._think_start_id = getattr(tokenizer, "think_start_id", None)
         self._model_identity = actual
-        return actual
 
     @property
     def model_identity(self) -> ModelIdentity:

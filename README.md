@@ -70,7 +70,9 @@ uv run ponderscope doctor
 ```bash
 ponderscope doctor                       # environment / runtime / model capability
 ponderscope generate --pack tasks-v1     # generate and validate a task pack
+ponderscope convert --revision <sha> --out models/<artifact> --bits 4   # controlled derived variant
 ponderscope run --spec specs/<spec>.json # run a declared deployment/task experiment
+ponderscope run --spec specs/<spec>.json --artifact-path models/<artifact>  # run a derived variant
 ponderscope analyze --run runs/<id>      # analyze immutable saved evidence
 ponderscope verify --run runs/<id>       # verify raw evidence + final manifest seal
 ponderscope bundle --run runs/<id> --output <archive.tar.gz>

@@ -217,6 +217,7 @@ def run_experiment(
     model_repo: str,
     model_revision: str,
     backend_name: str = "mlx",
+    artifact_path: str | None = None,
     runs_dir: str | Path = "runs",
     run_suffix: str | None = None,
     progress: Callable[[str], None] | None = None,
@@ -255,7 +256,7 @@ def run_experiment(
 
     backend = get_backend(backend_name)
     request = SourceArtifactIdentity(repo_id=model_repo, revision=model_revision)
-    loaded = backend.load(request)
+    loaded = backend.load(request, artifact_path=artifact_path)
     runtime = backend.runtime_identity()
 
     base_decoding = DecodingPolicy(
