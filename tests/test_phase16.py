@@ -211,7 +211,7 @@ from ponderscope.experiment import run_experiment  # noqa: E402
 CLEAN = {"version": "test", "git_sha": "0" * 40, "tracked_dirty": False}
 
 
-def _real_run(tmp_path, fake_backend, monkeypatch, name, seeds):
+def _real_run(tmp_path, fake_backend, monkeypatch, name, seeds, repeats=1):
     monkeypatch.setattr("ponderscope.experiment.get_backend", lambda _n: fake_backend)
     spec = ExperimentSpec(
         name=name,
@@ -220,6 +220,7 @@ def _real_run(tmp_path, fake_backend, monkeypatch, name, seeds):
         n_per_family=2,
         greedy_repeats=0,
         sampled_seeds=list(seeds),
+        sampled_repeats_per_seed=repeats,
         max_tokens=16,
     )
     return run_experiment(
@@ -278,3 +279,61 @@ def test_incomplete_population_is_not_publication_grade(tmp_path, fake_backend, 
     cmp = compare_configs(a.store, b.store, mode="sampled", n_resamples=100)
     assert cmp["trial_population"]["complete"] is False
     assert cmp["publication_grade"] is False
+
+
+# --------------------------------------------------------------------------- #
+# Stage 3: consistent stochastic-draw statistical units
+# --------------------------------------------------------------------------- #
+from ponderscope.analysis.compare import _ambiguous_draw_count, _matched_draw_records  # noqa: E402
+
+
+def test_repeats_change_execution_count_not_draw_population(tmp_path, fake_backend, monkeypatch):
+    a = _real_run(tmp_path, fake_backend, monkeypatch, "a", [0, 1])
+    b = _real_run(tmp_path, fake_backend, monkeypatch, "b", [0, 1], repeats=3)
+    # A seed-0/repeat-0 comparison matches only repeat 0, so repeats never become
+    # additional draws; the point estimate is unchanged.
+    cmp = compare_configs(a.store, b.store, mode="sampled", n_resamples=100)
+    assert cmp["analysis_population"]["n_draws_used_b"] == 4  # 2 tasks x 2 seeds
+    assert cmp["metrics"]["success_at_budget"]["delta"]["mean"] == 0.0
+    # The run-level draw collapse still counts all executions as diagnostics.
+    from ponderscope.analysis.draws import collapse_to_stochastic_draws
+
+    traces_b = b.store.read_traces()
+    draws_b = collapse_to_stochastic_draws(traces_b)
+    assert sum(d["n_executions"] for d in draws_b) == 12
+    assert len(draws_b) == 4
+
+
+def test_divergent_same_seed_repeats_excluded(tmp_path):
+    # two executions of one draw with divergent tokens -> ambiguous, excluded
+    man = _manifest("a", ["pres0"], [0], repeats=2)
+    traces = [
+        _tr("pres0", "task0", "cond-x", 0, 0, [1, 2, 3]),
+        _tr("pres0", "task0", "cond-x", 0, 1, [1, 2, 9]),
+    ]
+    assert _ambiguous_draw_count(traces) == 1
+    store = _store(tmp_path, man)
+    keys = {_key(r) for r in traces}
+    by_task, meta = _matched_draw_records(store, keys, traces=traces)
+    assert meta["n_draws"] == 1
+    assert meta["n_ambiguous_draws"] == 1
+    assert by_task == {}  # ambiguous draw contributes no primary observation
+
+
+def test_metrics_report_analysis_population(tmp_path, fake_backend, monkeypatch):
+    a = _real_run(tmp_path, fake_backend, monkeypatch, "a", [0, 1])
+    b = _real_run(tmp_path, fake_backend, monkeypatch, "b", [0, 1])
+    cmp = compare_configs(a.store, b.store, mode="sampled", n_resamples=100)
+    assert cmp["analysis_population"]["unit"].startswith("stochastic draw")
+    for metric in cmp["metrics"].values():
+        assert "analysis_population" in metric
+        assert metric["analysis_population"]["n_draws_used_a"] == 4
+
+
+def test_missing_condition_metadata_fails():
+    bad = {"presentation_id": "p", "task_id": "t", "condition_id": "c"}
+    try:
+        _key(bad)
+    except KeyError:
+        return
+    raise AssertionError("expected a fail-closed KeyError for missing condition metadata")
