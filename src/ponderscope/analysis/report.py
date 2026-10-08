@@ -267,6 +267,10 @@ def _comparison_section(comparison: dict[str, Any]) -> list[str]:
     lines = ["## Deployment comparison", ""]
     lines.append(f"- A: {comparison['description_a']}")
     lines.append(f"- B: {comparison['description_b']}")
+    lines.append(
+        f"- contrast: `{comparison.get('contrast')}` "
+        f"(changed: {comparison.get('validity', {}).get('contrast_changed_fields')})"
+    )
     lines.append(f"- matched observations ({comparison['mode']}): {comparison['n_matched_trials']}")
     validity = comparison.get("validity", {})
     if comparison.get("refused"):
@@ -302,6 +306,21 @@ def _comparison_section(comparison: dict[str, Any]) -> list[str]:
         lines.append("")
         lines.append(f"- trajectory states A: {comparison['trajectory_states']['a']}")
         lines.append(f"- trajectory states B: {comparison['trajectory_states']['b']}")
+    rmst = comparison.get("rmst", {}).get("endpoints", {})
+    if rmst:
+        lines.append("")
+        lines.append(
+            f"Censor-aware RMST difference (A−B), tau={comparison.get('rmst', {}).get('tau')}:"
+        )
+        lines.append("")
+        lines.append("| endpoint | delta RMST | 95% CI | clusters | excludes zero |")
+        lines.append("|---|---|---|---|---|")
+        for endpoint, m in rmst.items():
+            lines.append(
+                f"| {endpoint} | {_fmt(m.get('mean'))} | "
+                f"[{_fmt(m.get('lo'))}, {_fmt(m.get('hi'))}] | {m.get('n_clusters')} | "
+                f"{m.get('excludes_zero')} |"
+            )
     lines.append("")
     return lines
 
@@ -402,8 +421,8 @@ def render_markdown(store: RunStore, analysis: dict[str, Any]) -> str:
     lines.extend(_loop_section(analysis))
     lines.extend(_probe_section(analysis))
 
-    comp_path = store.path / "comparison.json"
-    if comp_path.exists():
+    comp_path = _latest_comparison_path(store)
+    if comp_path is not None:
         lines.extend(_comparison_section(json.loads(comp_path.read_text())))
 
     lines.append("## Limitations")
@@ -506,6 +525,22 @@ def _markdown_to_html(md: str) -> str:
     if in_table:
         out.append("</table>")
     return "\n".join(out)
+
+
+def _latest_comparison_path(store: RunStore) -> Any:
+    """Newest saved comparison for a run, if any.
+
+    ``compare`` writes ``comparisons/<timestamp>-...json``; an older single
+    ``comparison.json`` is also honoured for backward compatibility.
+    """
+    comparisons_dir = store.path / "comparisons"
+    candidates: list[Any] = []
+    if comparisons_dir.exists():
+        candidates.extend(sorted(comparisons_dir.glob("*.json")))
+    legacy = store.path / "comparison.json"
+    if legacy.exists():
+        candidates.append(legacy)
+    return candidates[-1] if candidates else None
 
 
 def generate_report(store: RunStore, analysis: dict[str, Any] | None = None) -> tuple[str, str]:

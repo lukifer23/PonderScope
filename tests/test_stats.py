@@ -67,8 +67,13 @@ def test_classify_effect_comparable():
     assert classify_effect(delta, 1.0) == "comparable"
 
 
-def test_classify_effect_missing_noise_is_insufficient():
+def test_classify_effect_missing_noise_excluding_zero_is_ci_only():
     delta = {"mean": 5.0, "lo": 1.0, "hi": 9.0, "excludes_zero": True}
+    assert classify_effect(delta, None) == "ci_only"
+
+
+def test_classify_effect_missing_noise_including_zero_is_insufficient():
+    delta = {"mean": 0.1, "lo": -1.0, "hi": 1.0, "excludes_zero": False}
     assert classify_effect(delta, None) == "insufficient_data"
 
 

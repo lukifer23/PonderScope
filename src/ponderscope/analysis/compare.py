@@ -24,13 +24,19 @@ from typing import Any
 import numpy as np
 
 from ..evidence.run import RunStore
-from .analyze import natural_final_status_of
+from .analyze import (
+    _is_generation_termination,
+    _is_reasoning_closure,
+    _time_to_closure,
+    natural_final_status_of,
+)
 from .stats import (
     classify_effect,
     combine_noise_scales,
     group_values_by_task,
     paired_cluster_bootstrap_delta,
 )
+from .survival import rmst_delta_clustered
 
 
 def _conditional_accuracy(r: dict[str, Any]) -> float | None:
@@ -103,6 +109,64 @@ _PACK_FIELDS = (
 )
 
 _MISSING = object()
+
+# Model fields whose change is intrinsic to a same-source precision/quantization
+# contrast: the executable representation changes while the upstream source
+# artifact (repo, revision, source weight/tokenizer/template hashes) does not.
+_WEIGHT_REPRESENTATION_FIELDS = frozenset(
+    {
+        "representation",
+        "precision",
+        "quantization",
+        "quantization_bits",
+        "quantization_group_size",
+        "variant_weight_files",
+        "conversion",
+    }
+)
+# Fields that identify the upstream source artifact itself.
+_SOURCE_IDENTITY_FIELDS = frozenset(
+    {
+        "repo_id",
+        "revision",
+        "weight_files",
+        "tokenizer_files",
+        "chat_template_sha256",
+    }
+)
+
+
+def classify_contrast(
+    diff: dict[str, Any],
+    *,
+    model_changed: list[str],
+    runtime_changed: list[str],
+    decoding_changed: list[str],
+) -> tuple[str, list[str]]:
+    """Classify the requested contrast by hypothesis, not by raw field count.
+
+    Returns ``(label, changed_fields)``. A same-source BF16-to-Q4 contrast is
+    ``weight_representation`` even though several model metadata fields change
+    together (precision, quantization, bits, group size, variant weight hashes,
+    conversion), because those all describe one controlled manipulation. A
+    changed source revision/tokenizer/template is a *different source model*, not
+    a weight-representation contrast, and is labelled accordingly.
+    """
+    model_fields = {k.split(".", 1)[1] for k in model_changed}
+    source_changed = sorted(model_fields & _SOURCE_IDENTITY_FIELDS)
+    if source_changed:
+        return "different_source_model", source_changed
+    if model_fields and not runtime_changed and model_fields <= _WEIGHT_REPRESENTATION_FIELDS:
+        return "weight_representation", sorted(model_fields)
+    if model_fields and runtime_changed:
+        return "confounded_model_runtime", sorted(model_fields)
+    if model_fields:
+        return "model_other", sorted(model_fields)
+    if runtime_changed:
+        return "runtime_hardware", sorted(k.split(".", 1)[1] for k in runtime_changed)
+    if decoding_changed:
+        return "decoding", sorted(k.split(".", 1)[1] for k in decoding_changed)
+    return "same_deployment", []
 
 
 def _key(r: dict[str, Any]) -> tuple:
@@ -214,6 +278,25 @@ def assess_comparison(
     spec_changed = {k.split(".", 1)[1] for k in diff["changed"] if k.startswith("spec.")}
     pack_changed = {k.split(".", 1)[1] for k in diff["changed"] if k.startswith("task_pack.")}
 
+    contrast, contrast_fields = classify_contrast(
+        diff,
+        model_changed=model_changed,
+        runtime_changed=runtime_changed,
+        decoding_changed=decoding_changed,
+    )
+
+    # Same repo+revision but different source weight/tokenizer/template hashes is
+    # inconsistent provenance: the source artifact must be immutable, so this is
+    # never a clean same-source contrast.
+    same_repo = "model.repo_id" not in diff["changed"]
+    same_revision = "model.revision" not in diff["changed"]
+    inconsistent_source = sorted(set(contrast_fields) & _SOURCE_IDENTITY_FIELDS)
+    if same_repo and same_revision and inconsistent_source:
+        reasons.append(
+            "source-artifact contents differ at the same repo/revision "
+            f"(inconsistent provenance): {inconsistent_source}"
+        )
+
     if model_changed and runtime_changed:
         reasons.append("both model-artifact and runtime/hardware changed simultaneously")
     if len(runtime_changed) > 1:
@@ -245,6 +328,8 @@ def assess_comparison(
     return {
         "clean": not reasons,
         "reasons": reasons,
+        "contrast": contrast,
+        "contrast_changed_fields": contrast_fields,
         "model_changed": model_changed,
         "runtime_changed": runtime_changed,
         "decoding_changed": decoding_changed,
@@ -277,6 +362,46 @@ def _noise_scale(run: RunStore, metric: str, mode: str) -> float | None:
     if not stds:
         return None
     return float(np.mean(stds))
+
+
+def _rmst_section(
+    run_a: RunStore,
+    run_b: RunStore,
+    keys: list[tuple],
+    *,
+    n_resamples: int,
+    seed: int,
+) -> dict[str, Any]:
+    """Task-clustered bootstrap of the censor-aware RMST difference A - B.
+
+    Reported separately for the primary endpoint (native reasoning closure) and
+    the secondary endpoint (EOS generation termination). Positive favors A.
+    """
+    matched_tasks = {k[0] for k in keys}
+    tau = float(run_a.manifest.get("spec", {}).get("max_tokens") or 0)
+    out: dict[str, Any] = {"tau": tau or None, "endpoints": {}}
+    if not tau or not matched_tasks:
+        return out
+
+    def _by_task(run: RunStore, event_key: Any) -> dict[str, list[tuple[float, bool]]]:
+        by_task: dict[str, list[tuple[float, bool]]] = defaultdict(list)
+        for r in run.read_traces():
+            if r["task_id"] in matched_tasks:
+                by_task[r["task_id"]].append((_time_to_closure(r), bool(event_key(r))))
+        return dict(by_task)
+
+    for label, event_key in (
+        ("reasoning_closure", _is_reasoning_closure),
+        ("generation_termination", _is_generation_termination),
+    ):
+        out["endpoints"][label] = rmst_delta_clustered(
+            _by_task(run_a, event_key),
+            _by_task(run_b, event_key),
+            tau=tau,
+            n_resamples=n_resamples,
+            seed=seed,
+        )
+    return out
 
 
 def compare_configs(
@@ -330,6 +455,7 @@ def compare_configs(
         "n_matched_tasks": len({k[0] for k in keys}),
         "configuration_diff": diff,
         "validity": validity,
+        "contrast": validity["contrast"],
         "exploratory": bool(not validity["clean"] and allow_confounded),
         "metrics": {},
     }
@@ -352,10 +478,18 @@ def compare_configs(
             "noise_scale_b": noise_b,
             "noise_scale": noise,
             "classification": classify_effect(delta, noise),
+            "noise_scale_note": (
+                None
+                if noise is not None
+                else "no within-(task,seed) technical repeats; within-deployment noise "
+                "is not estimable — uncertainty is the task-clustered bootstrap only"
+            ),
             "summary_a": _brief([x for values in a_vals.values() for x in values]),
             "summary_b": _brief([x for values in b_vals.values() for x in values]),
             "estimable": bool(a_vals and b_vals),
         }
+
+    result["rmst"] = _rmst_section(run_a, run_b, keys, n_resamples=n_resamples, seed=seed)
 
     probes_a = run_a.read_probes()
     probes_b = run_b.read_probes()

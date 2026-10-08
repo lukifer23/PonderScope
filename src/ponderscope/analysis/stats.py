@@ -89,7 +89,12 @@ def paired_bootstrap_delta(
 def classify_effect(delta: dict[str, Any], noise_scale: float | None) -> str:
     """Classify a paired delta against a within-configuration noise scale.
 
-    - insufficient_data: no usable point estimate or no noise estimate at all.
+    - insufficient_data: no usable point estimate, or no noise estimate *and* the
+      cluster-bootstrap CI includes zero.
+    - ci_only: no within-deployment noise estimate is available (e.g. one
+      execution per stochastic draw), but the task-clustered bootstrap CI
+      excludes zero. This is explicitly NOT a noise-floor-calibrated claim; the
+      uncertainty is the cluster bootstrap alone.
     - below_noise: CI includes zero, or point effect is within one noise scale.
     - comparable: effect exceeds noise but is not clearly larger (<= 2x noise).
     - clearly_larger: CI excludes zero and |mean| > 2x noise scale.
@@ -98,7 +103,7 @@ def classify_effect(delta: dict[str, Any], noise_scale: float | None) -> str:
     if mean is None:
         return "insufficient_data"
     if noise_scale is None:
-        return "insufficient_data"
+        return "ci_only" if delta.get("excludes_zero") else "insufficient_data"
     if not delta.get("excludes_zero"):
         return "below_noise"
     if noise_scale <= 0:

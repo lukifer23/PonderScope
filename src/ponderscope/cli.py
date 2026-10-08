@@ -160,11 +160,26 @@ def _cmd_compare(args: argparse.Namespace) -> int:
     atomic_write_json(out_path, comparison)
     print(f"compared {a.deployment_id} vs {b.deployment_id} [{args.mode}]")
     print(f"  written: {out_path}")
+    validity = comparison["validity"]
+    print(
+        f"  contrast: {comparison.get('contrast')} "
+        f"(changed: {validity.get('contrast_changed_fields')})"
+    )
     if comparison.get("refused"):
-        print(f"  REFUSED (confounded/under-specified): {comparison['validity']['reasons']}")
+        print("  REFUSED: requested contrast is confounded or under-specified.")
+        for reason in validity["reasons"]:
+            print(f"    - {reason}")
+        print("  expected: controlled dimensions identical; only the manipulated dimension differs")
+        print(
+            "  correct by aligning the listed fields, or pass the matching "
+            "*_intentional flag, or use --allow-confounded for a labelled "
+            "exploratory run"
+        )
         return 1
     if comparison.get("exploratory"):
         print("  EXPLORATORY / CONFOUNDED (override applied)")
+        for reason in validity["reasons"]:
+            print(f"    - {reason}")
     print(
         f"  matched trials={comparison['n_matched_trials']} tasks={comparison['n_matched_tasks']}"
     )
@@ -173,6 +188,14 @@ def _cmd_compare(args: argparse.Namespace) -> int:
         print(
             f"  {metric:<26} delta={d.get('mean')} ci=[{d.get('lo')}, {d.get('hi')}] "
             f"noise={m['noise_scale']} -> {m['classification']}"
+        )
+    rmst = comparison.get("rmst", {}).get("endpoints", {})
+    for endpoint, m in rmst.items():
+        if m.get("mean") is None:
+            continue
+        print(
+            f"  rmst[{endpoint}] delta={m.get('mean')} ci=[{m.get('lo')}, {m.get('hi')}] "
+            f"clusters={m.get('n_clusters')}"
         )
     return 0
 
