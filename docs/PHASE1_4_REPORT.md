@@ -14,8 +14,10 @@ DISTINGUISHABLE** at this sample size; the speed/memory advantage is large.
 
 - Starting `main` SHA: `906c8b4590b0b13e3b42b17293558b770c8a474e` (matched
   `origin/main`; clean worktree; CI green).
-- Ending `main` SHA at this report: `3518f17ebb51343962248979a7389ebd6a0f4d0d`
-  (pushed to `origin/main`). No history rewritten; no feature branch; no Docker;
+- The results below were produced by the Phase 1.5 analysis code; the corrected
+  full comparison is committed in `97c38b8` (research) and the narrative in
+  `2bb0716` (docs). The earlier `3518f17` referenced by the first draft predated
+  the corrected estimator. No history rewritten; no feature branch; no Docker;
   no mock model results.
 - Baseline gates on the starting SHA: `ruff check`, `ruff format --check`,
   `mypy src`, `pytest` (173 tests), `git diff --check` all pass.
@@ -106,8 +108,22 @@ seals verified.
 
 Secondary: reasoning tokens −117.5 [−307.9, +63.4]; total tokens −134.0; wall time
 −79.6 s (≈3.4× faster); 41.7 vs 13.4 tok/s (≈3.1×); repeated-4gram +0.013 (CI
-includes 0); MLX peak 2.56 vs 8.5 GB. Family closures: arith 5/6 vs 6/6, order
-5/6 vs 6/6, sm 6/6 vs 5/6, path 3/6 vs 2/6, logic 0/6 vs 0/6.
+includes 0); MLX peak 2.56 vs 8.5 GB.
+
+Family reconciliation (n=6/family; native closures and EOS are **distinct**):
+
+| family | Q4 closures | Q4 EOS | BF16 closures | BF16 EOS |
+|---|---|---|---|---|
+| arith | 6/6 | 5/6 | 6/6 | 6/6 |
+| order | 6/6 | 5/6 | 6/6 | 6/6 |
+| sm | 6/6 | 6/6 | 6/6 | 5/6 |
+| path | 3/6 | 3/6 | 2/6 | 2/6 |
+| logic | 0/6 | 0/6 | 0/6 | 0/6 |
+| **total** | **21/30** | **19/30** | **20/30** | **19/30** |
+
+> Correction (Phase 1.6): an earlier draft listed Q4 `arith 5/6, order 5/6` as
+> closures; those were EOS counts. Native closures are 21/30 (Q4) and 20/30
+> (BF16). `docs/RESULTS.md` and the generated report carry the corrected table.
 
 **Conclusion:** the reasoning-behavior effect is **not distinguishable** at this
 size; the practical speed/memory advantage is large. A larger independent-task

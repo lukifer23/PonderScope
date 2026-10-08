@@ -218,6 +218,17 @@
         "status:censored": 9,
         "missing_answer": 9
       },
+      "categories": {
+        "n": 30,
+        "native_reasoning_closures": 21,
+        "eos_terminations": 19,
+        "censored": 9,
+        "terminated_no_closure": 0,
+        "unparseable": 0,
+        "errors": 0,
+        "observed_answers": 21,
+        "correct_answers": 19
+      },
       "per_family": {
         "arith": {
           "n": 6,
@@ -239,7 +250,18 @@
             "unparseable_rate": 0.0,
             "answer_observation_rate": 1.0
           },
-          "reasoning_tokens_mean": 843.8333333333334
+          "reasoning_tokens_mean": 843.8333333333334,
+          "categories": {
+            "n": 6,
+            "native_reasoning_closures": 6,
+            "eos_terminations": 5,
+            "censored": 0,
+            "terminated_no_closure": 0,
+            "unparseable": 0,
+            "errors": 0,
+            "observed_answers": 6,
+            "correct_answers": 5
+          }
         },
         "logic": {
           "n": 6,
@@ -261,7 +283,18 @@
             "unparseable_rate": 0.0,
             "answer_observation_rate": 0.0
           },
-          "reasoning_tokens_mean": 2048.0
+          "reasoning_tokens_mean": 2048.0,
+          "categories": {
+            "n": 6,
+            "native_reasoning_closures": 0,
+            "eos_terminations": 0,
+            "censored": 6,
+            "terminated_no_closure": 0,
+            "unparseable": 0,
+            "errors": 0,
+            "observed_answers": 0,
+            "correct_answers": 0
+          }
         },
         "order": {
           "n": 6,
@@ -283,7 +316,18 @@
             "unparseable_rate": 0.0,
             "answer_observation_rate": 1.0
           },
-          "reasoning_tokens_mean": 982.5
+          "reasoning_tokens_mean": 982.5,
+          "categories": {
+            "n": 6,
+            "native_reasoning_closures": 6,
+            "eos_terminations": 5,
+            "censored": 0,
+            "terminated_no_closure": 0,
+            "unparseable": 0,
+            "errors": 0,
+            "observed_answers": 6,
+            "correct_answers": 5
+          }
         },
         "path": {
           "n": 6,
@@ -305,7 +349,18 @@
             "unparseable_rate": 0.0,
             "answer_observation_rate": 0.5
           },
-          "reasoning_tokens_mean": 1537.6666666666667
+          "reasoning_tokens_mean": 1537.6666666666667,
+          "categories": {
+            "n": 6,
+            "native_reasoning_closures": 3,
+            "eos_terminations": 3,
+            "censored": 3,
+            "terminated_no_closure": 0,
+            "unparseable": 0,
+            "errors": 0,
+            "observed_answers": 3,
+            "correct_answers": 3
+          }
         },
         "sm": {
           "n": 6,
@@ -327,7 +382,18 @@
             "unparseable_rate": 0.0,
             "answer_observation_rate": 1.0
           },
-          "reasoning_tokens_mean": 841.0
+          "reasoning_tokens_mean": 841.0,
+          "categories": {
+            "n": 6,
+            "native_reasoning_closures": 6,
+            "eos_terminations": 6,
+            "censored": 0,
+            "terminated_no_closure": 0,
+            "unparseable": 0,
+            "errors": 0,
+            "observed_answers": 6,
+            "correct_answers": 6
+          }
         }
       }
     }
@@ -257532,6 +257598,7 @@
   },
   "evidence_verified": true,
   "publication_grade": true,
+  "analysis_class": "publication_grade",
   "verification": {
     "path": "runs/20261008T225839Z-phase1-4-4b-q4-calibration-q4-full-dep-4f8e7958df4f",
     "run_id": "20261008T225839Z-phase1-4-4b-q4-calibration-q4-full-dep-4f8e7958df4f",

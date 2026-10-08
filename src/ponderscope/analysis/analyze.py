@@ -175,6 +175,29 @@ def _budget_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _category_counts(records: list[dict[str, Any]]) -> dict[str, int]:
+    """Explicit, reconcilable termination/outcome categories for a record set.
+
+    Kept separate so a report can never label EOS terminations as native
+    reasoning closures. ``native_reasoning_closures`` is the primary endpoint;
+    ``eos_terminations`` is the secondary endpoint.
+    """
+    statuses = [natural_final_status_of(r) for r in records]
+    return {
+        "n": len(records),
+        "native_reasoning_closures": sum(
+            1 for r in records if r["termination"].get("think_end_reached")
+        ),
+        "eos_terminations": sum(1 for r in records if r["termination"].get("terminated_by_eos")),
+        "censored": sum(1 for s in statuses if s == "censored"),
+        "terminated_no_closure": sum(1 for s in statuses if s == "terminated_no_closure"),
+        "unparseable": sum(1 for s in statuses if s == "unparseable"),
+        "errors": sum(1 for s in statuses if s == "error"),
+        "observed_answers": sum(1 for r in records if r["answer_normalized"] is not None),
+        "correct_answers": sum(1 for r in records if r["correct"]),
+    }
+
+
 def _config_summary(condition_id: str, records: list[dict[str, Any]]) -> dict[str, Any]:
     families: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for r in records:
@@ -211,12 +234,14 @@ def _config_summary(condition_id: str, records: list[dict[str, Any]]) -> dict[st
         ),
         "text_repeat_ratio": summarize([r["metrics"]["text_repeat_ratio"] for r in records]),
         "termination": _termination_counts(records),
+        "categories": _category_counts(records),
         "per_family": {
             fam: {
                 "n": len(rs),
                 "success_at_budget": _accuracy_macro(rs),
                 "outcomes": _budget_metrics(rs),
                 "reasoning_tokens_mean": summarize([r["reasoning_tokens"] for r in rs])["mean"],
+                "categories": _category_counts(rs),
             }
             for fam, rs in sorted(families.items())
         },

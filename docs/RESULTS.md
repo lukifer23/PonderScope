@@ -53,7 +53,7 @@ structural task ids identical). 7/10 native closures, success 0.60, RMST(2048)
 
 Run `runs/20261008T225839Z-phase1-4-4b-q4-calibration-q4-full-dep-4f8e7958df4f`
 (30 stochastic draws, seeds {0,1,2}, 10 tasks, `verify` PASS, publication-grade).
-Comparison `…/comparisons/202608T232827Z-…-sampled.json`: contrast
+Comparison `…/comparisons/20261008T232827Z-…-sampled.json`: contrast
 `weight_representation`, **complete** population (30/30 matched, 0 duplicates),
 both seals verified.
 
@@ -73,8 +73,24 @@ unambiguous: 41.7 vs 13.4 tok/s (≈3.1×), 33.0 vs 112.6 s per generation (≈3
 TTFT 286 vs 417 ms, MLX peak 2.56 vs 8.5 GB.
 
 Secondary: reasoning tokens −117.5 [−307.9, +63.4]; repeated-4gram fraction
-+0.013 (CI includes 0); family closures arith 5/6 vs 6/6, order 5/6 vs 6/6,
-sm 6/6 vs 5/6, path 3/6 vs 2/6, **logic 0/6 vs 0/6**.
++0.013 (CI includes 0).
+
+Family reconciliation (n=6/family; native closures vs EOS are **distinct**):
+
+| family | Q4 closures | Q4 EOS | BF16 closures | BF16 EOS |
+|---|---|---|---|---|
+| arith | 6/6 | 5/6 | 6/6 | 6/6 |
+| order | 6/6 | 5/6 | 6/6 | 6/6 |
+| sm | 6/6 | 6/6 | 6/6 | 5/6 |
+| path | 3/6 | 3/6 | 2/6 | 2/6 |
+| logic | 0/6 | 0/6 | 0/6 | 0/6 |
+| **total** | **21/30** | **19/30** | **20/30** | **19/30** |
+
+> Correction (Phase 1.6): an earlier draft of this page and of
+> `PHASE1_4_REPORT.md` listed Q4 `arith 5/6, order 5/6` as *closures*; those are
+> the EOS counts. The native-closure totals are 21/30 (Q4) and 20/30 (BF16). The
+> generated report's "Family reconciliation" table carries explicit closure and
+> EOS columns; totals reconcile with the aggregate.
 
 **Interpretation:** at n=10 tasks / 30 draws, Q4 does not measurably change
 native reasoning closure or time-to-closure, while it is substantially faster and

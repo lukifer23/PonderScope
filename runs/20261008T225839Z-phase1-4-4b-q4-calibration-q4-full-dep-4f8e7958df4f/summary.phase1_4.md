@@ -106,22 +106,11 @@ _Generated from saved evidence; no numbers are hand-entered._
 |---|---|---|---|---|---|---|
 | cond-f5e762d3078f | 0.6333 | 0.6333 | 0.3 | 0 | 0 | 1 |
 
-## Family reconciliation (closures vs EOS are distinct)
-
-| condition | family | n | native closures | EOS | censored | no-closure | unparseable | errors | observed answers | correct answers |
-|---|---|---|---|---|---|---|---|---|---|---|
-| cond-f5e762d3078f | **ALL** | 30 | 21 | 19 | 9 | 0 | 0 | 0 | 21 | 19 |
-| cond-f5e762d3078f | arith | 6 | 6 | 5 | 0 | 0 | 0 | 0 | 6 | 5 |
-| cond-f5e762d3078f | logic | 6 | 0 | 0 | 6 | 0 | 0 | 0 | 0 | 0 |
-| cond-f5e762d3078f | order | 6 | 6 | 5 | 0 | 0 | 0 | 0 | 6 | 5 |
-| cond-f5e762d3078f | path | 6 | 3 | 3 | 3 | 0 | 0 | 0 | 3 | 3 |
-| cond-f5e762d3078f | sm | 6 | 6 | 6 | 0 | 0 | 0 | 0 | 6 | 6 |
-
 ## Censor-aware time-to-closure (Kaplan-Meier / RMST)
 
 - observation horizon tau: 2048.0 tokens (an observation horizon, not a natural stopping threshold)
 - event: PRIMARY: native think-end reasoning closure observed
-- secondary event: SECONDARY: EOS observed (generation termination), timed at the terminal token, independent of the reasoning-closure time
+- secondary event: SECONDARY: EOS observed (generation termination)
 - analysis unit: unique stochastic draws (same-seed technical repeats collapsed)
 
 | condition | exec | draws (used) | events | censored | median tokens | RMST(tau) |
@@ -132,7 +121,7 @@ Secondary endpoint (generation termination via EOS):
 
 | condition | events | censored | median tokens | RMST(tau) |
 |---|---|---|---|---|
-| cond-f5e762d3078f | 19 | 11 | 1157 | 1378 |
+| cond-f5e762d3078f | 19 | 11 | 920 | 1262 |
 
 ### cond-f5e762d3078f by family
 | family | n | events | censored | median | RMST |
@@ -154,40 +143,6 @@ Descriptive loop structure with an explicitly documented onset rule; not a valid
 ## Prefix probes / trajectory states
 
 - no probes in this run
-
-## Deployment comparison
-
-- A: Qwen/Qwen3.5-4B@851bf6e806ef (derived, bfloat16 quant=mlx-affine4bit g64) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-b7a30758909a dep=dep-4f8e7958df4f
-- B: Qwen/Qwen3.5-4B@851bf6e806ef (original, bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-9b6f9b40b789 dep=dep-e1c20569173a
-- contrast: `weight_representation` (changed: ['conversion', 'quantization', 'quantization_bits', 'quantization_group_size', 'representation', 'variant_weight_files'])
-- matched observations (sampled): 30
-- trial population: matched=30 expected A=None B=None observed A=30 B=30 missing A=None B=None unexpected A=None B=None duplicates A=0 B=0 ambiguous A=None B=None complete=True
-- evidence seal verified: A=True B=True
-
-| metric | delta (A−B) | 95% CI | noise A | noise B | combined | classification |
-|---|---|---|---|---|---|---|
-| success_at_budget | 0 | [-0.1333, 0.1333] | — | — | — | insufficient_data |
-| reasoning_closure_rate | 0.03333 | [0, 0.1] | — | — | — | insufficient_data |
-| completion_rate | 0 | [-0.1333, 0.1333] | — | — | — | insufficient_data |
-| censored_rate | -0.03333 | [-0.1, 0] | — | — | — | insufficient_data |
-| error_rate | 0 | [0, 0] | — | — | — | insufficient_data |
-| answer_observation_rate | 0.06667 | [0, 0.1667] | — | — | — | insufficient_data |
-| conditional_accuracy_given_completed | 0 | [0, 0] | — | — | — | insufficient_data |
-| reasoning_tokens | -117.5 | [-307.9, 63.42] | — | — | — | insufficient_data |
-| total_tokens | -134 | [-328.3, 44.78] | — | — | — | insufficient_data |
-| wall_ms | -7.962e+04 | [-9.431e+04, -6.151e+04] | — | — | — | ci_only |
-| repeated_ngram_fraction_4 | 0.01273 | [-0.009161, 0.03277] | — | — | — | insufficient_data |
-| unique_token_ratio | -0.001396 | [-0.01136, 0.009993] | — | — | — | insufficient_data |
-| longest_run_length | -0.03333 | [-0.2, 0.1] | — | — | — | insufficient_data |
-| terminated_by_eos | 0 | [-0.1333, 0.1333] | — | — | — | insufficient_data |
-| missing_answer | -0.03333 | [-0.1, 0] | — | — | — | insufficient_data |
-
-Censor-aware RMST difference (A−B), tau=2048.0:
-
-| endpoint | delta RMST | 95% CI | clusters | excludes zero |
-|---|---|---|---|---|
-| reasoning_closure | -117.3 | [-307.9, 63.46] | 10 | False |
-| generation_termination | -133.4 | [-328.3, 44.78] | 10 | False |
 
 ## Limitations
 - Single model revision on a single machine; results do not generalize to other weights or hardware.

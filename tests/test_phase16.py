@@ -337,3 +337,39 @@ def test_missing_condition_metadata_fails():
     except KeyError:
         return
     raise AssertionError("expected a fail-closed KeyError for missing condition metadata")
+
+
+# --------------------------------------------------------------------------- #
+# Stage 4: family reconciliation (closures vs EOS never conflated)
+# --------------------------------------------------------------------------- #
+def test_family_categories_reconcile(tmp_path, fake_backend, monkeypatch):
+    from ponderscope.analysis import analyze_run
+
+    a = _real_run(tmp_path, fake_backend, monkeypatch, "a", [0, 1])
+    analysis = analyze_run(a.store)
+    c = next(iter(analysis["configs"].values()))
+    cats = c["categories"]
+    fam = c["per_family"]
+    assert sum(d["n"] for d in fam.values()) == cats["n"]
+    assert (
+        sum(d["categories"]["native_reasoning_closures"] for d in fam.values())
+        == cats["native_reasoning_closures"]
+    )
+    assert (
+        sum(d["categories"]["eos_terminations"] for d in fam.values()) == cats["eos_terminations"]
+    )
+    assert sum(d["categories"]["censored"] for d in fam.values()) == cats["censored"]
+    assert sum(d["categories"]["correct_answers"] for d in fam.values()) == cats["correct_answers"]
+
+
+def test_report_labels_closures_and_eos_distinctly(tmp_path, fake_backend, monkeypatch):
+    from ponderscope.analysis import analyze_run, generate_report
+
+    a = _real_run(tmp_path, fake_backend, monkeypatch, "a", [0, 1])
+    analysis = analyze_run(a.store)
+    md, _ = generate_report(a.store, analysis)
+    assert "native closures" in md and "| EOS |" in md
+    assert "closures vs EOS are distinct" in md
+    # The ALL row must carry the native-closure count, not the EOS count.
+    c = next(iter(analysis["configs"].values()))
+    assert c["categories"]["native_reasoning_closures"] == 4  # FakeBackend always closes

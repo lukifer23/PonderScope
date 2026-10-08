@@ -1,7 +1,7 @@
 {
   "interpretation": "phase1.5",
   "time_definition": "reasoning closure = tokens through native think-end; termination = tokens through terminal/EOS token",
-  "note": "Derived reanalysis under phase1.5 statistical semantics; the committed on-disk analysis.json (phase1.4/1.3b) is preserved unchanged; raw evidence untouched.",
+  "note": "Derived reanalysis under phase1.5 semantics; committed on-disk analysis.json preserved; raw evidence untouched.",
   "run_id": "20261006T024435Z-calibration-4b-generated-history-api-dep-e1c20569173a",
   "source_artifact_id": "src-6209ef70e318",
   "weight_variant_id": "wvar-9b6f9b40b789",
@@ -21,5 +21,72 @@
     "median_tokens": 1718.0,
     "rmst": 1511.9333333333336
   },
-  "n_competing_terminated_no_closure": 0
+  "categories": {
+    "n": 30,
+    "native_reasoning_closures": 20,
+    "eos_terminations": 19,
+    "censored": 10,
+    "terminated_no_closure": 0,
+    "unparseable": 0,
+    "errors": 0,
+    "observed_answers": 19,
+    "correct_answers": 19
+  },
+  "per_family_categories": {
+    "arith": {
+      "n": 6,
+      "native_reasoning_closures": 6,
+      "eos_terminations": 6,
+      "censored": 0,
+      "terminated_no_closure": 0,
+      "unparseable": 0,
+      "errors": 0,
+      "observed_answers": 6,
+      "correct_answers": 6
+    },
+    "logic": {
+      "n": 6,
+      "native_reasoning_closures": 0,
+      "eos_terminations": 0,
+      "censored": 6,
+      "terminated_no_closure": 0,
+      "unparseable": 0,
+      "errors": 0,
+      "observed_answers": 0,
+      "correct_answers": 0
+    },
+    "order": {
+      "n": 6,
+      "native_reasoning_closures": 6,
+      "eos_terminations": 6,
+      "censored": 0,
+      "terminated_no_closure": 0,
+      "unparseable": 0,
+      "errors": 0,
+      "observed_answers": 6,
+      "correct_answers": 6
+    },
+    "path": {
+      "n": 6,
+      "native_reasoning_closures": 2,
+      "eos_terminations": 2,
+      "censored": 4,
+      "terminated_no_closure": 0,
+      "unparseable": 0,
+      "errors": 0,
+      "observed_answers": 2,
+      "correct_answers": 2
+    },
+    "sm": {
+      "n": 6,
+      "native_reasoning_closures": 6,
+      "eos_terminations": 5,
+      "censored": 0,
+      "terminated_no_closure": 0,
+      "unparseable": 0,
+      "errors": 0,
+      "observed_answers": 5,
+      "correct_answers": 5
+    }
+  }
 }
