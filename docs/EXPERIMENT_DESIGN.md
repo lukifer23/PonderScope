@@ -75,10 +75,14 @@ sizes are compared to the within-condition noise and classified
 full source→derived lineage, and is validated by a real load audit
 (`ponderscope variant-audit`). The controlled Q4 artifact is derived from the
 identical pinned BF16 source revision, so BF16 and Q4 share one
-`source_artifact_id` and differ only in `weight_variant_id`. The 10-draw pilot is
-clean; the full 30-draw contrast is the next experiment. Because the primary
+`source_artifact_id` and differ only in `weight_variant_id`. The full 30-draw
+contrast is **MEASURED** (complete 30/30 matched pairs): the reasoning-behavior
+effect is not distinguishable (closure +0.033 [0.00, 0.10]; RMST −117.3
+[−307.9, +63.5]) while Q4 is ≈3.1× faster and ≈3.3× smaller. Because the primary
 design has one execution per stochastic draw, within-deployment noise is not
-estimable and uncertainty is the task-clustered bootstrap only.
+estimable and uncertainty is the task-clustered bootstrap only. Paired RMST uses
+matched stochastic draws only; the EOS termination endpoint is timed independently
+of reasoning closure.
 
 ## Capture settings
 

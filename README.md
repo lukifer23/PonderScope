@@ -92,11 +92,16 @@ All are properties of *this* machine/runtime/deployment, not of a model alone.
 - The `logic` family remains censored 6/6 at 2048 even at 4B.
 - `Qwen/Qwen3.5-0.8B` is a **termination-stress** deployment under every tested
   policy; retained as a stress model, not a baseline.
-- **Controlled Q4 derived from the same revision** loads and produces valid
-  native reasoning traces (see `docs/PHASE1_4_REPORT.md`). The 10-draw pilot was
-  operational and clean; the full 30-draw BF16-vs-Q4 contrast is **pending**.
-- The central deployment-drift comparison (BF16 vs controlled Q4 of the same
-  revision) is **NOT YET TESTED** as a powered result.
+- **Controlled Q4 derived from the same revision** (affine 4-bit/group-64,
+  4.503 bits/weight) loads and produces valid native reasoning traces. The full
+  30-draw BF16-vs-Q4 contrast is **MEASURED**: native reasoning closure +0.033
+  (95% CI [0.00, 0.10]), RMST to closure −117.3 tokens ([−307.9, +63.5]),
+  success-at-budget 0.633 in both arms — **not distinguishable** at this size —
+  while Q4 is ≈3.1× faster (41.7 vs 13.4 tok/s) and ≈3.3× smaller (2.56 vs
+  8.5 GB peak). See `docs/PHASE1_4_REPORT.md` and `docs/RESULTS.md`.
+- The central deployment-drift comparison is now **MEASURED but inconclusive**
+  on reasoning behavior; a larger independent-task replication is the next
+  experiment.
 
 ## 8. Model / runtime support
 

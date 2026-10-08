@@ -149,16 +149,23 @@ silently.
 
 ## Censor-aware time-to-closure
 
-Termination is a right-censored time-to-event problem. The event is a natural
-native think-end/reasoning closure; the time is generated tokens **through the
-native think-end token** (`reasoning_tokens + 1`) — never the total generated
-tokens, which would include the post-closure final-answer channel; an observation
-that reaches `max_tokens` first is censored at that horizon. The analysis reports
-Kaplan-Meier closure survival (with number at risk, events, and censored), median
-tokens-to-closure when estimable, and restricted mean survival time (RMST) up to
-an explicit common horizon `tau`. `max_tokens` is an observation horizon, never a
-natural stopping threshold. This endpoint is versioned `phase1.4`; the historical
-total-token definition is preserved in the Phase 1.1–1.3B derived artifacts.
+Termination is a right-censored time-to-event problem with **two distinct
+endpoints and two distinct time axes**. The *primary* event is a natural native
+think-end/reasoning closure, timed at the think-end token (`reasoning_tokens + 1`)
+— never the total generated tokens, which would include the post-closure
+final-answer channel. The *secondary* event is generation termination via EOS,
+timed independently at the terminal token (`total_tokens`). An observation that
+reaches `max_tokens` first is censored at that horizon. The analysis reports
+Kaplan-Meier survival (with number at risk, events, and censored), median
+time-to-event when estimable, and restricted mean survival time (RMST) up to an
+explicit common horizon `tau`. `max_tokens` is an observation horizon, never a
+natural stopping threshold. A generation that stops via EOS without ever emitting
+the native close is a **competing terminal event** for closure; the primary
+closure KM is cause-specific and currently treats it as noninformative censoring
+at the terminal token, with the count reported per condition
+(`n_competing_terminated_no_closure`) as a documented limitation. The event-time
+semantics are versioned `phase1.4`/`phase1.5`; historical definitions are
+preserved in earlier derived artifacts.
 
 ## Metrics
 
@@ -220,9 +227,19 @@ backend load audit are excluded from scientific identity.
 The statistical unit is the **task**, not the generation. Repeated seeds/repeats
 from one task are not independent samples, so accuracy CIs and paired deltas use
 a **task-clustered** bootstrap that preserves within-task seed/repeat structure;
-the estimand is stated explicitly. Every metric's delta is classified
-`below_noise` / `comparable` / `clearly_larger` / `insufficient_data` using the
-combined within-deployment noise of **both** compared conditions, not one side.
+the estimand is stated explicitly. Paired estimates use only **matched
+stochastic draws**: the canonical trial key is
+`(presentation_id, task_id, mode, seed, repeat)`, matched executions collapse to
+one observation per `(presentation, task, seed)` iff token-identical, and
+ambiguous draws are excluded. Unmatched seeds/repeats and other decoding modes
+cannot enter a paired survival estimate. A comparison reports its trial
+population (expected/observed/matched/unmatched/missing/duplicate per arm) and is
+**refused by default when incomplete** (`require_complete`), and refuses when
+either run's evidence seal does not verify unless an explicit exploratory
+override is given. Every metric's delta is classified
+`below_noise` / `comparable` / `clearly_larger` / `ci_only` / `insufficient_data`
+using the combined within-deployment noise of **both** compared conditions, not
+one side.
 
 Before any metric is compared, a canonical configuration-difference report lists
 identical / changed / missing provenance fields, and the requested contrast is

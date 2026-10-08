@@ -46,22 +46,52 @@ T=0.6. See `PHASE1_3_REPORT.md` and `PHASE1_3B_REPORT.md`.
 **Pilot (10 draws, seed 0):** run
 `runs/20261008T224538Z-phase1-4-4b-q4-pilot-q4-pilot-dep-4f8e7958df4f`
 (`verify` PASS; condition `cond-f5e762d3078f` identical to BF16; presentation and
-structural task ids identical).
+structural task ids identical). 7/10 native closures, success 0.60, RMST(2048)
+1195.2, median 833.
 
-| metric | Q4 pilot | BF16 seed-0 pilot |
+### Full 30-draw primary contrast (MEASURED)
+
+Run `runs/20261008T225839Z-phase1-4-4b-q4-calibration-q4-full-dep-4f8e7958df4f`
+(30 stochastic draws, seeds {0,1,2}, 10 tasks, `verify` PASS, publication-grade).
+Comparison `…/comparisons/202608T232827Z-…-sampled.json`: contrast
+`weight_representation`, **complete** population (30/30 matched, 0 duplicates),
+both seals verified.
+
+Primary outcomes (task-clustered paired bootstrap, 30 matched pairs, 10 clusters):
+
+| outcome | delta (Q4 − BF16) | 95% CI | excludes zero |
+|---|---|---|---|
+| native reasoning closure rate | +0.033 | [0.00, 0.10] | no |
+| RMST to reasoning closure (2048) | −117.3 | [−307.9, +63.5] | no |
+| success_at_budget | 0.000 | [−0.133, 0.133] | no |
+| EOS termination rate | 0.000 | [−0.133, 0.133] | no |
+| censoring rate | −0.033 | [−0.10, 0.00] | no |
+
+No primary interval excludes zero: **the reasoning-behavior effect is not
+distinguishable at this sample size.** The practical advantage is large and
+unambiguous: 41.7 vs 13.4 tok/s (≈3.1×), 33.0 vs 112.6 s per generation (≈3.4×),
+TTFT 286 vs 417 ms, MLX peak 2.56 vs 8.5 GB.
+
+Secondary: reasoning tokens −117.5 [−307.9, +63.4]; repeated-4gram fraction
++0.013 (CI includes 0); family closures arith 5/6 vs 6/6, order 5/6 vs 6/6,
+sm 6/6 vs 5/6, path 3/6 vs 2/6, **logic 0/6 vs 0/6**.
+
+**Interpretation:** at n=10 tasks / 30 draws, Q4 does not measurably change
+native reasoning closure or time-to-closure, while it is substantially faster and
+smaller. The study is underpowered for a small effect; a larger independent-task
+replication is required before any generalization.
+
+### Reanalysis / version history
+
+| version | change | effect |
 |---|---|---|
-| native closures | 7/10 | 7/10 |
-| success_at_budget | 0.60 | — |
-| conditional accuracy | 1.0 | — |
-| RMST(2048) | 1195.2 | — |
-| median tokens-to-closure | 833 | — |
+| phase1.2 | censored ≠ incorrect; seal ordering | corrected smoke interpretation |
+| phase1.3b | closure ≠ EOS; stochastic-draw units | Stage A reanalysis |
+| phase1.4 | event time = native think-end index | baseline RMST 1511.9→1368.8, median 1718→1569 |
+| phase1.5 | matched-draw paired RMST; independent EOS time; competing events; evidence gating | pilot/full comparisons regenerated |
 
-Pilot-vs-BF16-seed0 comparison classified the contrast as **`weight_representation`**
-(clean). RMST reasoning-closure delta −202.9 (95% CI [−422, +9.7], 10 clusters) is
-**not distinguishable** at this size. This is an operational validation, not a
-powered conclusion.
-
-**Full 30-draw contrast: PENDING.** Not yet run.
+Historical derived artifacts (`analysis.json`, old comparison files) are
+preserved; reanalyses are written as separate `phase1_4`/`phase1_5` artifacts.
 
 ## Historical smoke experiment
 
@@ -91,10 +121,12 @@ the original tables are in the "Historical smoke detail" section below.
 ## Pending research questions
 
 1. Does the controlled Q4 change native reasoning closure or time-to-closure on
-   the full 10-task calibration population? *(PENDING — full contrast not run.)*
+   the full 10-task calibration population? **MEASURED, not distinguishable**
+   (closure +0.033 [0.00, 0.10]; RMST −117.3 [−307.9, +63.5]).
 2. Is the change uniform across task families? *(family-level claims are not
    supported by 2 tasks/family.)*
-3. Does the effect survive a larger independent-task replication?
+3. Does the effect survive a larger independent-task replication? *(recommended
+   next experiment.)*
 4. Do early-stopping policies transfer across deployments? *(NOT YET TESTED.)*
 
 ---

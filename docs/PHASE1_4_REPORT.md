@@ -1,11 +1,14 @@
-# PonderScope Phase 1.4 report — controlled quantization drift (implementation + pilot)
+# PonderScope Phase 1.4 report — controlled quantization drift
 
-**Status.** Implementation complete; Q4 conversion and a 10-draw pilot are
-**MEASURED**. The full 30-draw BF16-vs-Q4 contrast is **PENDING** (gated on
-operator approval) and is reported here as **NOT YET TESTED**.
+**Status.** Implementation complete; the controlled Q4 artifact is
+**LIVE VALIDATED**; the 10-draw pilot and the **full 30-draw BF16-vs-Q4 contrast
+are MEASURED**. A Phase 1.5 pass corrected two statistical defects (matched-draw
+paired RMST; independent EOS event time), added evidence-verification gating, and
+regenerated the comparisons. The primary reasoning-behavior effect is **NOT
+DISTINGUISHABLE** at this sample size; the speed/memory advantage is large.
 
-**Classification key.** `IMPLEMENTED`, `LIVE VALIDATED`, `MEASURED`, `HYPOTHESIS`,
-`UNSUPPORTED`, `NOT YET TESTED`.
+**Classification key.** `IMPLEMENTED`, `LIVE VALIDATED`, `MEASURED`, `CORRECTED`,
+`INCONCLUSIVE`, `NOT ESTIMABLE`, `NOT YET TESTED`.
 
 ## Starting state
 
@@ -85,65 +88,108 @@ RMST reasoning-closure delta **−202.9 tokens** (95% CI [−422, +9.7], 10 clus
 — the interval includes zero, so the effect is **not distinguishable** at this
 size.
 
+## Full 30-draw primary contrast (MEASURED)
+
+Run `runs/20261008T225839Z-phase1-4-4b-q4-calibration-q4-full-dep-4f8e7958df4f`:
+30 stochastic draws, seeds {0,1,2}, 10 tasks, `verify` PASS, publication-grade.
+Comparison `comparisons/20261008T232827Z-dep-4f8e7958df4f-vs-dep-e1c20569173a-sampled.json`:
+contrast `weight_representation`, **complete** (30/30 matched, 0 duplicates), both
+seals verified.
+
+| primary outcome | delta (Q4 − BF16) | 95% CI | excludes zero |
+|---|---|---|---|
+| native reasoning closure rate | +0.033 | [0.00, 0.10] | no |
+| RMST to reasoning closure (2048) | −117.3 | [−307.9, +63.5] | no |
+| success_at_budget | 0.000 | [−0.133, 0.133] | no |
+| EOS termination rate | 0.000 | [−0.133, 0.133] | no |
+| censoring rate | −0.033 | [−0.10, 0.00] | no |
+
+Secondary: reasoning tokens −117.5 [−307.9, +63.4]; total tokens −134.0; wall time
+−79.6 s (≈3.4× faster); 41.7 vs 13.4 tok/s (≈3.1×); repeated-4gram +0.013 (CI
+includes 0); MLX peak 2.56 vs 8.5 GB. Family closures: arith 5/6 vs 6/6, order
+5/6 vs 6/6, sm 6/6 vs 5/6, path 3/6 vs 2/6, logic 0/6 vs 0/6.
+
+**Conclusion:** the reasoning-behavior effect is **not distinguishable** at this
+size; the practical speed/memory advantage is large. A larger independent-task
+replication is required before generalizing.
+
+## Phase 1.5 corrections (CORRECTED)
+
+| # | defect | evidence | fix |
+|---|---|---|---|
+| A | paired RMST used unmatched observations (all seeds/repeats/modes for matched tasks) | pilot-vs-full reasoning RMST −175.7 → −202.9 when restricted | canonical trial key (presentation+task+mode+seed+repeat); matched-draw collapse; trial-population accounting; `require_complete` |
+| B | EOS termination used reasoning-closure event time | full-run termination RMST −112.2 → −133.4 | independent `_time_to_termination` (terminal token); competing-event count; documented cause-specific estimand |
+| — | `analyze`/`compare` did not gate on seal verification | code path | verify-by-default; `--allow-unverified`/`--allow-confounded` produce labelled exploratory results |
+
+Interpretation versioned `phase1.5`. The historical `analysis.json` files and the
+previous comparison file are preserved; new comparisons and
+`runs/phase1_5-reanalysis-{baseline,pilot}.json` are added alongside.
+
 ## Corrected baseline reference (MEASURED, derived reanalysis)
 
-`runs/phase1_4-reanalysis-4b-baseline.json` (sha256 `78a9e080a8bcb5b9…`): the
-frozen 4B baseline raw traces reanalyzed under `phase1.4`.
+`runs/phase1_5-reanalysis-baseline.json`: the frozen 4B BF16 baseline raw traces
+reanalyzed under phase1.5.
 
-| endpoint | RMST(2048) | median tokens-to-closure |
+| endpoint | RMST(2048) | median tokens |
 |---|---|---|
-| historical (total generated tokens) | 1511.9 | 1718 |
-| corrected (native think-end index) | 1368.8 | 1569 |
+| reasoning closure (native think-end index) | 1368.8 | 1569 |
+| generation termination (EOS terminal token) | 1511.9 | 1718 |
 
-The on-disk `analysis.json` (phase1.3b) is preserved unchanged; raw evidence is
-untouched.
+The on-disk `analysis.json` (phase1.3b/1.4) is preserved unchanged; raw evidence
+is untouched.
 
 ## Tests / quality gates
 
 - `ruff check`, `ruff format --check`, `mypy src`, `git diff --check`: pass.
-- `pytest`: **231 tests** pass (58 added in Phase 1.4: termination matrix,
-  endpoint correction, analytic KM/RMST fixtures, structural-evidence tamper
-  cases, comparison negative matrix, conversion/provenance/lineage, spec-vs-
-  baseline match).
-- All 8 previously valid sealed runs still `verify` PASS; the historical Phase 1.1
-  smoke still FAILs as documented.
+- `pytest`: **249 tests** pass (Phase 1.4 added 58; Phase 1.5 added 17:
+  seed-subset invariance, repeat collapse, 30/30 completeness, duplicate/missing
+  accounting, event-time matrix, evidence gating).
+- All valid sealed runs still `verify` PASS; the historical Phase 1.1 smoke still
+  FAILs as documented.
 
 ## Live experiments actually executed
 
 1. Q4 conversion of the pinned 4B source (~9 s; 2.2 GB output).
 2. `variant-audit` real load + 32-token generation (load 1.9 s).
-3. 10-draw Q4 pilot (5 m 24 s, 10 generations, exit 0).
-4. Pilot-vs-BF16-seed0 comparison.
+3. 10-draw Q4 pilot (5 m 24 s).
+4. **Full 30-draw Q4 run (16 m 34 s, exit 0, verify PASS).**
+5. Corrected pilot and full comparisons (reanalysis only; no model execution).
 
 ## Claims supported by the evidence
 
 - A controlled MLX affine Q4 artifact can be produced from the pinned source
-  revision with verifiable lineage, and it loads and produces valid native
-  reasoning traces. (`MEASURED`)
-- The Q4 pilot is operationally clean: matching presentations, matching
-  condition id, sealed and verifiable evidence. (`MEASURED`)
-- The Q4 pilot's reasoning-closure count (7/10) matches the BF16 seed-0 pilot
-  (7/10). (`MEASURED`, single seed, descriptive)
+  revision with verifiable lineage and loads with valid native reasoning traces.
+  (`LIVE VALIDATED`)
+- The full Q4 contrast is complete and publication-grade: matching presentations,
+  matching condition id, sealed and verified evidence, 30/30 matched pairs.
+  (`MEASURED`)
+- Q4 is ≈3.1× faster and uses ≈3.3× less peak memory with no measurable change in
+  success-at-budget (0.633 both). (`MEASURED`)
+- The native reasoning-closure rate (+0.033) and RMST (−117.3) do not exclude zero.
+  (`INCONCLUSIVE` / `NOT ESTIMABLE` at this power)
 
 ## Claims NOT supported by the evidence
 
-- Any claim that Q4 changes reasoning behavior: **NOT ESTIMABLE / NOT YET TESTED**
-  at the full 30-draw level.
-- Any family-specific effect: with 2 tasks per family, family claims are not
-  supported.
+- Any claim that Q4 materially changes reasoning behavior: **NOT DISTINGUISHABLE**
+  at this sample size.
+- Any family-specific effect: 2 tasks/family is insufficient.
 - Any causal or policy-transfer claim: **NOT YET TESTED**.
-- The pilot delta does not exclude zero; it is not a "significant" drift.
+- Treating the degenerate `conditional_accuracy` CI [0, 0] as proof of exact
+  equivalence: all completed answers were correct in both arms, so the contrast
+  is uninformative there.
 
 ## Statistical uncertainty
 
-The primary design has one execution per stochastic draw, so within-deployment
-noise is **not estimable**; uncertainty is the task-clustered bootstrap only
-(`ci_only`). The pilot has 10 clusters and is underpowered by design.
+One execution per stochastic draw ⇒ within-deployment noise **not estimable**;
+uncertainty is the task-clustered bootstrap only (`ci_only`). 10 task clusters and
+30 draws are underpowered for a small effect.
 
 ## Remaining limitations
 
-Single machine, single runtime, one model family, small procedural tasks, and
-family-level censoring (`logic`). See `docs/LIMITATIONS.md`.
+Single machine, single runtime, one model family, small procedural tasks,
+family-level censoring (`logic` 0/6 in both arms), and competing EOS-without-close
+events treated as noninformative censoring for the primary closure KM. See
+`docs/LIMITATIONS.md`.
 
 ## Documentation changes
 
@@ -151,10 +197,16 @@ New: `docs/ARCHITECTURE.md`, `docs/REPRODUCIBILITY.md`, `docs/QUICKSTART.md`,
 `docs/ROADMAP.md`, this report. Rewritten: `README.md` (18 sections),
 `docs/RESULTS.md` (current-results index, historical smoke preserved).
 `METHODOLOGY.md`/`EXPERIMENT_DESIGN.md`/`LIMITATIONS.md` updated for the phase1.4
-endpoint and quantization provenance.
+endpoint, phase1.5 matched-draw RMST and competing events, and quantization
+provenance.
 
 ## Recommended next experiment
 
-Run the **full 30-draw BF16-vs-controlled-Q4 contrast**
-(`specs/phase1_4-4b-q4-calibration.json`) on the frozen protocol and report
-task-clustered CIs and censor-aware RMST. This is the single next experiment.
+**A larger independent-task replication of the same BF16/Q4 contrast.** The
+primary effect is not distinguishable at 10 tasks / 30 draws while the
+speed/memory advantage is large; the scientifically decisive question is now
+whether the small reasoning-behavior effect is real, which requires more
+independent tasks (not more seeds or repeats). A targeted secondary follow-up is
+a longer-horizon sensitivity run for the `logic` family (censored 0/6 in both
+arms at 2048). Early-stopping policy transfer remains **NOT YET TESTED** and is
+not justified yet.

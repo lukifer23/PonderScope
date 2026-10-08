@@ -16,9 +16,13 @@ changes its reasoning behavior.** It does not drift into generic benchmarking.
 
 ## Immediate next experiment
 
-The **full 30-draw BF16-vs-controlled-Q4 contrast** on the frozen protocol
-(`specs/phase1_4-4b-q4-calibration.json`), reported with task-clustered CIs and
-censor-aware RMST. This is the single next experiment.
+A **larger independent-task replication** of the same BF16-vs-controlled-Q4
+contrast. The full 30-draw contrast is complete: the reasoning-behavior effect is
+**not distinguishable** (closure +0.033 [0.00, 0.10]; RMST −117.3
+[−307.9, +63.5]) while Q4 is ≈3.1× faster and ≈3.3× smaller. The decisive open
+question is whether the small effect is real, which requires more **independent
+tasks**, not more seeds or repeats. A targeted secondary follow-up is a
+longer-horizon sensitivity run for the censored `logic` family.
 
 ## Later, only after the above is established
 

@@ -69,6 +69,16 @@ PonderScope is intentionally conservative about what its evidence supports.
 - When a design has one execution per stochastic draw, within-deployment noise is
   **not estimable**; such effects are classified `ci_only` (task-clustered
   bootstrap only) and are never described as noise-floor-calibrated.
+- A degenerate bootstrap interval of `[0, 0]` from a uniformly observed metric
+  (e.g. all completed answers correct) is **not** proof of exact equivalence; it
+  reflects an absence of estimable variation.
+- The primary closure survival is **cause-specific**: an EOS that terminates
+  generation without a native close is a competing terminal event but is currently
+  treated as noninformative censoring. The count is reported per condition; a full
+  competing-risk cumulative-incidence analysis is **NOT YET TESTED**.
+- Paired comparisons use only matched stochastic draws; a comparison with an
+  incomplete or unbalanced trial population is refused by default
+  (`require_complete`) rather than silently pooling unmatched observations.
 
 ## Not yet implemented / tested
 

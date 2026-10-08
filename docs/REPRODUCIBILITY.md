@@ -101,10 +101,16 @@ matching deployment/source/variant ids). It fails closed and never repairs.
 uv run ponderscope analyze --run runs/<id> --report
 uv run ponderscope report  --run runs/<id>
 uv run ponderscope compare --a runs/<id> --b runs/<id> --mode sampled
+uv run ponderscope compare --a runs/<id> --b runs/<id> --mode sampled --require-complete
 ```
 
 `compare` writes `runs/<a>/comparisons/<timestamp>-…json` and prints the contrast
-classification; a confounded contrast is refused with reasons.
+classification and trial population; a confounded, unverified, or incomplete
+contrast is refused with reasons. `analyze` and `compare` verify the evidence seal
+by default and refuse an unverifiable run; pass `--allow-unverified` (and
+`--allow-confounded` for a confounded contrast) only for a labelled
+exploratory/forensic analysis. `--require-complete` refuses a comparison whose
+matched-trial population is incomplete.
 
 ## Known sources of nondeterminism
 
