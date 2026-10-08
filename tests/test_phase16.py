@@ -464,3 +464,15 @@ def test_preflight_reports_population_and_expected_generations(tmp_path):
     assert report["checks"]["compute_estimate"]["total_hours"] == round(60 * 33.0 / 3600, 2)
     # fake source is not cached -> advisory problem, but checks still reported
     assert report["checks"]["source_cache"]["available"] is False
+
+
+def test_cross_study_does_not_pool(tmp_path, fake_backend, monkeypatch):
+    from ponderscope.analysis.compare import cross_study_summary
+
+    a = _real_run(tmp_path, fake_backend, monkeypatch, "a", [0, 1])
+    b = _real_run(tmp_path, fake_backend, monkeypatch, "b", [0, 1])
+    cmp = compare_configs(a.store, b.store, mode="sampled", n_resamples=100)
+    summary = cross_study_summary([cmp, cmp], labels=["calibration", "replication"])
+    assert summary["pooled"] is None
+    assert [s["label"] for s in summary["studies"]] == ["calibration", "replication"]
+    assert summary["studies"][0]["n_matched_pairs"] == 4

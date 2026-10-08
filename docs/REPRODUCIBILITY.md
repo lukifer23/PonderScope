@@ -129,6 +129,25 @@ matched-trial population is incomplete.
 - `verify` FAIL means the raw evidence or final manifest is inconsistent.
 - A sealed run with no local raw traces cannot be analyzed (analyze refuses).
 
+## Evidence bundles (external reproducibility)
+
+Raw traces are excluded from Git, so a sealed run's committed hashes and
+summaries do not by themselves let an external researcher regenerate every
+analysis. Build a deterministic, verified bundle instead:
+
+```bash
+uv run ponderscope bundle --run runs/<id> --output <path>.tar.gz
+```
+
+`bundle` refuses to bundle a run whose evidence seal does not verify, includes
+the final manifest, seal, environment, tasks, raw traces/probes, derived
+analysis/summaries, and the exact spec, and is byte-deterministic (sorted
+members, zeroed metadata, gzip mtime=0). A local bundle of the Phase 1.4 full
+Q4 run was produced at
+`models/bundles/q4-full-20261008T225839Z-phase1-4-4b-q4-calibration-q4-full-dep-4f8e7958df4f.tar.gz`
+(sha256 `a9327e3d119fd561…`, 985,486 bytes, 10 members). Bundles are **not**
+uploaded publicly without explicit approval.
+
 ## Interruption and resume
 
 There is **no silent resume**. Raw evidence is create-once and the manifest is

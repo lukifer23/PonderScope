@@ -588,6 +588,25 @@ def _cmd_preflight(args: argparse.Namespace) -> int:
     return 0 if report["ok"] else 1
 
 
+def _cmd_cross_study(args: argparse.Namespace) -> int:
+    from .analysis.compare import cross_study_summary
+
+    comparisons = [json.loads(Path(p).read_text()) for p in args.comparison]
+    summary = cross_study_summary(comparisons, labels=args.label or None)
+    if args.json:
+        print(json.dumps(summary, indent=2, default=str))
+        return 0
+    print("cross-study summary (no pooling):")
+    for s in summary["studies"]:
+        print(
+            f"  {s['label']}: contrast={s['contrast']} pairs={s['n_matched_pairs']} "
+            f"complete={s['population_complete']} publication_grade={s['publication_grade']} "
+            f"closure_delta={s['closure_rate_delta']} rmst_delta={s['rmst_reasoning_delta']}"
+        )
+    print(f"  pooled: {summary['pooled']} ({summary['pooling_note']})")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ponderscope", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -779,6 +798,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--compare-n-per-family", type=int, default=2)
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_preflight)
+
+    p = sub.add_parser(
+        "cross-study",
+        help="summarize multiple comparisons side by side without pooling",
+    )
+    p.add_argument("--comparison", nargs="+", required=True, help="comparison JSON paths")
+    p.add_argument("--label", nargs="*", default=None)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_cross_study)
 
     return parser
 

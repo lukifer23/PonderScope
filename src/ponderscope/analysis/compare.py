@@ -680,6 +680,46 @@ def _trial_population(
     }
 
 
+def cross_study_summary(
+    comparisons: list[dict[str, Any]],
+    labels: list[str] | None = None,
+) -> dict[str, Any]:
+    """Summarize several comparisons side by side **without pooling**.
+
+    Distinguishes the original calibration contrast from an independent
+    replication. Pooled estimates are deliberately withheld: the two populations
+    are distinct and pooling would require an explicit, justified method.
+    """
+    studies: list[dict[str, Any]] = []
+    for i, c in enumerate(comparisons):
+        rmst = c.get("rmst", {}).get("endpoints", {}).get("reasoning_closure", {})
+        closure = c.get("metrics", {}).get("reasoning_closure_rate", {}).get("delta", {})
+        studies.append(
+            {
+                "label": labels[i] if labels and i < len(labels) else f"study-{i}",
+                "deployment_a": c.get("deployment_a"),
+                "deployment_b": c.get("deployment_b"),
+                "contrast": c.get("contrast"),
+                "n_matched_pairs": c.get("n_matched_trials"),
+                "population_complete": c.get("trial_population", {}).get("complete"),
+                "publication_grade": c.get("publication_grade"),
+                "closure_rate_delta": closure.get("mean"),
+                "closure_rate_ci": [closure.get("lo"), closure.get("hi")],
+                "rmst_reasoning_delta": rmst.get("mean"),
+                "rmst_reasoning_ci": [rmst.get("lo"), rmst.get("hi")],
+            }
+        )
+    return {
+        "studies": studies,
+        "pooled": None,
+        "pooling_note": (
+            "Calibration and replication populations are distinct; pooled estimates "
+            "are not produced automatically and would require an explicit, "
+            "justified method."
+        ),
+    }
+
+
 def compare_configs(
     run_a: RunStore,
     run_b: RunStore,
