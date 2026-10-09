@@ -1,0 +1,891 @@
+{
+  "mode": "sampled",
+  "artifact_a": "wvar-b7a30758909a",
+  "artifact_b": "wvar-9b6f9b40b789",
+  "deployment_a": "dep-4f8e7958df4f",
+  "deployment_b": "dep-e1c20569173a",
+  "prompt_policy_a": "pp-v1",
+  "prompt_policy_b": "pp-v1",
+  "description_a": "Qwen/Qwen3.5-4B@851bf6e806ef (derived, bfloat16 quant=mlx-affine4bit g64) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-b7a30758909a dep=dep-4f8e7958df4f",
+  "description_b": "Qwen/Qwen3.5-4B@851bf6e806ef (original, bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-9b6f9b40b789 dep=dep-e1c20569173a",
+  "n_matched_trials": 5,
+  "n_matched_tasks": 5,
+  "trial_population": {
+    "mode": "sampled",
+    "expected_known": true,
+    "expected_trials_a": 5,
+    "expected_trials_b": 5,
+    "expected_meta_a": {
+      "n_conditions": 1,
+      "n_presentations": 5,
+      "n_seeds": 1,
+      "repeats_per_seed": 1,
+      "expected_total": 5
+    },
+    "expected_meta_b": {
+      "n_conditions": 1,
+      "n_presentations": 5,
+      "n_seeds": 1,
+      "repeats_per_seed": 1,
+      "expected_total": 5
+    },
+    "observed_executions_a": 5,
+    "observed_executions_b": 5,
+    "unique_trial_keys_a": 5,
+    "unique_trial_keys_b": 5,
+    "matched_pairs": 5,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "missing_trials_a": 0,
+    "missing_trials_b": 0,
+    "unexpected_trials_a": 0,
+    "unexpected_trials_b": 0,
+    "missing_examples_a": [],
+    "missing_examples_b": [],
+    "unexpected_examples_a": [],
+    "unexpected_examples_b": [],
+    "duplicate_keys_a": 0,
+    "duplicate_keys_b": 0,
+    "ambiguous_draws_a": 0,
+    "ambiguous_draws_b": 0,
+    "presentation_population_match_a": true,
+    "presentation_population_match_b": true,
+    "complete": true,
+    "incomplete_reasons": [],
+    "note": "complete requires each arm's observed trial identities to equal its declared population (presentation x condition_id x seed x repeat), no duplicate identities, no ambiguous same-seed repeats, matching presentation populations, and a matched intersection equal to the declared population."
+  },
+  "verification": {
+    "checked": true,
+    "a": {
+      "path": "runs/20261009T000607Z-phase1-6-replication-pilot-q4-pilot-dep-4f8e7958df4f",
+      "run_id": "20261009T000607Z-phase1-6-replication-pilot-q4-pilot-dep-4f8e7958df4f",
+      "pass": true,
+      "errors": [],
+      "checks": [
+        {
+          "file": "environment.json",
+          "expected": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+          "actual": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+          "ok": true
+        },
+        {
+          "file": "tasks.jsonl",
+          "expected": "0d18121833c1f1dcbcd7282630da6f2bb8666833f5d2d54a52bfcf241859b73e",
+          "actual": "0d18121833c1f1dcbcd7282630da6f2bb8666833f5d2d54a52bfcf241859b73e",
+          "ok": true
+        },
+        {
+          "file": "traces.jsonl",
+          "expected": "19c7b29bee19aa04eceb15806e4aa4073c73feb569c88d9b4777c369dcc5b761",
+          "actual": "19c7b29bee19aa04eceb15806e4aa4073c73feb569c88d9b4777c369dcc5b761",
+          "ok": true
+        },
+        {
+          "file": "probes.jsonl",
+          "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "actual": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ok": true
+        },
+        {
+          "file": "manifest.json",
+          "expected": "7395675bfd3e5152a7ac8944fd862a5791313db69f9ed16488e2f48b6fee446a",
+          "actual": "7395675bfd3e5152a7ac8944fd862a5791313db69f9ed16488e2f48b6fee446a",
+          "ok": true
+        }
+      ],
+      "structural_ok": true,
+      "structural_errors": []
+    },
+    "b": {
+      "path": "runs/20261008T235847Z-phase1-6-replication-pilot-bf16-pilot-dep-e1c20569173a",
+      "run_id": "20261008T235847Z-phase1-6-replication-pilot-bf16-pilot-dep-e1c20569173a",
+      "pass": true,
+      "errors": [],
+      "checks": [
+        {
+          "file": "environment.json",
+          "expected": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+          "actual": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+          "ok": true
+        },
+        {
+          "file": "tasks.jsonl",
+          "expected": "0d18121833c1f1dcbcd7282630da6f2bb8666833f5d2d54a52bfcf241859b73e",
+          "actual": "0d18121833c1f1dcbcd7282630da6f2bb8666833f5d2d54a52bfcf241859b73e",
+          "ok": true
+        },
+        {
+          "file": "traces.jsonl",
+          "expected": "2b3506c29ce8e2c3a586fddd9b5b1395aa5998ee3083bd347b591110fd57c0a1",
+          "actual": "2b3506c29ce8e2c3a586fddd9b5b1395aa5998ee3083bd347b591110fd57c0a1",
+          "ok": true
+        },
+        {
+          "file": "probes.jsonl",
+          "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "actual": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ok": true
+        },
+        {
+          "file": "manifest.json",
+          "expected": "cdaa8e1b98dcbfbc0628054d5732da82a0724fa78a19f7309891c7f7729352c7",
+          "actual": "cdaa8e1b98dcbfbc0628054d5732da82a0724fa78a19f7309891c7f7729352c7",
+          "ok": true
+        }
+      ],
+      "structural_ok": true,
+      "structural_errors": []
+    }
+  },
+  "configuration_diff": {
+    "identical": {
+      "model.repo_id": "Qwen/Qwen3.5-4B",
+      "model.revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "model.precision": "bfloat16",
+      "model.weight_files": {
+        "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+        "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+      },
+      "model.tokenizer_files": {
+        "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+        "tokenizer_config.json": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+        "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003",
+        "merges.txt": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d",
+        "chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+      },
+      "model.chat_template_sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715",
+      "runtime.runtime": "mlx-lm",
+      "runtime.runtime_version": "0.32.0",
+      "runtime.backend": "mlx-metal",
+      "runtime.hardware": "Apple M3 Pro",
+      "runtime.os": "Darwin 27.2.0",
+      "runtime.python_version": "3.12.12",
+      "runtime.device": "Device(gpu, 0)",
+      "spec.prompt_policy": "pp-v1",
+      "spec.max_tokens": 2048,
+      "spec.capture_level": "minimal",
+      "spec.task_pack": "tasks-v1",
+      "spec.split": "dev",
+      "spec.task_seed": 0,
+      "spec.n_per_family": 1,
+      "spec.model_policy": "qwen35-4b-thinking-api-v1",
+      "task_pack.pack_version": "tasks-v1",
+      "task_pack.generator_version": "generator-v1",
+      "task_pack.task_ids_sha256": "cca34706048b62ac7a246468b0d3c36eaf87064211210e58a779616862f4e20a",
+      "task_pack.presentation_ids_sha256": "0996d98e2acc4ced306f753b5bfc1042517a6271aa3a87b7a3e500505c1e4602",
+      "decoding.conditions": [
+        {
+          "mode": "sampled",
+          "max_tokens": 2048,
+          "temperature": 1.0,
+          "top_p": 0.95,
+          "top_k": 20,
+          "min_p": 0.0,
+          "presence_penalty": 1.5,
+          "stop_on_eos": true,
+          "context": {
+            "enable_thinking": true
+          },
+          "presence_scope": "generated_history"
+        }
+      ]
+    },
+    "changed": {
+      "model.representation": {
+        "a": "derived",
+        "b": "original"
+      },
+      "model.quantization": {
+        "a": "mlx-affine",
+        "b": null
+      },
+      "model.quantization_bits": {
+        "a": 4,
+        "b": null
+      },
+      "model.quantization_group_size": {
+        "a": 64,
+        "b": null
+      },
+      "model.variant_weight_files": {
+        "a": {
+          "model.safetensors": "d58b87def677c7b3235e21cdca85289a162a5ba8949687b9573592e3c74cd477"
+        },
+        "b": {
+          "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+          "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+        }
+      },
+      "model.conversion": {
+        "a": {
+          "tool": "mlx-lm",
+          "tool_version": "0.32.0",
+          "function": "mlx_lm.convert.convert",
+          "params": {
+            "quantize": true,
+            "q_bits": 4,
+            "q_group_size": 64,
+            "q_mode": "affine",
+            "dtype": "bfloat16"
+          }
+        },
+        "b": {}
+      }
+    },
+    "missing": []
+  },
+  "validity": {
+    "clean": true,
+    "reasons": [],
+    "contrast": "weight_representation",
+    "contrast_changed_fields": [
+      "conversion",
+      "quantization",
+      "quantization_bits",
+      "quantization_group_size",
+      "representation",
+      "variant_weight_files"
+    ],
+    "model_changed": [
+      "model.representation",
+      "model.quantization",
+      "model.quantization_bits",
+      "model.quantization_group_size",
+      "model.variant_weight_files",
+      "model.conversion"
+    ],
+    "runtime_changed": [],
+    "decoding_changed": [],
+    "spec_changed": [],
+    "task_pack_changed": [],
+    "presentation_mismatch": false,
+    "n_dimensions_changed": 6,
+    "overrides": {
+      "decoding_intentional": false,
+      "prompt_policy_intentional": false,
+      "horizon_intentional": false,
+      "capture_intentional": false
+    }
+  },
+  "contrast": "weight_representation",
+  "refusal_reasons": [],
+  "overrides_applied": [],
+  "exploratory": false,
+  "metrics": {
+    "success_at_budget": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": -0.2,
+        "lo": -0.6,
+        "hi": 0.0,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 0.6,
+        "std": 0.5477225575051662
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 0.8,
+        "std": 0.44721359549995804
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "reasoning_closure_rate": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": -0.2,
+        "lo": -0.6,
+        "hi": 0.0,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 0.6,
+        "std": 0.5477225575051662
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 0.8,
+        "std": 0.44721359549995804
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "completion_rate": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": -0.2,
+        "lo": -0.6,
+        "hi": 0.0,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 0.6,
+        "std": 0.5477225575051662
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 0.8,
+        "std": 0.44721359549995804
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "censored_rate": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": 0.2,
+        "lo": 0.0,
+        "hi": 0.6,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 0.4,
+        "std": 0.5477225575051662
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 0.2,
+        "std": 0.44721359549995804
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "error_rate": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "answer_observation_rate": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": -0.2,
+        "lo": -0.6,
+        "hi": 0.0,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 0.6,
+        "std": 0.5477225575051662
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 0.8,
+        "std": 0.44721359549995804
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "conditional_accuracy_given_completed": {
+      "delta": {
+        "n_clusters": 3,
+        "n_obs": 7,
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 3,
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "summary_b": {
+        "n": 4,
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "reasoning_tokens": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": 288.0,
+        "lo": -119.8,
+        "hi": 696.159999999998,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 1337.6,
+        "std": 792.4350446566583
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 1049.6,
+        "std": 595.003613434406
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "total_tokens": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": 213.0,
+        "lo": -144.0,
+        "hi": 570.0,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 1430.2,
+        "std": 755.3775215082852
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 1217.2,
+        "std": 548.1310974575334
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "wall_ms": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": -52440.960942000675,
+        "lo": -73819.3779586014,
+        "hi": -35361.140841801534,
+        "excludes_zero": true
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "ci_only",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 34030.21441639867,
+        "std": 18038.99250988113
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 86471.17535839934,
+        "std": 37933.38971167362
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "repeated_ngram_fraction_4": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": -0.06990897047196978,
+        "lo": -0.12399801390518758,
+        "hi": -0.02227637992345014,
+        "excludes_zero": true
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "ci_only",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 0.3095631395167365,
+        "std": 0.12253858126193495
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 0.37947210998870623,
+        "std": 0.13001954665476725
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "unique_token_ratio": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": 0.03670187483316635,
+        "lo": -0.009199786274870603,
+        "hi": 0.10055755387509746,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 0.2589152819262173,
+        "std": 0.07010110946795876
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 0.22221340709305099,
+        "std": 0.04404926699000034
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "longest_run_length": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": 0.2,
+        "lo": 0.0,
+        "hi": 0.6,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 1.8,
+        "std": 0.8366600265340756
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 1.6,
+        "std": 0.8944271909999159
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "terminated_by_eos": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": -0.2,
+        "lo": -0.6,
+        "hi": 0.0,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 0.6,
+        "std": 0.5477225575051662
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 0.8,
+        "std": 0.44721359549995804
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    },
+    "missing_answer": {
+      "delta": {
+        "n_clusters": 5,
+        "n_obs": 10,
+        "mean": 0.2,
+        "lo": 0.0,
+        "hi": 0.6,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 5,
+        "mean": 0.4,
+        "std": 0.5477225575051662
+      },
+      "summary_b": {
+        "n": 5,
+        "mean": 0.2,
+        "std": 0.44721359549995804
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n_draws_a": 5,
+        "n_draws_b": 5,
+        "n_draws_used_a": 5,
+        "n_draws_used_b": 5,
+        "n_executions_a": 5,
+        "n_executions_b": 5,
+        "n_ambiguous_excluded_a": 0,
+        "n_ambiguous_excluded_b": 0
+      }
+    }
+  },
+  "publication_grade": true,
+  "refused": false,
+  "analysis_population": {
+    "unit": "stochastic draw (same-seed technical repeats collapsed)",
+    "n_draws_a": 5,
+    "n_draws_b": 5,
+    "n_draws_used_a": 5,
+    "n_draws_used_b": 5,
+    "n_executions_a": 5,
+    "n_executions_b": 5,
+    "n_ambiguous_excluded_a": 0,
+    "n_ambiguous_excluded_b": 0
+  },
+  "rmst": {
+    "tau": 2048.0,
+    "endpoints": {
+      "reasoning_closure": {
+        "n_clusters": 5,
+        "n_resamples_used": 2000,
+        "point": 287.79999999999995,
+        "mean": 287.72139999999996,
+        "lo": -119.79999999999973,
+        "hi": 695.754999999998,
+        "excludes_zero": false,
+        "tau": 2048.0,
+        "note": "task-clustered bootstrap of RMST(A) - RMST(B); positive favors A.",
+        "a": {
+          "n_draws": 5,
+          "n_executions": 5,
+          "n_ambiguous_draws": 0
+        },
+        "b": {
+          "n_draws": 5,
+          "n_executions": 5,
+          "n_ambiguous_draws": 0
+        }
+      },
+      "generation_termination": {
+        "n_clusters": 5,
+        "n_resamples_used": 2000,
+        "point": 213.0,
+        "mean": 210.78900000000002,
+        "lo": -144.0,
+        "hi": 570.0,
+        "excludes_zero": false,
+        "tau": 2048.0,
+        "note": "task-clustered bootstrap of RMST(A) - RMST(B); positive favors A.",
+        "a": {
+          "n_draws": 5,
+          "n_executions": 5,
+          "n_ambiguous_draws": 0
+        },
+        "b": {
+          "n_draws": 5,
+          "n_executions": 5,
+          "n_ambiguous_draws": 0
+        }
+      }
+    }
+  }
+}
