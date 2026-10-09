@@ -103,8 +103,56 @@ def collapse_to_stochastic_draws(
     return draws
 
 
+def compact_draw(draw: dict[str, Any]) -> dict[str, Any]:
+    """A publication-safe summary of one stochastic draw.
+
+    Contains identity, flags, and per-draw scalar metrics only — never raw token
+    ids, decoded text, prompts, or the full trace record. Raw evidence stays in
+    the immutable run storage and optional verified bundles.
+    """
+    record = draw.get("record")
+    entry: dict[str, Any] = {
+        "stochastic_draw_id": draw["stochastic_draw_id"],
+        "key": draw.get("key"),
+        "task_id": draw["task_id"],
+        "presentation_id": draw.get("presentation_id"),
+        "family": draw.get("family"),
+        "condition_id": draw["condition_id"],
+        "mode": draw["mode"],
+        "seed": draw["seed"],
+        "n_executions": draw["n_executions"],
+        "token_identical": draw["token_identical"],
+        "ambiguous": draw["ambiguous"],
+        "first_token_divergence": draw.get("first_token_divergence"),
+        "execution_trial_ids": draw.get("execution_trial_ids", []),
+        "scalars": None,
+    }
+    if record is not None:
+        loop = record.get("loop") or {}
+        entry["scalars"] = {
+            "correct": record["correct"],
+            "answer_normalized": record.get("answer_normalized"),
+            "natural_final_status": record.get("natural_final_status"),
+            "think_end_reached": record["termination"].get("think_end_reached"),
+            "terminated_by_eos": record["termination"].get("terminated_by_eos"),
+            "reasoning_tokens": record["reasoning_tokens"],
+            "answer_tokens": record["answer_tokens"],
+            "total_tokens": record["total_tokens"],
+            "wall_ms": record["trace"].get("wall_ms"),
+            "tokens_per_sec": record["trace"].get("tokens_per_sec"),
+            "ttft_ms": record["trace"].get("ttft_ms"),
+            "unique_token_ratio": record["metrics"]["unique_token_ratio"],
+            "repeated_ngram_fraction_4": record["metrics"]["repeated_ngram_fraction_4"],
+            "longest_run_length": loop.get("longest_run_length"),
+        }
+    return entry
+
+
 def draw_summary(draws: list[dict[str, Any]]) -> dict[str, Any]:
-    """Counts that expose executions and unique draws separately."""
+    """Counts that expose executions and unique draws separately.
+
+    ``draws`` holds compact per-draw summaries (no raw evidence).
+    """
     ambiguous = [d for d in draws if d["ambiguous"]]
     primary = [d for d in draws if not d["ambiguous"]]
     return {
@@ -113,7 +161,7 @@ def draw_summary(draws: list[dict[str, Any]]) -> dict[str, Any]:
         "n_primary_draws": len(primary),
         "n_ambiguous_draws": len(ambiguous),
         "ambiguous_draw_ids": [d["stochastic_draw_id"] for d in ambiguous],
-        "draws": draws,
+        "draws": [compact_draw(d) for d in draws],
     }
 
 

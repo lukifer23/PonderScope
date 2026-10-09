@@ -361,3 +361,65 @@ def test_ambiguous_draws_excluded_from_primary_but_visible(tmp_path):
     assert summary["n_ambiguous_draws"] == 1
     assert summary["categories"]["n"] == 1
     assert summary["execution_diagnostics"]["n_executions"] == 4
+
+
+# --------------------------------------------------------------------------- #
+# Compact derived analysis (no raw evidence duplication)
+# --------------------------------------------------------------------------- #
+from ponderscope.analysis.draws import compact_draw, draw_summary  # noqa: E402
+
+
+def test_compact_draw_has_no_raw_evidence():
+    draw = {
+        "stochastic_draw_id": "draw-x",
+        "key": ["pres0", "cond-x", 0],
+        "task_id": "task0",
+        "presentation_id": "pres0",
+        "family": "arith",
+        "condition_id": "cond-x",
+        "mode": "sampled",
+        "seed": 0,
+        "n_executions": 1,
+        "token_identical": True,
+        "ambiguous": False,
+        "first_token_divergence": None,
+        "execution_trial_ids": ["trial-x"],
+        "record": _rec("pres0", "task0", "cond-x", 0, 0, [1, 2, 3]),
+    }
+    entry = compact_draw(draw)
+    blob = json.dumps(entry)
+    for forbidden in ("token_ids", '"text"', '"prompt"', "raw_text", "final_raw", "record"):
+        assert forbidden not in blob
+    assert entry["scalars"]["reasoning_tokens"] == 3
+
+
+def test_draw_summary_is_compact():
+    from ponderscope.analysis.draws import collapse_to_stochastic_draws
+
+    records = [_rec("pres0", "task0", "cond-x", 0, 0, [1, 2])]
+    summary = draw_summary(collapse_to_stochastic_draws(records))
+    assert "record" not in json.dumps(summary)
+    assert summary["draws"][0]["scalars"]["reasoning_tokens"] == 2
+
+
+def test_analysis_json_has_no_raw_evidence(tmp_path, fake_backend, monkeypatch):
+    from ponderscope.analysis import analyze_run
+
+    a = _run(tmp_path, fake_backend, monkeypatch, "compact", [0, 1])
+    analyze_run(a.store)
+    text = (a.store.path / "analysis.json").read_text()
+    for forbidden in ("token_ids", '"raw_text"', '"final_raw"', '"prompt"'):
+        assert forbidden not in text
+    assert '"interpretation": "phase1.6"' in text
+
+
+def test_analysis_is_idempotent(tmp_path, fake_backend, monkeypatch):
+    from ponderscope.analysis import analyze_run
+
+    a = _run(tmp_path, fake_backend, monkeypatch, "idem", [0, 1])
+    first = analyze_run(a.store)
+    second = analyze_run(a.store)
+    c1 = next(iter(first["configs"].values()))
+    c2 = next(iter(second["configs"].values()))
+    assert c1["reasoning_tokens"] == c2["reasoning_tokens"]
+    assert c1["categories"] == c2["categories"]
