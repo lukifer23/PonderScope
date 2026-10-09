@@ -1,0 +1,982 @@
+{
+  "mode": "sampled",
+  "artifact_a": "wvar-b7a30758909a",
+  "artifact_b": "wvar-9b6f9b40b789",
+  "deployment_a": "dep-4f8e7958df4f",
+  "deployment_b": "dep-e1c20569173a",
+  "prompt_policy_a": "pp-v1",
+  "prompt_policy_b": "pp-v1",
+  "description_a": "Qwen/Qwen3.5-4B@851bf6e806ef (derived, bfloat16 quant=mlx-affine4bit g64) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-b7a30758909a dep=dep-4f8e7958df4f",
+  "description_b": "Qwen/Qwen3.5-4B@851bf6e806ef (original, bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-9b6f9b40b789 dep=dep-e1c20569173a",
+  "n_matched_trials": 60,
+  "n_matched_tasks": 30,
+  "trial_population": {
+    "mode": "sampled",
+    "expected_known": true,
+    "expected_trials_a": 60,
+    "expected_trials_b": 60,
+    "expected_meta_a": {
+      "n_conditions": 1,
+      "n_presentations": 30,
+      "n_seeds": 2,
+      "repeats_per_seed": 1,
+      "expected_total": 60
+    },
+    "expected_meta_b": {
+      "n_conditions": 1,
+      "n_presentations": 30,
+      "n_seeds": 2,
+      "repeats_per_seed": 1,
+      "expected_total": 60
+    },
+    "observed_executions_a": 60,
+    "observed_executions_b": 60,
+    "unique_trial_keys_a": 60,
+    "unique_trial_keys_b": 60,
+    "matched_pairs": 60,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "missing_trials_a": 0,
+    "missing_trials_b": 0,
+    "unexpected_trials_a": 0,
+    "unexpected_trials_b": 0,
+    "missing_examples_a": [],
+    "missing_examples_b": [],
+    "unexpected_examples_a": [],
+    "unexpected_examples_b": [],
+    "duplicate_keys_a": 0,
+    "duplicate_keys_b": 0,
+    "ambiguous_draws_a": 0,
+    "ambiguous_draws_b": 0,
+    "presentation_population_match_a": true,
+    "presentation_population_match_b": true,
+    "complete": true,
+    "incomplete_reasons": [],
+    "note": "complete requires each arm's observed trial identities to equal its declared population (presentation x condition_id x seed x repeat), no duplicate identities, no ambiguous same-seed repeats, matching presentation populations, and a matched intersection equal to the declared population."
+  },
+  "verification": {
+    "checked": true,
+    "a": {
+      "path": "runs/20261009T025900Z-phase1-6-replication-q4-replication-q4-dep-4f8e7958df4f",
+      "run_id": "20261009T025900Z-phase1-6-replication-q4-replication-q4-dep-4f8e7958df4f",
+      "pass": true,
+      "errors": [],
+      "checks": [
+        {
+          "file": "environment.json",
+          "expected": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+          "actual": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+          "ok": true
+        },
+        {
+          "file": "tasks.jsonl",
+          "expected": "6b1df2b2ce37310613af3d86741799c87146bc96ce63b221db3b513c7c1f79ad",
+          "actual": "6b1df2b2ce37310613af3d86741799c87146bc96ce63b221db3b513c7c1f79ad",
+          "ok": true
+        },
+        {
+          "file": "traces.jsonl",
+          "expected": "0852195bb714fb13e71fa39d85f2ea4a462d92e99f2263425228747274e0e0d1",
+          "actual": "0852195bb714fb13e71fa39d85f2ea4a462d92e99f2263425228747274e0e0d1",
+          "ok": true
+        },
+        {
+          "file": "probes.jsonl",
+          "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "actual": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ok": true
+        },
+        {
+          "file": "manifest.json",
+          "expected": "f600be954a87706b21f4875e7140e3f3bb0d90aa57ec597bc38051a4f7a21674",
+          "actual": "f600be954a87706b21f4875e7140e3f3bb0d90aa57ec597bc38051a4f7a21674",
+          "ok": true
+        }
+      ],
+      "structural_ok": true,
+      "structural_errors": []
+    },
+    "b": {
+      "path": "runs/20261009T005354Z-phase1-6-replication-bf16-replication-bf16-dep-e1c20569173a",
+      "run_id": "20261009T005354Z-phase1-6-replication-bf16-replication-bf16-dep-e1c20569173a",
+      "pass": true,
+      "errors": [],
+      "checks": [
+        {
+          "file": "environment.json",
+          "expected": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+          "actual": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+          "ok": true
+        },
+        {
+          "file": "tasks.jsonl",
+          "expected": "6b1df2b2ce37310613af3d86741799c87146bc96ce63b221db3b513c7c1f79ad",
+          "actual": "6b1df2b2ce37310613af3d86741799c87146bc96ce63b221db3b513c7c1f79ad",
+          "ok": true
+        },
+        {
+          "file": "traces.jsonl",
+          "expected": "8ffa29c19a265a94b40e1409fe27366f63b6e9f835280aa285d1c66a3f69fc4d",
+          "actual": "8ffa29c19a265a94b40e1409fe27366f63b6e9f835280aa285d1c66a3f69fc4d",
+          "ok": true
+        },
+        {
+          "file": "probes.jsonl",
+          "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "actual": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ok": true
+        },
+        {
+          "file": "manifest.json",
+          "expected": "c469f0e3c718286e340fec9e5b220c73cd35fe75c0eed3b2a23fd31eaef92a86",
+          "actual": "c469f0e3c718286e340fec9e5b220c73cd35fe75c0eed3b2a23fd31eaef92a86",
+          "ok": true
+        }
+      ],
+      "structural_ok": true,
+      "structural_errors": []
+    }
+  },
+  "configuration_diff": {
+    "identical": {
+      "model.repo_id": "Qwen/Qwen3.5-4B",
+      "model.revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "model.precision": "bfloat16",
+      "model.weight_files": {
+        "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+        "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+      },
+      "model.tokenizer_files": {
+        "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+        "tokenizer_config.json": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+        "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003",
+        "merges.txt": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d",
+        "chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+      },
+      "model.chat_template_sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715",
+      "runtime.runtime": "mlx-lm",
+      "runtime.runtime_version": "0.32.0",
+      "runtime.backend": "mlx-metal",
+      "runtime.hardware": "Apple M3 Pro",
+      "runtime.os": "Darwin 27.2.0",
+      "runtime.python_version": "3.12.12",
+      "runtime.device": "Device(gpu, 0)",
+      "spec.prompt_policy": "pp-v1",
+      "spec.max_tokens": 2048,
+      "spec.capture_level": "minimal",
+      "spec.task_pack": "tasks-v1",
+      "spec.split": "test",
+      "spec.task_seed": 1729,
+      "spec.n_per_family": 6,
+      "spec.model_policy": "qwen35-4b-thinking-api-v1",
+      "task_pack.pack_version": "tasks-v1",
+      "task_pack.generator_version": "generator-v1",
+      "task_pack.task_ids_sha256": "f8b80c4b2bb379b346d08e4ceb19c1454c226f918399f7245ea3b32a713c04be",
+      "task_pack.presentation_ids_sha256": "105e556860b36fc2423c26cdcf9cfcd46f0ca15f1863810b5c83ce41a413aa40",
+      "decoding.conditions": [
+        {
+          "mode": "sampled",
+          "max_tokens": 2048,
+          "temperature": 1.0,
+          "top_p": 0.95,
+          "top_k": 20,
+          "min_p": 0.0,
+          "presence_penalty": 1.5,
+          "stop_on_eos": true,
+          "context": {
+            "enable_thinking": true
+          },
+          "presence_scope": "generated_history"
+        }
+      ]
+    },
+    "changed": {
+      "model.representation": {
+        "a": "derived",
+        "b": "original"
+      },
+      "model.quantization": {
+        "a": "mlx-affine",
+        "b": null
+      },
+      "model.quantization_bits": {
+        "a": 4,
+        "b": null
+      },
+      "model.quantization_group_size": {
+        "a": 64,
+        "b": null
+      },
+      "model.variant_weight_files": {
+        "a": {
+          "model.safetensors": "d58b87def677c7b3235e21cdca85289a162a5ba8949687b9573592e3c74cd477"
+        },
+        "b": {
+          "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+          "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+        }
+      },
+      "model.conversion": {
+        "a": {
+          "tool": "mlx-lm",
+          "tool_version": "0.32.0",
+          "function": "mlx_lm.convert.convert",
+          "params": {
+            "quantize": true,
+            "q_bits": 4,
+            "q_group_size": 64,
+            "q_mode": "affine",
+            "dtype": "bfloat16"
+          }
+        },
+        "b": {}
+      }
+    },
+    "missing": []
+  },
+  "validity": {
+    "clean": true,
+    "reasons": [],
+    "contrast": "weight_representation",
+    "contrast_changed_fields": [
+      "conversion",
+      "quantization",
+      "quantization_bits",
+      "quantization_group_size",
+      "representation",
+      "variant_weight_files"
+    ],
+    "model_changed": [
+      "model.representation",
+      "model.quantization",
+      "model.quantization_bits",
+      "model.quantization_group_size",
+      "model.variant_weight_files",
+      "model.conversion"
+    ],
+    "runtime_changed": [],
+    "decoding_changed": [],
+    "spec_changed": [],
+    "task_pack_changed": [],
+    "presentation_mismatch": false,
+    "n_dimensions_changed": 6,
+    "overrides": {
+      "decoding_intentional": false,
+      "prompt_policy_intentional": false,
+      "horizon_intentional": false,
+      "capture_intentional": false
+    }
+  },
+  "contrast": "weight_representation",
+  "refusal_reasons": [],
+  "overrides_applied": [],
+  "exploratory": false,
+  "metrics": {
+    "success_at_budget": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": 0.05,
+        "lo": -0.017083333333333308,
+        "hi": 0.13333333333333333,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 0.48333333333333334,
+        "std": 0.5039392842990978
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 0.43333333333333335,
+        "std": 0.49971743428090815
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "reasoning_closure_rate": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": 0.06666666666666667,
+        "lo": -0.03333333333333333,
+        "hi": 0.18333333333333332,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 0.5166666666666667,
+        "std": 0.5039392842990978
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 0.45,
+        "std": 0.501692052213544
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "completion_rate": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": 0.05,
+        "lo": -0.017083333333333308,
+        "hi": 0.13333333333333333,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 0.48333333333333334,
+        "std": 0.5039392842990978
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 0.43333333333333335,
+        "std": 0.49971743428090815
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "censored_rate": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": -0.06666666666666667,
+        "lo": -0.18333333333333332,
+        "hi": 0.03333333333333333,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 0.48333333333333334,
+        "std": 0.5039392842990978
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 0.55,
+        "std": 0.501692052213544
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "error_rate": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "answer_observation_rate": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": 0.06666666666666667,
+        "lo": -0.016666666666666666,
+        "hi": 0.16666666666666666,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 0.5,
+        "std": 0.5042194840896107
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 0.43333333333333335,
+        "std": 0.49971743428090815
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "conditional_accuracy_given_completed": {
+      "delta": {
+        "n_clusters": 14,
+        "n_obs": 55,
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 29,
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "summary_b": {
+        "n": 26,
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "reasoning_tokens": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": -48.85,
+        "lo": -172.02125,
+        "hi": 62.250416666666666,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 1417.7666666666667,
+        "std": 673.6758101454595
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 1466.6166666666666,
+        "std": 684.9633193610125
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "total_tokens": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": -23.383333333333333,
+        "lo": -118.0025,
+        "hi": 63.61999999999989,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 1540.2,
+        "std": 594.7619036504425
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 1563.5833333333333,
+        "std": 600.1429290683466
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "wall_ms": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": -82149.81099931669,
+        "lo": -95672.24311653092,
+        "hi": -69012.6149978698,
+        "excludes_zero": true
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "ci_only",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 41925.35953328382,
+        "std": 16610.71920126924
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 124075.17053260053,
+        "std": 50277.58471176821
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "repeated_ngram_fraction_4": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": -0.017347185832387823,
+        "lo": -0.035513352825664736,
+        "hi": -0.00029624871019903254,
+        "excludes_zero": true
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "ci_only",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 0.40048720834583534,
+        "std": 0.15688160344498972
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 0.4178343941782232,
+        "std": 0.15448317455961652
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "unique_token_ratio": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": 0.00541944584989188,
+        "lo": -0.0028756670630953377,
+        "hi": 0.014384987428929782,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 0.2012899768169968,
+        "std": 0.05929213042828427
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 0.19587053096710497,
+        "std": 0.054671571728140245
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "longest_run_length": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": -0.08333333333333333,
+        "lo": -0.2670833333333333,
+        "hi": 0.08333333333333333,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 1.6,
+        "std": 0.785461108230301
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 1.6833333333333333,
+        "std": 1.0166689821220274
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "terminated_by_eos": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": 0.05,
+        "lo": -0.017083333333333308,
+        "hi": 0.13333333333333333,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 0.48333333333333334,
+        "std": 0.5039392842990978
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 0.43333333333333335,
+        "std": 0.49971743428090815
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    },
+    "missing_answer": {
+      "delta": {
+        "n_clusters": 30,
+        "n_obs": 120,
+        "mean": -0.06666666666666667,
+        "lo": -0.18333333333333332,
+        "hi": 0.03333333333333333,
+        "excludes_zero": false
+      },
+      "noise_scale_a": null,
+      "noise_scale_b": null,
+      "noise_scale": null,
+      "classification": "insufficient_data",
+      "noise_scale_note": "no within-(task,seed) technical repeats; within-deployment noise is not estimable \u2014 uncertainty is the task-clustered bootstrap only",
+      "summary_a": {
+        "n": 60,
+        "mean": 0.48333333333333334,
+        "std": 0.5039392842990978
+      },
+      "summary_b": {
+        "n": 60,
+        "mean": 0.55,
+        "std": 0.501692052213544
+      },
+      "estimable": true,
+      "analysis_population": {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": 60,
+        "n_draws_b": 60,
+        "n_usable_draws_a": 60,
+        "n_usable_draws_b": 60,
+        "n_paired_draws": 60,
+        "n_ambiguous_a": 0,
+        "n_ambiguous_b": 0,
+        "n_unpaired_a": 0,
+        "n_unpaired_b": 0,
+        "unpaired_examples_a": [],
+        "unpaired_examples_b": [],
+        "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+        "n_draws_used_a": 60,
+        "n_draws_used_b": 60
+      }
+    }
+  },
+  "publication_grade": true,
+  "refused": false,
+  "analysis_population": {
+    "unit": "stochastic draw (presentation x task x condition x seed)",
+    "n_draws_a": 60,
+    "n_draws_b": 60,
+    "n_usable_draws_a": 60,
+    "n_usable_draws_b": 60,
+    "n_paired_draws": 60,
+    "n_ambiguous_a": 0,
+    "n_ambiguous_b": 0,
+    "n_unpaired_a": 0,
+    "n_unpaired_b": 0,
+    "unpaired_examples_a": [],
+    "unpaired_examples_b": [],
+    "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics.",
+    "n_draws_used_a": 60,
+    "n_draws_used_b": 60
+  },
+  "rmst": {
+    "tau": 2048.0,
+    "endpoints": {
+      "reasoning_closure": {
+        "n_clusters": 30,
+        "n_resamples_used": 2000,
+        "point": -48.78333333333353,
+        "mean": -48.096249999999955,
+        "lo": -171.87249999999946,
+        "hi": 62.25041666666689,
+        "excludes_zero": false,
+        "tau": 2048.0,
+        "note": "task-clustered bootstrap of RMST(A) - RMST(B); positive favors A."
+      },
+      "generation_termination": {
+        "n_clusters": 30,
+        "n_resamples_used": 2000,
+        "point": -23.383333333333667,
+        "mean": -22.382274999999964,
+        "lo": -118.00250000000001,
+        "hi": 63.62000000000002,
+        "excludes_zero": false,
+        "tau": 2048.0,
+        "note": "task-clustered bootstrap of RMST(A) - RMST(B); positive favors A."
+      }
+    },
+    "paired_population": {
+      "unit": "stochastic draw (presentation x task x condition x seed)",
+      "n_draws_a": 60,
+      "n_draws_b": 60,
+      "n_usable_draws_a": 60,
+      "n_usable_draws_b": 60,
+      "n_paired_draws": 60,
+      "n_ambiguous_a": 0,
+      "n_ambiguous_b": 0,
+      "n_unpaired_a": 0,
+      "n_unpaired_b": 0,
+      "unpaired_examples_a": [],
+      "unpaired_examples_b": [],
+      "note": "Every paired metric uses only the intersection of usable draws from both arms; ambiguous or unmatched draws are excluded from both and remain visible in the diagnostics."
+    }
+  }
+}
