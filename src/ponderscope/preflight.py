@@ -273,8 +273,9 @@ def run_preflight(
     if rt.get("error"):
         gate("runtime", "BLOCK", rt["error"])
     else:
-        if rt.get("python") != "3.12":
-            gate("runtime", "BLOCK", f"python {rt.get('python')} != 3.12")
+        py = str(rt.get("python", ""))
+        if not py.startswith("3.12"):
+            gate("runtime", "BLOCK", f"python {py} is not 3.12.x")
         elif rt.get("mlx_lm") != "0.32.0":
             gate("runtime", "WARNING", f"mlx-lm {rt.get('mlx_lm')} != pinned 0.32.0")
         else:
