@@ -161,3 +161,78 @@ def test_repetition_analysis_orientation(tmp_path, fake_backend, monkeypatch):
     # identical runs -> zero delta
     assert rep["overall_mean_delta"] == 0.0
     assert rep["n_paired_draws"] == 4
+
+
+# --------------------------------------------------------------------------- #
+# Stage 4: fixed prefix checkpoints and population-lock design independence
+# --------------------------------------------------------------------------- #
+from ponderscope.backends.base import CaptureSpec  # noqa: E402
+from ponderscope.config.identity import DecodingPolicy  # noqa: E402
+from ponderscope.population import build_lock, verify_lock  # noqa: E402
+from ponderscope.reasoning.probes import run_prefix_probes  # noqa: E402
+from ponderscope.reasoning.transitions import prefix_lengths  # noqa: E402
+
+
+def test_prefix_lengths_fixed_checkpoints():
+    assert prefix_lengths(1000, 4, checkpoints=[256, 512, 1024, 1536]) == [0, 256, 512, 1000]
+    # trajectory shorter than the checkpoints: only 0 and the full prefix
+    assert prefix_lengths(100, 4, checkpoints=[256, 512]) == [0, 100]
+
+
+def test_probe_checkpoints_spec_roundtrip():
+    spec = ExperimentSpec.from_dict(
+        {
+            "name": "p",
+            "task_pack": "tasks-v1",
+            "probe": True,
+            "probe_checkpoints": [256, 512],
+        }
+    )
+    assert spec.probe_checkpoints == [256, 512]
+    assert spec.to_dict()["probe_checkpoints"] == [256, 512]
+
+
+def test_run_prefix_probes_uses_checkpoints(fake_backend):
+    prompt_ids = [10, 20, 30]
+    prefix = list(range(1000))
+    results = run_prefix_probes(
+        fake_backend,
+        family="arith",
+        answer="3",
+        prompt_token_ids=prompt_ids,
+        prefix_token_ids=prefix,
+        n_probes=4,
+        probe_decoding=DecodingPolicy(mode="greedy", max_tokens=8),
+        capture=CaptureSpec.minimal(),
+        eos_token_ids={42},
+        checkpoints=[256, 512, 1024, 1536],
+    )
+    assert [r["reasoning_prefix_tokens"] for r in results] == [0, 256, 512, 1000]
+
+
+def test_population_lock_is_design_independent(tmp_path):
+    base = ExperimentSpec(
+        name="base",
+        task_pack="tasks-v1",
+        families=["arith", "logic"],
+        n_per_family=2,
+        split="dev",
+        task_seed=0,
+        greedy_repeats=0,
+        sampled_seeds=[0, 1],
+    )
+    lock = build_lock(base)
+    probe = ExperimentSpec(
+        name="probe",
+        task_pack="tasks-v1",
+        families=["arith", "logic"],
+        n_per_family=2,
+        split="dev",
+        task_seed=0,
+        greedy_repeats=1,  # different sampling design
+        sampled_seeds=[],
+        probe=True,
+        probe_checkpoints=[256, 512],
+    )
+    # Same frozen population, different design -> lock still verifies.
+    assert verify_lock(probe, lock)["ok"] is True

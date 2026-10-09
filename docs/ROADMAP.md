@@ -16,14 +16,14 @@ changes its reasoning behavior.** It does not drift into generic benchmarking.
 
 ## Immediate next experiment
 
-The Phase 1.6 independent replication is **complete** (30 unseen tasks, 60 draws
-per arm, under a frozen population lock): no distinguishable reasoning-behavior
-difference (closure +0.067 [−0.033, +0.183]; RMST −48.1 [−171.9, +62.3]; success
-+0.050 [−0.017, 0.133]) with a large speed advantage (≈2.9×). Because the
-closure-rate interval is still within the ≈0.165 planning half-width, the next
-step is a **larger independent-task population** (more tasks, not more seeds) if
-a small closure-rate effect is to be resolved — the held-out test/1729
-population must not be reused for a new primary claim.
+**Bounded prefix-probe diagnostic (Option C).** Determine whether censoring
+conceals recoverable correct answers and whether Q4 changes answer availability
+or stability along a reasoning trajectory, using the already-measured test/1729
+tasks and fixed checkpoints (256/512/1024/1536). Exploratory, oracle-style
+intervention, ≈2 h compute; see `docs/PHASE1_7_ANALYSIS.md`. Requires explicit
+authorization before model inference. A **larger independent-task replication**
+(Option A) remains the eventual confirmatory step; test/1729 must not be reused
+as a fresh confirmatory population.
 
 ## Later, only after the above is established
 

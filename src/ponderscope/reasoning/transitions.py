@@ -228,16 +228,33 @@ def classify_transitions(
     )
 
 
-def prefix_lengths(n_reasoning: int, n_probes: int, min_prefix: int = 16) -> list[int]:
+def prefix_lengths(
+    n_reasoning: int,
+    n_probes: int,
+    min_prefix: int = 16,
+    checkpoints: list[int] | None = None,
+) -> list[int]:
     """Prefix token counts for forced-finalization probing.
 
     Includes the empty prefix (0), which measures the answer with no reasoning
     at all. Locations are bounded by the actual reasoning length, so no probe can
     contain a final-answer token.
+
+    When explicit ``checkpoints`` are given (e.g. 256/512/1024/1536), only those
+    that fit within the reasoning length are used, plus the empty prefix and the
+    full reasoning prefix; a trajectory shorter than a checkpoint simply does not
+    receive that checkpoint. Otherwise a uniform grid of ``n_probes`` locations
+    is used.
     """
+    max_prefix = max(0, n_reasoning)
+    if checkpoints is not None:
+        checkpoint_lengths: set[int] = {0, max_prefix}
+        for checkpoint in checkpoints:
+            if 0 <= int(checkpoint) <= max_prefix:
+                checkpoint_lengths.add(int(checkpoint))
+        return sorted(checkpoint_lengths)
     if n_probes <= 0:
         return []
-    max_prefix = max(0, n_reasoning)
     lengths = [0]
     if n_reasoning > min_prefix:
         import numpy as np

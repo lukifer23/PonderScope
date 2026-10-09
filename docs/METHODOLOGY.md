@@ -113,9 +113,14 @@ EOS marker can never become answer content. PonderScope records:
 Prefix states (over **observed** forced probes only): `initially_correct`,
 `wrong_to_correct`, `correct_to_wrong`, `multiple_flips`, `stable_correct`,
 `never_correct`. The natural final outcome is a separate category: `correct`,
-`incorrect`, `censored` (no final channel observed before the horizon),
-`terminated_no_closure` (generation stopped via EOS without ever emitting the
-native close), `unparseable`, or `error`.
+`incorrect` (a **scorable** normalized answer that is wrong), `censored` (capped
+inside reasoning, no final channel), `terminated_no_closure` (EOS without the
+native close), `unparseable` (a final-channel string that does **not**
+normalize — never treated as a wrong answer), or `error`. A generation capped
+after the native close is flagged `budget_exhausted_after_closure`, distinct from
+a generation capped inside reasoning. Prefix probes accept fixed reasoning-prefix
+checkpoints (e.g. 256/512/1024/1536 tokens, bounded by the actual reasoning
+length).
 
 A censored trajectory has unknown final correctness: it contributes no
 correctness transition and cannot be evidence of harmful overthinking. Two

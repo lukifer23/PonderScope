@@ -102,6 +102,9 @@ All are properties of *this* machine/runtime/deployment, not of a model alone.
 - The central deployment-drift comparison is now **MEASURED but inconclusive**
   on reasoning behavior; a larger independent-task replication is the next
   experiment.
+- **Phase 1.7** corrected the outcome classification (a raw-but-unscorable answer
+  is `unparseable`, never a wrong answer) and added offline paired-transition
+  analysis. See `docs/PHASE1_7_ANALYSIS.md`.
 
 ## 8. Model / runtime support
 
@@ -131,6 +134,7 @@ ponderscope convert --revision <sha> --out models/<artifact> --bits 4
 ponderscope variant-audit --path models/<artifact> --revision <sha>
 ponderscope preflight --spec specs/<spec>.json   # preconditions, no inference
 ponderscope design-precision            # reproducible planning precision (no model data)
+ponderscope paired-outcomes --a runs/<id> --b runs/<id>  # offline paired transition analysis
 ponderscope run --spec specs/<spec>.json # run a declared deployment/task experiment
 ponderscope run --spec specs/<spec>.json --artifact-path models/<artifact>
 ponderscope analyze --run runs/<id>      # analyze immutable saved evidence

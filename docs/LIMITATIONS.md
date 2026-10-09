@@ -51,6 +51,16 @@ PonderScope is intentionally conservative about what its evidence supports.
   native think-end token (versioned `phase1.4`). The historical Phase 1.1–1.3B
   endpoint used total generated tokens (including the post-closure answer
   channel); those values are preserved and superseded, not erased.
+- **Answer classification.** A final-channel string that fails normalization is
+  `unparseable`, not a wrong answer; a generation capped after the native close
+  (`budget_exhausted_after_closure`) is distinguished from one capped inside
+  reasoning. The stored per-record `natural_final_status` reflects the semantics
+  in force at run time (Phase 1.6 and earlier mislabelled unscorable strings as
+  `incorrect`); derived analysis recomputes it from immutable fields.
+- **Repeated-4gram difference is exploratory.** The small Q4/BF16 repeated-4gram
+  difference flips sign between studies and is concentrated in closed
+  trajectories and ordinary repeated phrasing, not censored loops. It is not a
+  validated loop-detector result and is not confirmatory.
 - **Quantization provenance.** A derived variant records its *actual* per-module
   scheme; a nominal "Q4" artifact may include non-quantized embedding/norm weights
   and is reported as e.g. 4.503 bits per weight, not uniformly four-bit. Tokenizer

@@ -226,8 +226,10 @@ def verify_lock(
     ):
         if lock.get(field) != value:
             mismatches.append(f"{field} differs ({lock.get(field)!r} != {value!r})")
-    if expected_executions(spec) != lock.get("expected_executions"):
-        mismatches.append("expected execution counts differ")
+    # ``expected_executions`` is recorded for the primary design but is a
+    # sampling-design property, not a population property: a different design
+    # (e.g. a greedy probe run) over the same frozen population is legitimate and
+    # must not fail the population lock.
     return {"ok": not mismatches, "mismatches": mismatches}
 
 

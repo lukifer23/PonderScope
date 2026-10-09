@@ -46,6 +46,7 @@ class ExperimentSpec:
     probe: bool = False
     n_probes: int = 4
     probe_max_tokens: int = 64
+    probe_checkpoints: list[int] = field(default_factory=list)
     capture_entropy: bool = True
     capture_top_k: int = 5
     capture_logprob_digest: bool = False
@@ -80,6 +81,7 @@ class ExperimentSpec:
             "probe": self.probe,
             "n_probes": self.n_probes,
             "probe_max_tokens": self.probe_max_tokens,
+            "probe_checkpoints": self.probe_checkpoints,
             "capture_entropy": self.capture_entropy,
             "capture_top_k": self.capture_top_k,
             "capture_logprob_digest": self.capture_logprob_digest,

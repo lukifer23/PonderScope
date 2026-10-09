@@ -385,6 +385,7 @@ def run_experiment(
                         probe_decoding=probe_decoding,
                         capture=CaptureSpec(entropy=False, top_k=0, logprob_digest=False),
                         eos_token_ids=eos_ids,
+                        checkpoints=spec.probe_checkpoints or None,
                     )
                 except PrefixProbeUnsupported as exc:
                     probe_supported = False

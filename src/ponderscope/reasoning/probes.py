@@ -33,17 +33,20 @@ def run_prefix_probes(
     probe_decoding: DecodingPolicy,
     capture: CaptureSpec,
     eos_token_ids: set[int] | None = None,
+    checkpoints: list[int] | None = None,
 ) -> list[dict[str, Any]]:
     """Run forced-finalization probes over reasoning prefixes.
 
     ``prefix_token_ids`` must contain reasoning tokens only; the caller is
     responsible for stripping the final channel. Raises
     ``PrefixProbeUnsupported`` (propagated from the backend) if the native
-    closure cannot be validated.
+    closure cannot be validated. ``checkpoints`` selects explicit prefix token
+    lengths (bounded by the actual reasoning length); otherwise a uniform grid is
+    used.
     """
     eos_ids = eos_token_ids or set()
     results: list[dict[str, Any]] = []
-    for length in prefix_lengths(len(prefix_token_ids), n_probes):
+    for length in prefix_lengths(len(prefix_token_ids), n_probes, checkpoints=checkpoints):
         prefix = prefix_token_ids[:length]
         trace = backend.probe(prompt_token_ids, prefix, probe_decoding, capture)
         answer_raw = extract_answer(trace.text)

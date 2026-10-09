@@ -1,0 +1,20 @@
+{
+  "name": "phase1-7-prefix-probe-diagnostic",
+  "task_pack": "tasks-v1",
+  "prompt_policy": "pp-v1",
+  "model_policy": "qwen35-4b-thinking-api-v1",
+  "families": ["arith", "path", "order", "logic", "sm"],
+  "n_per_family": 6,
+  "task_seed": 1729,
+  "split": "test",
+  "greedy_repeats": 1,
+  "sampled_seeds": [],
+  "sampled_repeats_per_seed": 1,
+  "max_tokens": 2048,
+  "capture_level": "minimal",
+  "probe": true,
+  "n_probes": 4,
+  "probe_max_tokens": 64,
+  "probe_checkpoints": [256, 512, 1024, 1536],
+  "notes": "Phase 1.7 EXPLORATORY prefix-probe diagnostic (post-outcome). Reuses the already-measured test/1729 population under the frozen population lock; it is NOT a fresh confirmatory population. Runs one greedy trajectory per task per deployment and forces finalization from fixed reasoning checkpoints (256/512/1024/1536 tokens, bounded by the actual reasoning length) using the model's validated native closing sequence. Forced finalization is an ORACLE-STYLE intervention: a correct forced answer does not establish natural closure, natural accuracy, or a deployable stopping policy. No model execution without explicit authorization."
+}

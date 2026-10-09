@@ -129,6 +129,7 @@ population is now measured. Cross-study summary:
 | phase1.4 | event time = native think-end index | baseline RMST 1511.9→1368.8, median 1718→1569 |
 | phase1.5 | matched-draw paired RMST; independent EOS time; competing events; evidence gating | pilot/full comparisons regenerated |
 | phase1.6 | condition-aware draw identity; paired-draw alignment; draw-unit standalone metrics; compact analyses | primary values unchanged; committed analyses no longer embed raw traces |
+| phase1.7 | raw-but-unscorable answer classified `unparseable` (not incorrect); capped-after-close distinguished; paired-transition analysis | replication `unparseable_rate` 0→0.017; primary metrics unchanged; prior analyses preserved as `analysis.phase1_6.json` |
 
 Historical derived artifacts (`analysis.json`, old comparison files) are
 preserved; reanalyses are written as separate `phase1_4`/`phase1_5` artifacts.
