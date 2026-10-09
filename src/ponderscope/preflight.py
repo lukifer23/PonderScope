@@ -17,21 +17,13 @@ from pathlib import Path
 from typing import Any
 
 from .config.schema import ExperimentSpec
+from .population import enforce_population_lock, expected_executions
 from .tasks import generate_pack, generate_pack_metadata
 from .tasks.invariants import collision_audit, signature_hash
 
 
 def _expected_generations(spec: ExperimentSpec) -> dict[str, int]:
-    sampled = len(spec.families or []) or 5
-    n_tasks = sampled * spec.n_per_family
-    greedy = n_tasks * spec.greedy_repeats
-    draws = n_tasks * len(spec.sampled_seeds) * spec.sampled_repeats_per_seed
-    return {
-        "n_tasks": n_tasks,
-        "greedy_executions": greedy,
-        "sampled_draws": draws,
-        "total_executions": greedy + draws,
-    }
+    return expected_executions(spec)
 
 
 def run_preflight(
@@ -43,6 +35,8 @@ def run_preflight(
     runs_dir: str | Path = "runs",
     per_generation_seconds: float | None = None,
     comparison_population: tuple[str, int, int] | None = None,
+    population_lock: str | None = None,
+    specs_dir: str | Path = "specs",
 ) -> dict[str, Any]:
     """Return a preflight report. ``comparison_population`` = (split, seed, n_per_family)."""
     checks: dict[str, Any] = {}
@@ -79,6 +73,14 @@ def run_preflight(
         "task_ids_sha256": meta["task_ids_sha256"],
         "presentation_ids_sha256": meta["presentation_ids_sha256"],
     }
+
+    # 1b. Frozen population lock (fail closed when a lock exists).
+    lock = enforce_population_lock(
+        spec, lock_path=population_lock, specs_dir=specs_dir, tasks=tasks
+    )
+    checks["population_lock"] = lock
+    if lock["locked"] and not lock["ok"]:
+        problems.append(f"frozen population lock does not match: {lock['mismatches']}")
     if comparison_population is not None:
         split, seed, n = comparison_population
         other = generate_pack(

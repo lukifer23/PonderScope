@@ -223,6 +223,7 @@ def run_experiment(
     progress: Callable[[str], None] | None = None,
     allow_dirty: bool = False,
     code_state: dict[str, Any] | None = None,
+    population_lock: str | None = None,
 ) -> RunResult:
     def _progress(message: str) -> None:
         if progress is not None:
@@ -240,6 +241,17 @@ def run_experiment(
         "exploratory": tracked_dirty,
         "publication_grade": not tracked_dirty,
     }
+
+    # Fail closed on a frozen-population mismatch before any model is loaded.
+    from .population import enforce_population_lock
+
+    lock_result = enforce_population_lock(spec, lock_path=population_lock)
+    if lock_result["locked"] and not lock_result["ok"]:
+        raise RuntimeError(
+            "refusing to run: the frozen population lock does not match the declared "
+            f"specification ({lock_result['mismatches']}); a change requires a documented "
+            "preregistration amendment"
+        )
 
     model_policy_record: dict[str, Any] | None = None
     if spec.model_policy:
@@ -277,6 +289,7 @@ def run_experiment(
     )
     if model_policy_record is not None:
         store.manifest["model_policy"] = model_policy_record
+    store.manifest["population_lock"] = lock_result
     store.add_observation(
         f"model loaded; precision={loaded.precision}; quantization={loaded.quantization}; "
         f"load_audit_ok={loaded.load_audit.get('ok')}"

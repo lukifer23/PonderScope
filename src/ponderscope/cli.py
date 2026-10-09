@@ -104,6 +104,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         runs_dir=args.runs_dir,
         run_suffix=args.suffix,
         allow_dirty=args.allow_dirty,
+        population_lock=args.population_lock,
         progress=lambda message: print(message, file=sys.stderr, flush=True),
     )
     print(f"run {result.store.run_id}")
@@ -548,6 +549,7 @@ def _cmd_preflight(args: argparse.Namespace) -> int:
         runs_dir=args.runs_dir,
         per_generation_seconds=args.per_generation_seconds,
         comparison_population=comparison_population,
+        population_lock=args.population_lock,
     )
     if args.json:
         print(json.dumps(report, indent=2, default=str))
@@ -568,6 +570,13 @@ def _cmd_preflight(args: argparse.Namespace) -> int:
             f"structural_overlap={d['structural_overlap']} clean={d['collision_clean']}"
         )
     print(f"  source cache: {checks.get('source_cache')}")
+    lock = checks.get("population_lock", {})
+    print(
+        f"  population lock: locked={lock.get('locked')} ok={lock.get('ok')} "
+        f"path={lock.get('path')}"
+    )
+    if lock.get("locked") and not lock.get("ok"):
+        print(f"    mismatches: {lock.get('mismatches')}")
     if "artifact" in checks:
         print(f"  artifact: {checks['artifact']}")
     print(f"  disk free: {checks.get('disk', {}).get('free_bytes')} bytes")
@@ -657,6 +666,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--artifact-path",
         default=None,
         help="load a derived weight variant (e.g. a controlled Q4) from this directory",
+    )
+    p.add_argument(
+        "--population-lock",
+        default=None,
+        help="explicit frozen population-lock path (default: auto-detect in specs/)",
     )
     p.add_argument("--runs-dir", default="runs")
     p.add_argument("--suffix", default=None)
@@ -796,6 +810,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--compare-split", default=None)
     p.add_argument("--compare-seed", type=int, default=0)
     p.add_argument("--compare-n-per-family", type=int, default=2)
+    p.add_argument("--population-lock", default=None)
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_preflight)
 
