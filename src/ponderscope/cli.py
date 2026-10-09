@@ -651,6 +651,36 @@ def _cmd_design_precision(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_paired_outcomes(args: argparse.Namespace) -> int:
+    from .analysis.paired import paired_outcomes, repetition_analysis
+    from .evidence.run import RunStore
+    from .evidence.store import atomic_write_json
+
+    a = RunStore.load(args.a)
+    b = RunStore.load(args.b)
+    po = paired_outcomes(a, b, mode=args.mode)
+    rep = repetition_analysis(a, b, mode=args.mode)
+    result = {
+        "reference_arm": a.deployment_id,
+        "comparison_arm": b.deployment_id,
+        "paired_outcomes": po,
+        "repetition": rep,
+    }
+    if args.out:
+        atomic_write_json(Path(args.out), result)
+    if args.json:
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    print(f"paired outcomes [{args.mode}] matched draws={po['n_matched_draws']}")
+    print(f"  closure transitions:     {po['closure_transitions']}")
+    print(f"  correctness transitions: {po['correctness_transitions']}")
+    print(f"  scorable transitions:    {po['scorable_transitions']}")
+    print(f"  repeated-4gram mean delta: {rep['overall_mean_delta']}")
+    if args.out:
+        print(f"  saved {args.out}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ponderscope", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -873,6 +903,17 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out", default=None)
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_design_precision)
+
+    p = sub.add_parser(
+        "paired-outcomes",
+        help="offline paired closure/correctness transition and repetition analysis",
+    )
+    p.add_argument("--a", required=True, help="reference arm run")
+    p.add_argument("--b", required=True, help="comparison arm run")
+    p.add_argument("--mode", default="sampled", choices=["greedy", "sampled"])
+    p.add_argument("--out", default=None)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_paired_outcomes)
 
     return parser
 

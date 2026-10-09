@@ -108,14 +108,14 @@ _Generated from saved evidence; no numbers are hand-entered._
 
 ## Family reconciliation (closures vs EOS are distinct)
 
-| condition | family | n | native closures | EOS | capped-after-close | censored | no-closure | unparseable | errors | scorable answers | correct | incorrect |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| cond-f5e762d3078f | **ALL** | 30 | 21 | 19 | 2 | 9 | 0 | 0 | 0 | 21 | 19 | 2 |
-| cond-f5e762d3078f | arith | 6 | 6 | 5 | 1 | 0 | 0 | 0 | 0 | 6 | 5 | 1 |
-| cond-f5e762d3078f | logic | 6 | 0 | 0 | 0 | 6 | 0 | 0 | 0 | 0 | 0 | 0 |
-| cond-f5e762d3078f | order | 6 | 6 | 5 | 1 | 0 | 0 | 0 | 0 | 6 | 5 | 1 |
-| cond-f5e762d3078f | path | 6 | 3 | 3 | 0 | 3 | 0 | 0 | 0 | 3 | 3 | 0 |
-| cond-f5e762d3078f | sm | 6 | 6 | 6 | 0 | 0 | 0 | 0 | 0 | 6 | 6 | 0 |
+| condition | family | n | native closures | EOS | censored | no-closure | unparseable | errors | observed answers | correct answers |
+|---|---|---|---|---|---|---|---|---|---|---|
+| cond-f5e762d3078f | **ALL** | 30 | 21 | 19 | 9 | 0 | 0 | 0 | 21 | 19 |
+| cond-f5e762d3078f | arith | 6 | 6 | 5 | 0 | 0 | 0 | 0 | 6 | 5 |
+| cond-f5e762d3078f | logic | 6 | 0 | 0 | 6 | 0 | 0 | 0 | 0 | 0 |
+| cond-f5e762d3078f | order | 6 | 6 | 5 | 0 | 0 | 0 | 0 | 6 | 5 |
+| cond-f5e762d3078f | path | 6 | 3 | 3 | 3 | 0 | 0 | 0 | 3 | 3 |
+| cond-f5e762d3078f | sm | 6 | 6 | 6 | 0 | 0 | 0 | 0 | 6 | 6 |
 
 ## Censor-aware time-to-closure (Kaplan-Meier / RMST)
 

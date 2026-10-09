@@ -98,25 +98,24 @@ _Generated from saved evidence; no numbers are hand-entered._
 - natural_eos: 29
 - status:censored: 29
 - status:correct: 29
-- status:incorrect: 1
-- status:unparseable: 1
+- status:incorrect: 2
 - think_end_reached: 31
 
 ### Budget outcomes per condition
 | condition_id | success_at_budget | completion_rate | censored_rate | error_rate | unparseable_rate | cond_acc|completed |
 |---|---|---|---|---|---|---|
-| cond-f5e762d3078f | 0.4833 | 0.4833 | 0.4833 | 0 | 0.01667 | 1 |
+| cond-f5e762d3078f | 0.4833 | 0.4833 | 0.4833 | 0 | 0 | 1 |
 
 ## Family reconciliation (closures vs EOS are distinct)
 
-| condition | family | n | native closures | EOS | capped-after-close | censored | no-closure | unparseable | errors | scorable answers | correct | incorrect |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| cond-f5e762d3078f | **ALL** | 60 | 31 | 29 | 2 | 29 | 0 | 1 | 0 | 30 | 29 | 1 |
-| cond-f5e762d3078f | arith | 12 | 11 | 11 | 0 | 1 | 0 | 0 | 0 | 11 | 11 | 0 |
-| cond-f5e762d3078f | logic | 12 | 0 | 0 | 0 | 12 | 0 | 0 | 0 | 0 | 0 | 0 |
-| cond-f5e762d3078f | order | 12 | 11 | 10 | 1 | 1 | 0 | 0 | 0 | 11 | 10 | 1 |
-| cond-f5e762d3078f | path | 12 | 2 | 1 | 1 | 10 | 0 | 1 | 0 | 1 | 1 | 0 |
-| cond-f5e762d3078f | sm | 12 | 7 | 7 | 0 | 5 | 0 | 0 | 0 | 7 | 7 | 0 |
+| condition | family | n | native closures | EOS | censored | no-closure | unparseable | errors | observed answers | correct answers |
+|---|---|---|---|---|---|---|---|---|---|---|
+| cond-f5e762d3078f | **ALL** | 60 | 31 | 29 | 29 | 0 | 0 | 0 | 30 | 29 |
+| cond-f5e762d3078f | arith | 12 | 11 | 11 | 1 | 0 | 0 | 0 | 11 | 11 |
+| cond-f5e762d3078f | logic | 12 | 0 | 0 | 12 | 0 | 0 | 0 | 0 | 0 |
+| cond-f5e762d3078f | order | 12 | 11 | 10 | 1 | 0 | 0 | 0 | 11 | 10 |
+| cond-f5e762d3078f | path | 12 | 2 | 1 | 10 | 0 | 0 | 0 | 1 | 1 |
+| cond-f5e762d3078f | sm | 12 | 7 | 7 | 5 | 0 | 0 | 0 | 7 | 7 |
 
 ## Censor-aware time-to-closure (Kaplan-Meier / RMST)
 
@@ -155,40 +154,6 @@ Descriptive loop structure with an explicitly documented onset rule; not a valid
 ## Prefix probes / trajectory states
 
 - no probes in this run
-
-## Deployment comparison
-
-- A: Qwen/Qwen3.5-4B@851bf6e806ef (derived, bfloat16 quant=mlx-affine4bit g64) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-b7a30758909a dep=dep-4f8e7958df4f
-- B: Qwen/Qwen3.5-4B@851bf6e806ef (original, bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-9b6f9b40b789 dep=dep-e1c20569173a
-- contrast: `weight_representation` (changed: ['conversion', 'quantization', 'quantization_bits', 'quantization_group_size', 'representation', 'variant_weight_files'])
-- matched observations (sampled): 60
-- trial population: matched=60 expected A=60 B=60 observed A=60 B=60 missing A=0 B=0 unexpected A=0 B=0 duplicates A=0 B=0 ambiguous A=0 B=0 complete=True
-- evidence seal verified: A=True B=True
-
-| metric | delta (A−B) | 95% CI | noise A | noise B | combined | classification |
-|---|---|---|---|---|---|---|
-| success_at_budget | 0.05 | [-0.01708, 0.1333] | — | — | — | insufficient_data |
-| reasoning_closure_rate | 0.06667 | [-0.03333, 0.1833] | — | — | — | insufficient_data |
-| completion_rate | 0.05 | [-0.01708, 0.1333] | — | — | — | insufficient_data |
-| censored_rate | -0.06667 | [-0.1833, 0.03333] | — | — | — | insufficient_data |
-| error_rate | 0 | [0, 0] | — | — | — | insufficient_data |
-| answer_observation_rate | 0.06667 | [-0.01667, 0.1667] | — | — | — | insufficient_data |
-| conditional_accuracy_given_completed | 0 | [0, 0] | — | — | — | insufficient_data |
-| reasoning_tokens | -48.85 | [-172, 62.25] | — | — | — | insufficient_data |
-| total_tokens | -23.38 | [-118, 63.62] | — | — | — | insufficient_data |
-| wall_ms | -8.215e+04 | [-9.567e+04, -6.901e+04] | — | — | — | ci_only |
-| repeated_ngram_fraction_4 | -0.01735 | [-0.03551, -0.0002962] | — | — | — | ci_only |
-| unique_token_ratio | 0.005419 | [-0.002876, 0.01438] | — | — | — | insufficient_data |
-| longest_run_length | -0.08333 | [-0.2671, 0.08333] | — | — | — | insufficient_data |
-| terminated_by_eos | 0.05 | [-0.01708, 0.1333] | — | — | — | insufficient_data |
-| missing_answer | -0.06667 | [-0.1833, 0.03333] | — | — | — | insufficient_data |
-
-Censor-aware RMST difference (A−B), tau=2048.0:
-
-| endpoint | delta RMST | 95% CI | clusters | excludes zero |
-|---|---|---|---|---|
-| reasoning_closure | -48.1 | [-171.9, 62.25] | 30 | False |
-| generation_termination | -22.38 | [-118, 63.62] | 30 | False |
 
 ## Limitations
 - Single model revision on a single machine; results do not generalize to other weights or hardware.

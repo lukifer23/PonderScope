@@ -475,12 +475,19 @@ def _make_record(
         error_type = trace.error.split(":", 1)[0]
     natural_final_status = natural_final_status_from_termination(
         correct=correct,
-        answer_observed=parsed.answer_raw is not None,
+        answer_scorable=answer_norm is not None,
         think_end_reached=trace.think_end_reached,
         capped=trace.capped,
         finish_reason=trace.finish_reason,
         error_type=error_type,
+        raw_answer_present=parsed.answer_raw is not None,
     )
+    if answer_norm is not None:
+        answer_state = "scorable_correct" if correct else "scorable_incorrect"
+    elif parsed.answer_raw is not None:
+        answer_state = "unparseable"
+    else:
+        answer_state = "none"
     return {
         "record_type": "generation",
         "run_id": store.run_id,
@@ -505,8 +512,10 @@ def _make_record(
         "trace": trace.to_dict(),
         "parse": parsed.to_dict(),
         "answer_normalized": answer_norm,
+        "answer_state": answer_state,
         "correct": correct,
         "natural_final_status": natural_final_status,
+        "budget_exhausted_after_closure": bool(trace.think_end_reached and trace.capped),
         "reasoning_tokens": len(parsed.reasoning_token_ids),
         "answer_tokens": len(parsed.final_token_ids),
         "total_tokens": len(trace.token_ids),

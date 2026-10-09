@@ -23,6 +23,7 @@ import numpy as np
 
 from ..evidence.run import TRACES, RunStore
 from ..reasoning.transitions import (
+    budget_exhausted_after_closure,
     classify_transitions,
     natural_final_status_for_record,
 )
@@ -87,10 +88,14 @@ def prefix_invariance(traces_by_cap: dict[int, list[int]]) -> dict[str, Any]:
 
 
 def natural_final_status_of(record: dict[str, Any]) -> str:
-    """Return the saved status, deriving it for pre-Phase-1.2 evidence."""
-    status = record.get("natural_final_status")
-    if status:
-        return str(status)
+    """Derive the natural final status from the record under current semantics.
+
+    The per-record ``natural_final_status`` field saved at run time reflects the
+    semantics in force then (Phase 1.6 and earlier classified a raw-but-
+    unscorable answer as ``incorrect``). Derived analysis recomputes the status
+    from the immutable record fields so the correction is applied without
+    modifying raw evidence; the stored field is retained as historical.
+    """
     return natural_final_status_for_record(record)
 
 
@@ -178,23 +183,32 @@ def _budget_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
 def _category_counts(records: list[dict[str, Any]]) -> dict[str, int]:
     """Explicit, reconcilable termination/outcome categories for a record set.
 
-    Kept separate so a report can never label EOS terminations as native
-    reasoning closures. ``native_reasoning_closures`` is the primary endpoint;
-    ``eos_terminations`` is the secondary endpoint.
+    Non-overlapping distinctions kept separate so a report can never label EOS
+    terminations as native reasoning closures, an unscorable string as a wrong
+    answer, or a capped-after-closure trajectory as identical to a capped-inside-
+    reasoning one.
     """
     statuses = [natural_final_status_of(r) for r in records]
+    scorable = [r for r in records if r["answer_normalized"] is not None]
     return {
         "n": len(records),
         "native_reasoning_closures": sum(
             1 for r in records if r["termination"].get("think_end_reached")
         ),
         "eos_terminations": sum(1 for r in records if r["termination"].get("terminated_by_eos")),
+        "budget_exhausted_after_closure": sum(
+            1 for r in records if budget_exhausted_after_closure(r)
+        ),
         "censored": sum(1 for s in statuses if s == "censored"),
         "terminated_no_closure": sum(1 for s in statuses if s == "terminated_no_closure"),
         "unparseable": sum(1 for s in statuses if s == "unparseable"),
         "errors": sum(1 for s in statuses if s == "error"),
-        "observed_answers": sum(1 for r in records if r["answer_normalized"] is not None),
+        "raw_answer_present": sum(
+            1 for r in records if not r["termination"].get("missing_answer", True)
+        ),
+        "observed_answers": len(scorable),
         "correct_answers": sum(1 for r in records if r["correct"]),
+        "scorable_incorrect": sum(1 for r in scorable if not r["correct"]),
     }
 
 
@@ -806,7 +820,7 @@ def analyze_run(store: RunStore, *, allow_unverified: bool = False) -> dict[str,
     }
 
     analysis = {
-        "interpretation": "phase1.6",
+        "interpretation": "phase1.7",
         "run_id": store.run_id,
         "artifact_id": store.artifact_id,
         "deployment_id": store.deployment_id,

@@ -410,7 +410,7 @@ def test_analysis_json_has_no_raw_evidence(tmp_path, fake_backend, monkeypatch):
     text = (a.store.path / "analysis.json").read_text()
     for forbidden in ("token_ids", '"raw_text"', '"final_raw"', '"prompt"'):
         assert forbidden not in text
-    assert '"interpretation": "phase1.6"' in text
+    assert '"interpretation": "phase1.7"' in text
 
 
 def test_analysis_is_idempotent(tmp_path, fake_backend, monkeypatch):

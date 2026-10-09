@@ -59,7 +59,7 @@ def test_repetition_metrics_constant_run():
 def test_natural_final_status_categories():
     censored = natural_final_status_from_termination(
         correct=False,
-        answer_observed=False,
+        answer_scorable=False,
         think_end_reached=False,
         capped=True,
         finish_reason="length",
@@ -68,7 +68,7 @@ def test_natural_final_status_categories():
     assert (
         natural_final_status_from_termination(
             correct=True,
-            answer_observed=True,
+            answer_scorable=True,
             think_end_reached=True,
             capped=False,
             finish_reason="stop",
@@ -78,7 +78,7 @@ def test_natural_final_status_categories():
     assert (
         natural_final_status_from_termination(
             correct=False,
-            answer_observed=True,
+            answer_scorable=True,
             think_end_reached=True,
             capped=False,
             finish_reason="stop",
@@ -88,7 +88,7 @@ def test_natural_final_status_categories():
     assert (
         natural_final_status_from_termination(
             correct=False,
-            answer_observed=False,
+            answer_scorable=False,
             think_end_reached=True,
             capped=False,
             finish_reason="stop",
@@ -98,7 +98,7 @@ def test_natural_final_status_categories():
     assert (
         natural_final_status_from_termination(
             correct=False,
-            answer_observed=False,
+            answer_scorable=False,
             think_end_reached=False,
             capped=False,
             finish_reason="error",

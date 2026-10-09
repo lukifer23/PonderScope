@@ -20,7 +20,7 @@ from ponderscope.reasoning.transitions import (
 # --------------------------------------------------------------------------- #
 # Termination-state matrix (Phase 2.1)
 # --------------------------------------------------------------------------- #
-# (correct, answer_observed, think_end_reached, capped, finish_reason, error_type)
+# (correct, answer_scorable, think_end_reached, capped, finish_reason, error_type)
 TERMINATION_CASES = [
     # An observed parseable answer wins regardless of stop cause.
     ((True, True, True, False, "stop", None), "correct"),
@@ -47,7 +47,7 @@ def test_termination_state_matrix(args, expected):
     correct, answer_observed, think_end, capped, finish_reason, error_type = args
     status = natural_final_status_from_termination(
         correct=correct,
-        answer_observed=answer_observed,
+        answer_scorable=answer_observed,
         think_end_reached=think_end,
         capped=capped,
         finish_reason=finish_reason,

@@ -1,5 +1,5 @@
 {
-  "interpretation": "phase1.7",
+  "interpretation": "phase1.6",
   "run_id": "20261009T005354Z-phase1-6-replication-bf16-replication-bf16-dep-e1c20569173a",
   "artifact_id": "wvar-9b6f9b40b789",
   "deployment_id": "dep-e1c20569173a",
@@ -149,7 +149,7 @@
         "n_answer_observed": 26,
         "n_censored": 33,
         "n_error": 0,
-        "n_unparseable": 1,
+        "n_unparseable": 0,
         "n_terminated_no_closure": 0,
         "success_at_budget": 0.43333333333333335,
         "completion_rate": 0.43333333333333335,
@@ -157,7 +157,7 @@
         "answer_observed_accuracy": 1.0,
         "censored_rate": 0.55,
         "error_rate": 0.0,
-        "unparseable_rate": 0.016666666666666666,
+        "unparseable_rate": 0.0,
         "answer_observation_rate": 0.43333333333333335
       },
       "reasoning_tokens": {
@@ -228,21 +228,18 @@
         "natural_eos": 26,
         "eos_observed": 26,
         "think_end_reached": 27,
-        "status:unparseable": 1
+        "status:incorrect": 1
       },
       "categories": {
         "n": 60,
         "native_reasoning_closures": 27,
         "eos_terminations": 26,
-        "budget_exhausted_after_closure": 1,
         "censored": 33,
         "terminated_no_closure": 0,
-        "unparseable": 1,
+        "unparseable": 0,
         "errors": 0,
-        "raw_answer_present": 27,
         "observed_answers": 26,
-        "correct_answers": 26,
-        "scorable_incorrect": 0
+        "correct_answers": 26
       },
       "per_family": {
         "arith": {
@@ -270,15 +267,12 @@
             "n": 12,
             "native_reasoning_closures": 9,
             "eos_terminations": 9,
-            "budget_exhausted_after_closure": 0,
             "censored": 3,
             "terminated_no_closure": 0,
             "unparseable": 0,
             "errors": 0,
-            "raw_answer_present": 9,
             "observed_answers": 9,
-            "correct_answers": 9,
-            "scorable_incorrect": 0
+            "correct_answers": 9
           }
         },
         "logic": {
@@ -306,15 +300,12 @@
             "n": 12,
             "native_reasoning_closures": 0,
             "eos_terminations": 0,
-            "budget_exhausted_after_closure": 0,
             "censored": 12,
             "terminated_no_closure": 0,
             "unparseable": 0,
             "errors": 0,
-            "raw_answer_present": 0,
             "observed_answers": 0,
-            "correct_answers": 0,
-            "scorable_incorrect": 0
+            "correct_answers": 0
           }
         },
         "order": {
@@ -342,15 +333,12 @@
             "n": 12,
             "native_reasoning_closures": 10,
             "eos_terminations": 10,
-            "budget_exhausted_after_closure": 0,
             "censored": 2,
             "terminated_no_closure": 0,
             "unparseable": 0,
             "errors": 0,
-            "raw_answer_present": 10,
             "observed_answers": 10,
-            "correct_answers": 10,
-            "scorable_incorrect": 0
+            "correct_answers": 10
           }
         },
         "path": {
@@ -378,15 +366,12 @@
             "n": 12,
             "native_reasoning_closures": 1,
             "eos_terminations": 1,
-            "budget_exhausted_after_closure": 0,
             "censored": 11,
             "terminated_no_closure": 0,
             "unparseable": 0,
             "errors": 0,
-            "raw_answer_present": 1,
             "observed_answers": 1,
-            "correct_answers": 1,
-            "scorable_incorrect": 0
+            "correct_answers": 1
           }
         },
         "sm": {
@@ -398,7 +383,7 @@
             "n_answer_observed": 6,
             "n_censored": 5,
             "n_error": 0,
-            "n_unparseable": 1,
+            "n_unparseable": 0,
             "n_terminated_no_closure": 0,
             "success_at_budget": 0.5,
             "completion_rate": 0.5,
@@ -406,7 +391,7 @@
             "answer_observed_accuracy": 1.0,
             "censored_rate": 0.4166666666666667,
             "error_rate": 0.0,
-            "unparseable_rate": 0.08333333333333333,
+            "unparseable_rate": 0.0,
             "answer_observation_rate": 0.5
           },
           "reasoning_tokens_mean": 1424.9166666666667,
@@ -414,15 +399,12 @@
             "n": 12,
             "native_reasoning_closures": 7,
             "eos_terminations": 6,
-            "budget_exhausted_after_closure": 1,
             "censored": 5,
             "terminated_no_closure": 0,
-            "unparseable": 1,
+            "unparseable": 0,
             "errors": 0,
-            "raw_answer_present": 7,
             "observed_answers": 6,
-            "correct_answers": 6,
-            "scorable_incorrect": 0
+            "correct_answers": 6
           }
         }
       },

@@ -98,24 +98,24 @@ _Generated from saved evidence; no numbers are hand-entered._
 - natural_eos: 26
 - status:censored: 33
 - status:correct: 26
-- status:unparseable: 1
+- status:incorrect: 1
 - think_end_reached: 27
 
 ### Budget outcomes per condition
 | condition_id | success_at_budget | completion_rate | censored_rate | error_rate | unparseable_rate | cond_acc|completed |
 |---|---|---|---|---|---|---|
-| cond-f5e762d3078f | 0.4333 | 0.4333 | 0.55 | 0 | 0.01667 | 1 |
+| cond-f5e762d3078f | 0.4333 | 0.4333 | 0.55 | 0 | 0 | 1 |
 
 ## Family reconciliation (closures vs EOS are distinct)
 
-| condition | family | n | native closures | EOS | capped-after-close | censored | no-closure | unparseable | errors | scorable answers | correct | incorrect |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| cond-f5e762d3078f | **ALL** | 60 | 27 | 26 | 1 | 33 | 0 | 1 | 0 | 26 | 26 | 0 |
-| cond-f5e762d3078f | arith | 12 | 9 | 9 | 0 | 3 | 0 | 0 | 0 | 9 | 9 | 0 |
-| cond-f5e762d3078f | logic | 12 | 0 | 0 | 0 | 12 | 0 | 0 | 0 | 0 | 0 | 0 |
-| cond-f5e762d3078f | order | 12 | 10 | 10 | 0 | 2 | 0 | 0 | 0 | 10 | 10 | 0 |
-| cond-f5e762d3078f | path | 12 | 1 | 1 | 0 | 11 | 0 | 0 | 0 | 1 | 1 | 0 |
-| cond-f5e762d3078f | sm | 12 | 7 | 6 | 1 | 5 | 0 | 1 | 0 | 6 | 6 | 0 |
+| condition | family | n | native closures | EOS | censored | no-closure | unparseable | errors | observed answers | correct answers |
+|---|---|---|---|---|---|---|---|---|---|---|
+| cond-f5e762d3078f | **ALL** | 60 | 27 | 26 | 33 | 0 | 0 | 0 | 26 | 26 |
+| cond-f5e762d3078f | arith | 12 | 9 | 9 | 3 | 0 | 0 | 0 | 9 | 9 |
+| cond-f5e762d3078f | logic | 12 | 0 | 0 | 12 | 0 | 0 | 0 | 0 | 0 |
+| cond-f5e762d3078f | order | 12 | 10 | 10 | 2 | 0 | 0 | 0 | 10 | 10 |
+| cond-f5e762d3078f | path | 12 | 1 | 1 | 11 | 0 | 0 | 0 | 1 | 1 |
+| cond-f5e762d3078f | sm | 12 | 7 | 6 | 5 | 0 | 0 | 0 | 6 | 6 |
 
 ## Censor-aware time-to-closure (Kaplan-Meier / RMST)
 

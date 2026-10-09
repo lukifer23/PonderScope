@@ -110,26 +110,25 @@ svg { display:block; margin: 0.5rem 0 1rem; background:#fafafa; }
 <li>natural_eos: 29</li>
 <li>status:censored: 29</li>
 <li>status:correct: 29</li>
-<li>status:incorrect: 1</li>
-<li>status:unparseable: 1</li>
+<li>status:incorrect: 2</li>
 <li>think_end_reached: 31</li>
 
 <h3>Budget outcomes per condition</h3>
 <table>
 <tr><th>condition_id</th><th>success_at_budget</th><th>completion_rate</th><th>censored_rate</th><th>error_rate</th><th>unparseable_rate</th><th>cond_acc</th><th>completed</th></tr>
-<tr><td>cond-f5e762d3078f</td><td>0.4833</td><td>0.4833</td><td>0.4833</td><td>0</td><td>0.01667</td><td>1</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>0.4833</td><td>0.4833</td><td>0.4833</td><td>0</td><td>0</td><td>1</td></tr>
 </table>
 
 <h2>Family reconciliation (closures vs EOS are distinct)</h2>
 
 <table>
-<tr><th>condition</th><th>family</th><th>n</th><th>native closures</th><th>EOS</th><th>capped-after-close</th><th>censored</th><th>no-closure</th><th>unparseable</th><th>errors</th><th>scorable answers</th><th>correct</th><th>incorrect</th></tr>
-<tr><td>cond-f5e762d3078f</td><td>**ALL**</td><td>60</td><td>31</td><td>29</td><td>2</td><td>29</td><td>0</td><td>1</td><td>0</td><td>30</td><td>29</td><td>1</td></tr>
-<tr><td>cond-f5e762d3078f</td><td>arith</td><td>12</td><td>11</td><td>11</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>11</td><td>11</td><td>0</td></tr>
-<tr><td>cond-f5e762d3078f</td><td>logic</td><td>12</td><td>0</td><td>0</td><td>0</td><td>12</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-<tr><td>cond-f5e762d3078f</td><td>order</td><td>12</td><td>11</td><td>10</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>11</td><td>10</td><td>1</td></tr>
-<tr><td>cond-f5e762d3078f</td><td>path</td><td>12</td><td>2</td><td>1</td><td>1</td><td>10</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
-<tr><td>cond-f5e762d3078f</td><td>sm</td><td>12</td><td>7</td><td>7</td><td>0</td><td>5</td><td>0</td><td>0</td><td>0</td><td>7</td><td>7</td><td>0</td></tr>
+<tr><th>condition</th><th>family</th><th>n</th><th>native closures</th><th>EOS</th><th>censored</th><th>no-closure</th><th>unparseable</th><th>errors</th><th>observed answers</th><th>correct answers</th></tr>
+<tr><td>cond-f5e762d3078f</td><td>**ALL**</td><td>60</td><td>31</td><td>29</td><td>29</td><td>0</td><td>0</td><td>0</td><td>30</td><td>29</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>arith</td><td>12</td><td>11</td><td>11</td><td>1</td><td>0</td><td>0</td><td>0</td><td>11</td><td>11</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>logic</td><td>12</td><td>0</td><td>0</td><td>12</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>order</td><td>12</td><td>11</td><td>10</td><td>1</td><td>0</td><td>0</td><td>0</td><td>11</td><td>10</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>path</td><td>12</td><td>2</td><td>1</td><td>10</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>sm</td><td>12</td><td>7</td><td>7</td><td>5</td><td>0</td><td>0</td><td>0</td><td>7</td><td>7</td></tr>
 </table>
 
 <h2>Censor-aware time-to-closure (Kaplan-Meier / RMST)</h2>
@@ -173,42 +172,6 @@ svg { display:block; margin: 0.5rem 0 1rem; background:#fafafa; }
 <h2>Prefix probes / trajectory states</h2>
 
 <li>no probes in this run</li>
-
-<h2>Deployment comparison</h2>
-
-<li>A: Qwen/Qwen3.5-4B@851bf6e806ef (derived, bfloat16 quant=mlx-affine4bit g64) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-b7a30758909a dep=dep-4f8e7958df4f</li>
-<li>B: Qwen/Qwen3.5-4B@851bf6e806ef (original, bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-9b6f9b40b789 dep=dep-e1c20569173a</li>
-<li>contrast: `weight_representation` (changed: [&#x27;conversion&#x27;, &#x27;quantization&#x27;, &#x27;quantization_bits&#x27;, &#x27;quantization_group_size&#x27;, &#x27;representation&#x27;, &#x27;variant_weight_files&#x27;])</li>
-<li>matched observations (sampled): 60</li>
-<li>trial population: matched=60 expected A=60 B=60 observed A=60 B=60 missing A=0 B=0 unexpected A=0 B=0 duplicates A=0 B=0 ambiguous A=0 B=0 complete=True</li>
-<li>evidence seal verified: A=True B=True</li>
-
-<table>
-<tr><th>metric</th><th>delta (A−B)</th><th>95% CI</th><th>noise A</th><th>noise B</th><th>combined</th><th>classification</th></tr>
-<tr><td>success_at_budget</td><td>0.05</td><td>[-0.01708, 0.1333]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>reasoning_closure_rate</td><td>0.06667</td><td>[-0.03333, 0.1833]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>completion_rate</td><td>0.05</td><td>[-0.01708, 0.1333]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>censored_rate</td><td>-0.06667</td><td>[-0.1833, 0.03333]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>error_rate</td><td>0</td><td>[0, 0]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>answer_observation_rate</td><td>0.06667</td><td>[-0.01667, 0.1667]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>conditional_accuracy_given_completed</td><td>0</td><td>[0, 0]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>reasoning_tokens</td><td>-48.85</td><td>[-172, 62.25]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>total_tokens</td><td>-23.38</td><td>[-118, 63.62]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>wall_ms</td><td>-8.215e+04</td><td>[-9.567e+04, -6.901e+04]</td><td>—</td><td>—</td><td>—</td><td>ci_only</td></tr>
-<tr><td>repeated_ngram_fraction_4</td><td>-0.01735</td><td>[-0.03551, -0.0002962]</td><td>—</td><td>—</td><td>—</td><td>ci_only</td></tr>
-<tr><td>unique_token_ratio</td><td>0.005419</td><td>[-0.002876, 0.01438]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>longest_run_length</td><td>-0.08333</td><td>[-0.2671, 0.08333]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>terminated_by_eos</td><td>0.05</td><td>[-0.01708, 0.1333]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-<tr><td>missing_answer</td><td>-0.06667</td><td>[-0.1833, 0.03333]</td><td>—</td><td>—</td><td>—</td><td>insufficient_data</td></tr>
-</table>
-
-<p>Censor-aware RMST difference (A−B), tau=2048.0:</p>
-
-<table>
-<tr><th>endpoint</th><th>delta RMST</th><th>95% CI</th><th>clusters</th><th>excludes zero</th></tr>
-<tr><td>reasoning_closure</td><td>-48.1</td><td>[-171.9, 62.25]</td><td>30</td><td>False</td></tr>
-<tr><td>generation_termination</td><td>-22.38</td><td>[-118, 63.62]</td><td>30</td><td>False</td></tr>
-</table>
 
 <h2>Limitations</h2>
 <li>Single model revision on a single machine; results do not generalize to other weights or hardware.</li>

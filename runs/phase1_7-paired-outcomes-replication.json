@@ -1,0 +1,2454 @@
+{
+  "reference_arm": "dep-4f8e7958df4f",
+  "comparison_arm": "dep-e1c20569173a",
+  "paired_outcomes": {
+    "mode": "sampled",
+    "unit": "stochastic draw (presentation x task x condition x seed)",
+    "n_matched_draws": 60,
+    "closure_transitions": {
+      "both": 23,
+      "neither": 25,
+      "only_b": 4,
+      "only_a": 8
+    },
+    "correctness_transitions": {
+      "both": 23,
+      "neither": 28,
+      "only_a": 6,
+      "only_b": 3
+    },
+    "scorable_transitions": {
+      "both": 23,
+      "neither": 27,
+      "only_a": 7,
+      "only_b": 3
+    },
+    "per_family": {
+      "arith": {
+        "both": 8,
+        "correct:both": 8,
+        "only_a": 3,
+        "correct:only_a": 3,
+        "only_b": 1,
+        "correct:only_b": 1
+      },
+      "logic": {
+        "neither": 12,
+        "correct:neither": 12
+      },
+      "order": {
+        "both": 10,
+        "correct:both": 10,
+        "neither": 1,
+        "correct:neither": 2,
+        "only_a": 1
+      },
+      "path": {
+        "neither": 9,
+        "correct:neither": 10,
+        "only_a": 2,
+        "only_b": 1,
+        "correct:only_b": 1,
+        "correct:only_a": 1
+      },
+      "sm": {
+        "both": 5,
+        "correct:both": 5,
+        "only_b": 2,
+        "correct:neither": 4,
+        "only_a": 2,
+        "correct:only_a": 2,
+        "neither": 3,
+        "correct:only_b": 1
+      }
+    },
+    "per_difficulty": {
+      "easy": {
+        "both": 12,
+        "neither": 5,
+        "only_a": 2,
+        "only_b": 1
+      },
+      "hard": {
+        "neither": 10,
+        "both": 3,
+        "only_b": 3,
+        "only_a": 4
+      },
+      "medium": {
+        "neither": 10,
+        "both": 8,
+        "only_a": 2
+      }
+    },
+    "draws": [
+      {
+        "draw_key": [
+          "pres-01e09e4ac6af",
+          "a49ea403d609a0eb",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "order",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 334,
+          "repeated_ngram_fraction_4": 0.1189873417721519,
+          "family": "order",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 292,
+          "repeated_ngram_fraction_4": 0.13043478260869565,
+          "family": "order",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-01e09e4ac6af",
+          "a49ea403d609a0eb",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "order",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1156,
+          "repeated_ngram_fraction_4": 0.23813112283345894,
+          "family": "order",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 441,
+          "repeated_ngram_fraction_4": 0.3370165745856354,
+          "family": "order",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-0c19ba4dccf5",
+          "148e3892fd01d0b0",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "path",
+        "difficulty": "hard",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.4743276283618582,
+          "family": "path",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.3921760391198044,
+          "family": "path",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-0c19ba4dccf5",
+          "148e3892fd01d0b0",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "path",
+        "difficulty": "hard",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.26259168704156477,
+          "family": "path",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.4469437652811736,
+          "family": "path",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-1033341c7308",
+          "b9864e062c7d7b9d",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "arith",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 438,
+          "repeated_ngram_fraction_4": 0.3771760154738878,
+          "family": "arith",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 476,
+          "repeated_ngram_fraction_4": 0.4714285714285714,
+          "family": "arith",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-1033341c7308",
+          "b9864e062c7d7b9d",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "arith",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 682,
+          "repeated_ngram_fraction_4": 0.32546583850931676,
+          "family": "arith",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 473,
+          "repeated_ngram_fraction_4": 0.4448462929475588,
+          "family": "arith",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-196933b03251",
+          "7d27b7a327b4adcb",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "logic",
+        "difficulty": "easy",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.2943765281173594,
+          "family": "logic",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.2449877750611247,
+          "family": "logic",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-196933b03251",
+          "7d27b7a327b4adcb",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "logic",
+        "difficulty": "easy",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.27041564792176037,
+          "family": "logic",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.33251833740831294,
+          "family": "logic",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-1fa4f20834bc",
+          "f4763fad3f6b669b",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "logic",
+        "difficulty": "medium",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.33691931540342296,
+          "family": "logic",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.2616136919315403,
+          "family": "logic",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-1fa4f20834bc",
+          "f4763fad3f6b669b",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "logic",
+        "difficulty": "medium",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.263080684596577,
+          "family": "logic",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.3041564792176039,
+          "family": "logic",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-4798065f6e56",
+          "93f4dd00fc3b07f5",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "order",
+        "difficulty": "medium",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 615,
+          "repeated_ngram_fraction_4": 0.3312883435582822,
+          "family": "order",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 993,
+          "repeated_ngram_fraction_4": 0.24707716289945442,
+          "family": "order",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-4798065f6e56",
+          "93f4dd00fc3b07f5",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "order",
+        "difficulty": "medium",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 615,
+          "repeated_ngram_fraction_4": 0.27402135231316727,
+          "family": "order",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 519,
+          "repeated_ngram_fraction_4": 0.4444444444444444,
+          "family": "order",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-4e139115238d",
+          "1a35d0bf50cb60d8",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "logic",
+        "difficulty": "medium",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.30366748166259167,
+          "family": "logic",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.27383863080684595,
+          "family": "logic",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-4e139115238d",
+          "1a35d0bf50cb60d8",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "logic",
+        "difficulty": "medium",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.25476772616136917,
+          "family": "logic",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.36577017114914423,
+          "family": "logic",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-54bd455d05e9",
+          "8bd797a31d02e188",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "sm",
+        "difficulty": "hard",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1254,
+          "repeated_ngram_fraction_4": 0.6917808219178082,
+          "family": "sm",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1005,
+          "repeated_ngram_fraction_4": 0.7461103253182461,
+          "family": "sm",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-54bd455d05e9",
+          "8bd797a31d02e188",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "sm",
+        "difficulty": "hard",
+        "closure_transition": "only_b",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.6596577017114914,
+          "family": "sm",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "unparseable",
+          "reasoning_tokens": 1853,
+          "repeated_ngram_fraction_4": 0.634718826405868,
+          "family": "sm",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-5ce78598d490",
+          "7f08d256de9a6ddd",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "sm",
+        "difficulty": "medium",
+        "closure_transition": "only_a",
+        "correctness_transition": "only_a",
+        "scorable_transition": "only_a",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1443,
+          "repeated_ngram_fraction_4": 0.6236775818639798,
+          "family": "sm",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.5975550122249389,
+          "family": "sm",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-5ce78598d490",
+          "7f08d256de9a6ddd",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "sm",
+        "difficulty": "medium",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.6112469437652812,
+          "family": "sm",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.5354523227383863,
+          "family": "sm",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-64461ea0c162",
+          "d4476e057081138e",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "logic",
+        "difficulty": "hard",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.4982885085574572,
+          "family": "logic",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.5853300733496333,
+          "family": "logic",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-64461ea0c162",
+          "d4476e057081138e",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "logic",
+        "difficulty": "hard",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.545721271393643,
+          "family": "logic",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.48508557457212714,
+          "family": "logic",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-855c7b1d1496",
+          "67d090aa0cfd504a",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "order",
+        "difficulty": "medium",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 976,
+          "repeated_ngram_fraction_4": 0.3266832917705736,
+          "family": "order",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 683,
+          "repeated_ngram_fraction_4": 0.32086167800453513,
+          "family": "order",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-855c7b1d1496",
+          "67d090aa0cfd504a",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "order",
+        "difficulty": "medium",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 904,
+          "repeated_ngram_fraction_4": 0.3296327924850555,
+          "family": "order",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 943,
+          "repeated_ngram_fraction_4": 0.3639291465378422,
+          "family": "order",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-86b30aaa0c86",
+          "8f076d9e47eb4342",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "order",
+        "difficulty": "hard",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.28753056234718827,
+          "family": "order",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.2552567237163814,
+          "family": "order",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-86b30aaa0c86",
+          "8f076d9e47eb4342",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "order",
+        "difficulty": "hard",
+        "closure_transition": "only_a",
+        "correctness_transition": "neither",
+        "scorable_transition": "only_a",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": false,
+          "capped": true,
+          "scorable": true,
+          "correct": false,
+          "natural_final_status": "incorrect",
+          "reasoning_tokens": 1661,
+          "repeated_ngram_fraction_4": 0.3828850855745721,
+          "family": "order",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.3740831295843521,
+          "family": "order",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-967ce226b3b0",
+          "2c89a40287e1f674",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "sm",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1051,
+          "repeated_ngram_fraction_4": 0.47432950191570883,
+          "family": "sm",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1018,
+          "repeated_ngram_fraction_4": 0.5889328063241107,
+          "family": "sm",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-967ce226b3b0",
+          "2c89a40287e1f674",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "sm",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1015,
+          "repeated_ngram_fraction_4": 0.6376811594202898,
+          "family": "sm",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 676,
+          "repeated_ngram_fraction_4": 0.6499442586399108,
+          "family": "sm",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-9a8cb6958b68",
+          "6589e1ac47aabea8",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "sm",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 943,
+          "repeated_ngram_fraction_4": 0.6390728476821192,
+          "family": "sm",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 744,
+          "repeated_ngram_fraction_4": 0.64,
+          "family": "sm",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-9a8cb6958b68",
+          "6589e1ac47aabea8",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "sm",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 838,
+          "repeated_ngram_fraction_4": 0.5797101449275363,
+          "family": "sm",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 650,
+          "repeated_ngram_fraction_4": 0.686414708886619,
+          "family": "sm",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-9ac708b63f9d",
+          "9832342bb6c878c5",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "sm",
+        "difficulty": "medium",
+        "closure_transition": "only_a",
+        "correctness_transition": "only_a",
+        "scorable_transition": "only_a",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 914,
+          "repeated_ngram_fraction_4": 0.7271142109851787,
+          "family": "sm",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.6860635696821515,
+          "family": "sm",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-9ac708b63f9d",
+          "9832342bb6c878c5",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "sm",
+        "difficulty": "medium",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.5789731051344743,
+          "family": "sm",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.6449877750611247,
+          "family": "sm",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-a5227b0cb24e",
+          "716b73bf28a2ab13",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "logic",
+        "difficulty": "hard",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.4317848410757946,
+          "family": "logic",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.45036674816625916,
+          "family": "logic",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-a5227b0cb24e",
+          "716b73bf28a2ab13",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "logic",
+        "difficulty": "hard",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.341320293398533,
+          "family": "logic",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.30220048899755503,
+          "family": "logic",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-a5de6eaf88cd",
+          "f0df0dd03afae23a",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "arith",
+        "difficulty": "medium",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 556,
+          "repeated_ngram_fraction_4": 0.5110565110565111,
+          "family": "arith",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 866,
+          "repeated_ngram_fraction_4": 0.5041705282669138,
+          "family": "arith",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-a5de6eaf88cd",
+          "f0df0dd03afae23a",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "arith",
+        "difficulty": "medium",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 531,
+          "repeated_ngram_fraction_4": 0.5932642487046632,
+          "family": "arith",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 294,
+          "repeated_ngram_fraction_4": 0.5317460317460317,
+          "family": "arith",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-a7844e60aa7a",
+          "e39f5e7965bc9d2e",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "sm",
+        "difficulty": "hard",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.6542787286063569,
+          "family": "sm",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.7207823960880195,
+          "family": "sm",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-a7844e60aa7a",
+          "e39f5e7965bc9d2e",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "sm",
+        "difficulty": "hard",
+        "closure_transition": "only_b",
+        "correctness_transition": "only_b",
+        "scorable_transition": "only_b",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.5809290953545232,
+          "family": "sm",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 913,
+          "repeated_ngram_fraction_4": 0.7303988995873453,
+          "family": "sm",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-afb2797e998a",
+          "051fe252328d539c",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "arith",
+        "difficulty": "hard",
+        "closure_transition": "only_a",
+        "correctness_transition": "only_a",
+        "scorable_transition": "only_a",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 712,
+          "repeated_ngram_fraction_4": 0.5535872453498671,
+          "family": "arith",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.45672371638141807,
+          "family": "arith",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-afb2797e998a",
+          "051fe252328d539c",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "arith",
+        "difficulty": "hard",
+        "closure_transition": "only_b",
+        "correctness_transition": "only_b",
+        "scorable_transition": "only_b",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.5374083129584352,
+          "family": "arith",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 974,
+          "repeated_ngram_fraction_4": 0.5658972449739389,
+          "family": "arith",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-b823bcfec41b",
+          "0860ee8c753bad15",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "logic",
+        "difficulty": "easy",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.2665036674816626,
+          "family": "logic",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.23374083129584353,
+          "family": "logic",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-b823bcfec41b",
+          "0860ee8c753bad15",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "logic",
+        "difficulty": "easy",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.33643031784841076,
+          "family": "logic",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.31931540342298287,
+          "family": "logic",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-ba1f7c9c0f0b",
+          "a1ba3b73c7d63c38",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "path",
+        "difficulty": "hard",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.31442542787286065,
+          "family": "path",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.3501222493887531,
+          "family": "path",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-ba1f7c9c0f0b",
+          "a1ba3b73c7d63c38",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "path",
+        "difficulty": "hard",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.2938875305623472,
+          "family": "path",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.4073349633251834,
+          "family": "path",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-c7eaa22d17e3",
+          "fa3c5c38891d1eb5",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "arith",
+        "difficulty": "medium",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 794,
+          "repeated_ngram_fraction_4": 0.5336091003102379,
+          "family": "arith",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 378,
+          "repeated_ngram_fraction_4": 0.4826254826254826,
+          "family": "arith",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-c7eaa22d17e3",
+          "fa3c5c38891d1eb5",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "arith",
+        "difficulty": "medium",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1053,
+          "repeated_ngram_fraction_4": 0.47297297297297297,
+          "family": "arith",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 327,
+          "repeated_ngram_fraction_4": 0.4042145593869732,
+          "family": "arith",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-ca15ea625ae5",
+          "7ad1e6350d457cb9",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "path",
+        "difficulty": "medium",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.3437652811735941,
+          "family": "path",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.32078239608801956,
+          "family": "path",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-ca15ea625ae5",
+          "7ad1e6350d457cb9",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "path",
+        "difficulty": "medium",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.3315403422982885,
+          "family": "path",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.36528117359413204,
+          "family": "path",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-cd9f24a05b48",
+          "42328719aee13018",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "order",
+        "difficulty": "hard",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1033,
+          "repeated_ngram_fraction_4": 0.32964601769911506,
+          "family": "order",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1115,
+          "repeated_ngram_fraction_4": 0.3570887035633055,
+          "family": "order",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-cd9f24a05b48",
+          "42328719aee13018",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "order",
+        "difficulty": "hard",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 509,
+          "repeated_ngram_fraction_4": 0.41201117318435754,
+          "family": "order",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 1070,
+          "repeated_ngram_fraction_4": 0.4037763253449528,
+          "family": "order",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-dc52f59e9aca",
+          "c2031f0347f5b79a",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "path",
+        "difficulty": "easy",
+        "closure_transition": "only_a",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "unparseable",
+          "reasoning_tokens": 1908,
+          "repeated_ngram_fraction_4": 0.21858190709046454,
+          "family": "path",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.2410757946210269,
+          "family": "path",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-dc52f59e9aca",
+          "c2031f0347f5b79a",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "path",
+        "difficulty": "easy",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.22249388753056235,
+          "family": "path",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.23618581907090463,
+          "family": "path",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-e4a1f45d8b04",
+          "674096c0d4660f01",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "order",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 494,
+          "repeated_ngram_fraction_4": 0.2296416938110749,
+          "family": "order",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 638,
+          "repeated_ngram_fraction_4": 0.26173541963015645,
+          "family": "order",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-e4a1f45d8b04",
+          "674096c0d4660f01",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "order",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 287,
+          "repeated_ngram_fraction_4": 0.1778975741239892,
+          "family": "order",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 734,
+          "repeated_ngram_fraction_4": 0.2735632183908046,
+          "family": "order",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-f025279e70c3",
+          "c38ba4753851dc00",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "arith",
+        "difficulty": "hard",
+        "closure_transition": "only_a",
+        "correctness_transition": "only_a",
+        "scorable_transition": "only_a",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 812,
+          "repeated_ngram_fraction_4": 0.49616858237547895,
+          "family": "arith",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.5051344743276284,
+          "family": "arith",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-f025279e70c3",
+          "c38ba4753851dc00",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "arith",
+        "difficulty": "hard",
+        "closure_transition": "only_a",
+        "correctness_transition": "only_a",
+        "scorable_transition": "only_a",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 843,
+          "repeated_ngram_fraction_4": 0.6089108910891089,
+          "family": "arith",
+          "difficulty": "hard"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.43031784841075793,
+          "family": "arith",
+          "difficulty": "hard"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-f1f1023d29a0",
+          "e0248acdd2c606b0",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "path",
+        "difficulty": "easy",
+        "closure_transition": "only_b",
+        "correctness_transition": "only_b",
+        "scorable_transition": "only_b",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.25476772616136917,
+          "family": "path",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 953,
+          "repeated_ngram_fraction_4": 0.1843238587424634,
+          "family": "path",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-f1f1023d29a0",
+          "e0248acdd2c606b0",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "path",
+        "difficulty": "easy",
+        "closure_transition": "only_a",
+        "correctness_transition": "only_a",
+        "scorable_transition": "only_a",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 528,
+          "repeated_ngram_fraction_4": 0.12017167381974249,
+          "family": "path",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.2,
+          "family": "path",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-f5e445f86581",
+          "a7d82659b89ff887",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "arith",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 215,
+          "repeated_ngram_fraction_4": 0.26666666666666666,
+          "family": "arith",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 652,
+          "repeated_ngram_fraction_4": 0.4052197802197802,
+          "family": "arith",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-f5e445f86581",
+          "a7d82659b89ff887",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "arith",
+        "difficulty": "easy",
+        "closure_transition": "both",
+        "correctness_transition": "both",
+        "scorable_transition": "both",
+        "a": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 560,
+          "repeated_ngram_fraction_4": 0.3193403298350825,
+          "family": "arith",
+          "difficulty": "easy"
+        },
+        "b": {
+          "available": true,
+          "closed": true,
+          "eos": true,
+          "capped": false,
+          "scorable": true,
+          "correct": true,
+          "natural_final_status": "correct",
+          "reasoning_tokens": 733,
+          "repeated_ngram_fraction_4": 0.4014423076923077,
+          "family": "arith",
+          "difficulty": "easy"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-f6c3da2f0b0d",
+          "1d379c9275247163",
+          "cond-f5e762d3078f",
+          0
+        ],
+        "family": "path",
+        "difficulty": "medium",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.3202933985330073,
+          "family": "path",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.23814180929095355,
+          "family": "path",
+          "difficulty": "medium"
+        }
+      },
+      {
+        "draw_key": [
+          "pres-f6c3da2f0b0d",
+          "1d379c9275247163",
+          "cond-f5e762d3078f",
+          1
+        ],
+        "family": "path",
+        "difficulty": "medium",
+        "closure_transition": "neither",
+        "correctness_transition": "neither",
+        "scorable_transition": "neither",
+        "a": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.23667481662591688,
+          "family": "path",
+          "difficulty": "medium"
+        },
+        "b": {
+          "available": true,
+          "closed": false,
+          "eos": false,
+          "capped": true,
+          "scorable": false,
+          "correct": false,
+          "natural_final_status": "censored",
+          "reasoning_tokens": 2048,
+          "repeated_ngram_fraction_4": 0.2943765281173594,
+          "family": "path",
+          "difficulty": "medium"
+        }
+      }
+    ],
+    "note": "Closure and correctness transitions are separate. A correct answer requires a scorable normalized answer; an unscorable string is never a wrong answer. Ambiguous draws are labelled, not dropped."
+  },
+  "repetition": {
+    "mode": "sampled",
+    "n_paired_draws": 60,
+    "overall_mean_delta": 0.01734718583238782,
+    "by_family_mean_delta": {
+      "arith": 0.0006783435920944778,
+      "logic": 0.0013039934800326048,
+      "order": 0.02757591315313113,
+      "path": 0.02360192413068315,
+      "sm": 0.03357575480599774
+    },
+    "by_closure_state_mean_delta": {
+      "both_closed": 0.039432880284708934,
+      "other": 0.003618240632296321
+    },
+    "by_reasoning_length_quartile_mean_delta": {
+      "long": 0.011657701711491447,
+      "mid": 0.004235412952892523,
+      "short": 0.04180723506568908
+    },
+    "length_quartile_bounds": {
+      "q1": 804.0,
+      "q3": 2048.0
+    },
+    "note": "Exploratory association only; not a validated loop detector and not a confirmatory result."
+  }
+}

@@ -110,25 +110,25 @@ svg { display:block; margin: 0.5rem 0 1rem; background:#fafafa; }
 <li>natural_eos: 26</li>
 <li>status:censored: 33</li>
 <li>status:correct: 26</li>
-<li>status:unparseable: 1</li>
+<li>status:incorrect: 1</li>
 <li>think_end_reached: 27</li>
 
 <h3>Budget outcomes per condition</h3>
 <table>
 <tr><th>condition_id</th><th>success_at_budget</th><th>completion_rate</th><th>censored_rate</th><th>error_rate</th><th>unparseable_rate</th><th>cond_acc</th><th>completed</th></tr>
-<tr><td>cond-f5e762d3078f</td><td>0.4333</td><td>0.4333</td><td>0.55</td><td>0</td><td>0.01667</td><td>1</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>0.4333</td><td>0.4333</td><td>0.55</td><td>0</td><td>0</td><td>1</td></tr>
 </table>
 
 <h2>Family reconciliation (closures vs EOS are distinct)</h2>
 
 <table>
-<tr><th>condition</th><th>family</th><th>n</th><th>native closures</th><th>EOS</th><th>capped-after-close</th><th>censored</th><th>no-closure</th><th>unparseable</th><th>errors</th><th>scorable answers</th><th>correct</th><th>incorrect</th></tr>
-<tr><td>cond-f5e762d3078f</td><td>**ALL**</td><td>60</td><td>27</td><td>26</td><td>1</td><td>33</td><td>0</td><td>1</td><td>0</td><td>26</td><td>26</td><td>0</td></tr>
-<tr><td>cond-f5e762d3078f</td><td>arith</td><td>12</td><td>9</td><td>9</td><td>0</td><td>3</td><td>0</td><td>0</td><td>0</td><td>9</td><td>9</td><td>0</td></tr>
-<tr><td>cond-f5e762d3078f</td><td>logic</td><td>12</td><td>0</td><td>0</td><td>0</td><td>12</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-<tr><td>cond-f5e762d3078f</td><td>order</td><td>12</td><td>10</td><td>10</td><td>0</td><td>2</td><td>0</td><td>0</td><td>0</td><td>10</td><td>10</td><td>0</td></tr>
-<tr><td>cond-f5e762d3078f</td><td>path</td><td>12</td><td>1</td><td>1</td><td>0</td><td>11</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
-<tr><td>cond-f5e762d3078f</td><td>sm</td><td>12</td><td>7</td><td>6</td><td>1</td><td>5</td><td>0</td><td>1</td><td>0</td><td>6</td><td>6</td><td>0</td></tr>
+<tr><th>condition</th><th>family</th><th>n</th><th>native closures</th><th>EOS</th><th>censored</th><th>no-closure</th><th>unparseable</th><th>errors</th><th>observed answers</th><th>correct answers</th></tr>
+<tr><td>cond-f5e762d3078f</td><td>**ALL**</td><td>60</td><td>27</td><td>26</td><td>33</td><td>0</td><td>0</td><td>0</td><td>26</td><td>26</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>arith</td><td>12</td><td>9</td><td>9</td><td>3</td><td>0</td><td>0</td><td>0</td><td>9</td><td>9</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>logic</td><td>12</td><td>0</td><td>0</td><td>12</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>order</td><td>12</td><td>10</td><td>10</td><td>2</td><td>0</td><td>0</td><td>0</td><td>10</td><td>10</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>path</td><td>12</td><td>1</td><td>1</td><td>11</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+<tr><td>cond-f5e762d3078f</td><td>sm</td><td>12</td><td>7</td><td>6</td><td>5</td><td>0</td><td>0</td><td>0</td><td>6</td><td>6</td></tr>
 </table>
 
 <h2>Censor-aware time-to-closure (Kaplan-Meier / RMST)</h2>

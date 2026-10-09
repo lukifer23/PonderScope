@@ -142,27 +142,29 @@ def _family_reconciliation_section(analysis: dict[str, Any]) -> list[str]:
     """
     lines = ["## Family reconciliation (closures vs EOS are distinct)", ""]
     lines.append(
-        "| condition | family | n | native closures | EOS | censored | no-closure | "
-        "unparseable | errors | observed answers | correct answers |"
+        "| condition | family | n | native closures | EOS | capped-after-close | censored | "
+        "no-closure | unparseable | errors | scorable answers | correct | incorrect |"
     )
-    lines.append("|---|---|---|---|---|---|---|---|---|---|---|")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for cid, c in analysis["configs"].items():
         cats = c.get("categories", {})
         lines.append(
             f"| {cid} | **ALL** | {cats.get('n')} | {cats.get('native_reasoning_closures')} | "
-            f"{cats.get('eos_terminations')} | {cats.get('censored')} | "
-            f"{cats.get('terminated_no_closure')} | {cats.get('unparseable')} | "
-            f"{cats.get('errors')} | {cats.get('observed_answers')} | "
-            f"{cats.get('correct_answers')} |"
+            f"{cats.get('eos_terminations')} | {cats.get('budget_exhausted_after_closure')} | "
+            f"{cats.get('censored')} | {cats.get('terminated_no_closure')} | "
+            f"{cats.get('unparseable')} | {cats.get('errors')} | "
+            f"{cats.get('observed_answers')} | {cats.get('correct_answers')} | "
+            f"{cats.get('scorable_incorrect')} |"
         )
         for fam, d in c.get("per_family", {}).items():
             fc = d.get("categories", {})
             lines.append(
                 f"| {cid} | {fam} | {fc.get('n')} | {fc.get('native_reasoning_closures')} | "
-                f"{fc.get('eos_terminations')} | {fc.get('censored')} | "
-                f"{fc.get('terminated_no_closure')} | {fc.get('unparseable')} | "
-                f"{fc.get('errors')} | {fc.get('observed_answers')} | "
-                f"{fc.get('correct_answers')} |"
+                f"{fc.get('eos_terminations')} | {fc.get('budget_exhausted_after_closure')} | "
+                f"{fc.get('censored')} | {fc.get('terminated_no_closure')} | "
+                f"{fc.get('unparseable')} | {fc.get('errors')} | "
+                f"{fc.get('observed_answers')} | {fc.get('correct_answers')} | "
+                f"{fc.get('scorable_incorrect')} |"
             )
     lines.append("")
     return lines
