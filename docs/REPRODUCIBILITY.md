@@ -129,6 +129,17 @@ matched-trial population is incomplete.
 - `verify` FAIL means the raw evidence or final manifest is inconsistent.
 - A sealed run with no local raw traces cannot be analyzed (analyze refuses).
 
+## Frozen populations and compact analyses
+
+A declared experiment may be frozen with `specs/<...>-population-lock.json`.
+`preflight` and `run` auto-detect a lock by the specification's population key
+and fail closed on any mismatch; `--population-lock` selects one explicitly.
+Committed `analysis.json` files are compact summaries (no raw token arrays, text,
+or prompts); raw evidence is only in the run directory and verified bundles.
+Raw traces are **not guaranteed byte-reproducible** by re-running with the same
+seed — GPU nondeterminism and library changes can alter them — so the immutable
+run evidence and bundles are the archival record, not a re-run.
+
 ## Evidence bundles (external reproducibility)
 
 Raw traces are excluded from Git, so a sealed run's committed hashes and

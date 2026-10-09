@@ -423,3 +423,48 @@ def test_analysis_is_idempotent(tmp_path, fake_backend, monkeypatch):
     c2 = next(iter(second["configs"].values()))
     assert c1["reasoning_tokens"] == c2["reasoning_tokens"]
     assert c1["categories"] == c2["categories"]
+
+
+# --------------------------------------------------------------------------- #
+# Preflight gates and design-planning precision
+# --------------------------------------------------------------------------- #
+from ponderscope.design import design_plan  # noqa: E402
+from ponderscope.preflight import run_preflight  # noqa: E402
+
+
+def test_preflight_gates_block_on_missing_source(tmp_path):
+    spec = _base(families=["arith"], n_per_family=1, sampled_seeds=[0])
+    report = run_preflight(
+        spec, model_repo="fake/model", model_revision="deadbeef", runs_dir=tmp_path
+    )
+    assert report["gates"]["source_cache"] == "BLOCK"
+    assert report["ok"] is False
+    assert any("source_cache" in b for b in report["blocks"])
+    assert "expected_generations" in report["gates"]
+
+
+def test_preflight_lock_block(tmp_path):
+    spec = _base()
+    lock = build_lock(spec)
+    lock["task_ids_sha256"] = "0" * 64
+    lock_path = tmp_path / "bad-lock.json"
+    lock_path.write_text(json.dumps(lock))
+    report = run_preflight(
+        spec,
+        model_repo="fake/model",
+        model_revision="deadbeef",
+        runs_dir=tmp_path,
+        population_lock=str(lock_path),
+    )
+    assert report["gates"]["population_lock"] == "BLOCK"
+    assert report["ok"] is False
+
+
+def test_design_plan_is_deterministic_and_sensitive():
+    a = design_plan(seed=7, n_monte_carlo=40, n_resamples=200, task_sizes=(30, 60))
+    b = design_plan(seed=7, n_monte_carlo=40, n_resamples=200, task_sizes=(30, 60))
+    assert a == b
+    widths = {row["n_tasks"]: row["closure_ci_half_width"] for row in a["sensitivity"]}
+    assert widths[30] > widths[60]  # more tasks -> tighter interval
+    assert a["assumptions"]["simulation_seed"] == 7
+    assert a["kind"].startswith("design-planning")

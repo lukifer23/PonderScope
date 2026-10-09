@@ -34,6 +34,44 @@ Specs: `specs/phase1_6-replication-bf16.json` and
 `specs/phase1_6-replication-q4.json` differ only in name/notes; the weight
 variant is selected via `--artifact-path`.
 
+## Frozen population lock (PREREGISTERED, enforced)
+
+The population is cryptographically frozen in
+`specs/phase1_6-population-lock.json` (schema `ponderscope-population-lock/1`):
+task pack/generator version, split, seed, families, per-family counts, task ids,
+presentation ids, task/presentation/structural-signature digests, prompt policy,
+difficulty distribution, expected draws/executions, controlled spec hashes, and
+the generating code revision. `ponderscope preflight` and `ponderscope run`
+auto-detect the lock by the specification's population key (or an explicit
+`--population-lock`) and **fail closed** on any mismatch. Changing the population
+requires a documented preregistration amendment before any held-out outcome is
+inspected. Historical specifications without a lock are unaffected.
+
+## Precision (reproducible, PREREGISTERED assumptions)
+
+`ponderscope design-precision` (module `src/ponderscope/design.py`) computes the
+achievable precision from stated assumptions, seeded and committed to
+`runs/phase1_6-precision-simulation.json`. It uses **no model data**.
+
+Assumptions: 5 families × 6 tasks = 30 task clusters; 2 seeds/task; closure
+baseline `p0=0.5`; true delta `0`; between-task sd `0.15`; Bernoulli within task;
+300 Monte-Carlo replicates; 2000 task-clustered bootstrap resamples; interval =
+task-clustered percentile bootstrap; RMST per-task sd `250` tokens; seed `0`.
+
+| tasks | draws/arm | closure CI half-width | RMST CI half-width |
+|---|---|---|---|
+| 30 | 60 | ≈0.165 | ≈89 tokens |
+| 50 | 100 | ≈0.130 | ≈69 tokens |
+| 100 | 200 | ≈0.093 | ≈49 tokens |
+
+**Interpretation.** At 30 tasks the closure-rate interval is **too wide to
+resolve a 0.10 difference** (half-width ≈0.165 > 0.10); the RMST interval
+(half-width ≈89 tokens) *can* resolve a 150-token difference. The 30-task design
+therefore remains appropriate as a **bounded** replication but is underpowered
+for a small closure-rate effect. A null closure-rate result is **not** evidence
+of equivalence. The design is retained unchanged; this limitation is documented
+rather than amended opportunistically.
+
 ## Task-population audit (MEASURED, read-only, pre-outcome)
 
 - 30 tasks generated deterministically; **0 task-id overlap** and **0 structural

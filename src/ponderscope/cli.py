@@ -590,10 +590,14 @@ def _cmd_preflight(args: argparse.Namespace) -> int:
     if "compute_estimate" in checks:
         print(f"  compute estimate: {checks['compute_estimate']}")
     print(f"  duplicate runs: {checks.get('duplicate_runs')}")
-    print(f"  active/incomplete runs: {checks.get('active_or_incomplete_runs')}")
+    print(f"  active runs (live): {checks.get('active_runs')}")
+    print(f"  stale runs: {checks.get('stale_runs')}")
+    print(f"  gates: {report.get('gates')}")
+    for warning in report.get("warnings", []):
+        print(f"  WARNING: {warning}")
     print(f"  OK: {report['ok']}")
-    for problem in report["problems"]:
-        print(f"  PROBLEM: {problem}")
+    for problem in report.get("blocks", report.get("problems", [])):
+        print(f"  BLOCK: {problem}")
     return 0 if report["ok"] else 1
 
 
@@ -613,6 +617,37 @@ def _cmd_cross_study(args: argparse.Namespace) -> int:
             f"closure_delta={s['closure_rate_delta']} rmst_delta={s['rmst_reasoning_delta']}"
         )
     print(f"  pooled: {summary['pooled']} ({summary['pooling_note']})")
+    return 0
+
+
+def _cmd_design_precision(args: argparse.Namespace) -> int:
+    from .design import design_plan
+    from .evidence.store import atomic_write_json
+
+    plan = design_plan(
+        seed=args.seed,
+        p0=args.p0,
+        delta=args.delta,
+        between_task_sd=args.between_task_sd,
+        n_monte_carlo=args.monte_carlo,
+        n_resamples=args.resamples,
+        per_task_sd_tokens=args.per_task_sd_tokens,
+        task_sizes=tuple(args.task_sizes),
+    )
+    if args.out:
+        atomic_write_json(Path(args.out), plan)
+    if args.json:
+        print(json.dumps(plan, indent=2))
+        return 0
+    print("design-planning precision (not model data)")
+    for row in plan["sensitivity"]:
+        print(
+            f"  tasks={row['n_tasks']:4} draws/arm={row['n_draws_per_arm']:4} "
+            f"closure_ci_half_width={row['closure_ci_half_width']:.3f} "
+            f"rmst_ci_half_width={row['rmst_ci_half_width_tokens']:.0f} tokens"
+        )
+    if args.out:
+        print(f"  saved {args.out}")
     return 0
 
 
@@ -822,6 +857,22 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--label", nargs="*", default=None)
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_cross_study)
+
+    p = sub.add_parser(
+        "design-precision",
+        help="reproducible design-planning precision simulation (no model data)",
+    )
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--p0", type=float, default=0.5)
+    p.add_argument("--delta", type=float, default=0.0)
+    p.add_argument("--between-task-sd", type=float, default=0.15)
+    p.add_argument("--monte-carlo", type=int, default=300)
+    p.add_argument("--resamples", type=int, default=2000)
+    p.add_argument("--per-task-sd-tokens", type=float, default=250.0)
+    p.add_argument("--task-sizes", nargs="+", type=int, default=[30, 50, 100])
+    p.add_argument("--out", default=None)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_design_precision)
 
     return parser
 

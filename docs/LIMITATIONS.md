@@ -72,13 +72,26 @@ PonderScope is intentionally conservative about what its evidence supports.
 - A degenerate bootstrap interval of `[0, 0]` from a uniformly observed metric
   (e.g. all completed answers correct) is **not** proof of exact equivalence; it
   reflects an absence of estimable variation.
+- **Publication-grade is not statistical sufficiency.** A publication-grade result
+  means integrity and methodological checks passed (verified seals, complete
+  declared population, clean contrast, no exploratory override). It does **not**
+  mean the sample size can resolve every effect. The Phase 1.6 30-task design has
+  a closure-rate CI half-width of ≈0.165 and an RMST half-width of ≈89 tokens;
+  it is underpowered for a ~0.10 closure-rate effect. A null result is **not**
+  evidence of equivalence.
+- **Raw traces are not byte-reproducible by re-running.** The immutable run
+  evidence and verified bundles are the archival record; re-running the same
+  seed may differ (GPU nondeterminism, library drift).
+- **Historical derived analyses.** Phase 1.1–1.4 `analysis.json` files contain
+  embedded raw trace records; they are preserved unchanged and are not rewritten
+  by the compact-serialization change (Phase 1.6).
+- Paired comparisons use only matched stochastic draws; a comparison with an
+  incomplete or unbalanced trial population is refused by default
+  (`require_complete`) rather than silently pooling unmatched observations.
 - The primary closure survival is **cause-specific**: an EOS that terminates
   generation without a native close is a competing terminal event but is currently
   treated as noninformative censoring. The count is reported per condition; a full
   competing-risk cumulative-incidence analysis is **NOT YET TESTED**.
-- Paired comparisons use only matched stochastic draws; a comparison with an
-  incomplete or unbalanced trial population is refused by default
-  (`require_complete`) rather than silently pooling unmatched observations.
 
 ## Not yet implemented / tested
 

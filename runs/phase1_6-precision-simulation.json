@@ -1,0 +1,36 @@
+{
+  "kind": "design-planning (not model data)",
+  "assumptions": {
+    "closure_baseline_p0": 0.5,
+    "true_closure_delta": 0.0,
+    "between_task_sd": 0.15,
+    "within_task": "Bernoulli per seed",
+    "seeds_per_task": 2,
+    "monte_carlo_replicates": 300,
+    "bootstrap_resamples": 2000,
+    "interval_method": "task-clustered percentile bootstrap",
+    "rmst_per_task_sd_tokens": 250.0,
+    "simulation_seed": 0
+  },
+  "sensitivity": [
+    {
+      "n_tasks": 30,
+      "n_draws_per_arm": 60,
+      "closure_ci_half_width": 0.16518611111111106,
+      "rmst_ci_half_width_tokens": 89.45970718585782
+    },
+    {
+      "n_tasks": 50,
+      "n_draws_per_arm": 100,
+      "closure_ci_half_width": 0.12959416666666665,
+      "rmst_ci_half_width_tokens": 69.29519121748388
+    },
+    {
+      "n_tasks": 100,
+      "n_draws_per_arm": 200,
+      "closure_ci_half_width": 0.0927708333333333,
+      "rmst_ci_half_width_tokens": 48.999099613501336
+    }
+  ],
+  "note": "Planning estimates under stated assumptions; not a measurement of model performance. A null result is not evidence of equivalence."
+}

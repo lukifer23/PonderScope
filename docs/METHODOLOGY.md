@@ -222,6 +222,23 @@ source's while both share the same `source_artifact_id`, and
 `derived_from_source_artifact_id` records lineage. Local filesystem paths and the
 backend load audit are excluded from scientific identity.
 
+## Frozen task populations
+
+A declared experiment may be frozen with a versioned population lock
+(`ponderscope-population-lock/1`) recording the exact task and presentation
+identities. When a lock matches a specification's population key, preflight and
+the run path verify the freshly generated population against it and **fail
+closed** on any mismatch; historical specifications without a lock are
+unaffected. A lock change requires a documented preregistration amendment.
+
+## Derived analyses vs raw evidence
+
+Committed `analysis.json` artifacts are compact: counts, aggregates, draw
+identities, flags, and per-draw scalar metrics — never raw token arrays, decoded
+text, or prompts. Raw traces live in immutable run storage and verified bundles.
+Analysis semantics are versioned (`phase1.6`); historical derived artifacts are
+preserved rather than rewritten.
+
 ## Comparison and statistics
 
 The statistical unit is the **task**, not the generation. Repeated seeds/repeats
@@ -229,17 +246,22 @@ from one task are not independent samples, so accuracy CIs and paired deltas use
 a **task-clustered** bootstrap that preserves within-task seed/repeat structure;
 the estimand is stated explicitly. Paired estimates use only **matched
 stochastic draws**: the canonical trial key is
-`(presentation_id, task_id, mode, seed, repeat)`, matched executions collapse to
-one observation per `(presentation, task, seed)` iff token-identical, and
-ambiguous draws are excluded. Unmatched seeds/repeats and other decoding modes
-cannot enter a paired survival estimate. A comparison reports its trial
+`(presentation_id, task_id, condition_id, mode, seed, repeat)` and the canonical
+draw key is `(presentation_id, task_id, condition_id, seed)` — including the
+decoding condition so two different conditions never collapse together. Matched
+executions collapse to one observation per draw iff token-identical; ambiguous
+draws are excluded. Each arm is collapsed independently and then **both arms are
+restricted to the intersection of their usable draws**, so a draw ambiguous in
+only one arm is excluded from both. Unmatched seeds/repeats and other decoding
+conditions cannot enter a paired estimate. A comparison reports its trial
 population (expected/observed/matched/unmatched/missing/duplicate per arm) and is
 **refused by default when incomplete** (`require_complete`), and refuses when
 either run's evidence seal does not verify unless an explicit exploratory
-override is given. Every metric's delta is classified
+override is given. Standalone per-run primary metrics are draw-level and agree
+with the paired code; timing/throughput remain execution-level diagnostics under
+`execution_diagnostics`. Every metric's delta is classified
 `below_noise` / `comparable` / `clearly_larger` / `ci_only` / `insufficient_data`
-using the combined within-deployment noise of **both** compared conditions, not
-one side.
+using the combined within-deployment noise of **both** compared conditions.
 
 Before any metric is compared, a canonical configuration-difference report lists
 identical / changed / missing provenance fields, and the requested contrast is

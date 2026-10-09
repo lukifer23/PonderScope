@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import platform
 import shutil
+import time
 from pathlib import Path
 from typing import Any
 
@@ -171,10 +172,12 @@ def run_preflight(
             "total_hours": round(seconds / 3600, 2),
         }
 
-    # 7. Duplicate and active/incomplete runs.
+    # 7. Duplicate and active/incomplete runs (live vs stale).
     runs_path = Path(runs_dir)
     duplicates: list[str] = []
-    active: list[str] = []
+    live: list[str] = []
+    stale: list[str] = []
+    now = time.time()
     if runs_path.exists():
         for manifest_path in runs_path.glob("*/manifest.json"):
             try:
@@ -186,7 +189,9 @@ def run_preflight(
             run_id = manifest.get("run_id", manifest_path.parent.name)
             status = manifest.get("status", {}).get("run")
             if status in ("RUNNING", "IN_PROGRESS", "PARTIAL", "FAILED"):
-                active.append(f"{run_id} ({status})")
+                age = now - manifest_path.stat().st_mtime
+                entry = f"{run_id} ({status}, age={int(age)}s)"
+                (live if age < 600 else stale).append(entry)
             same_spec = manifest.get("spec_hash") == spec.canonical_hash()
             recorded_path = manifest.get("weight_variant", {}).get("local_path") or manifest.get(
                 "artifact", {}
@@ -199,13 +204,108 @@ def run_preflight(
             if same_spec and same_variant:
                 duplicates.append(run_id)
     checks["duplicate_runs"] = duplicates
-    checks["active_or_incomplete_runs"] = active
+    checks["active_runs"] = live
+    checks["stale_runs"] = stale
+    checks["active_or_incomplete_runs"] = live + stale
+
+    # 8. Code state (advisory: preflight never mutates).
+    from .evidence.environment import capture_code_state
+
+    code_state = capture_code_state(include_diff_hash=False)
+    checks["code_state"] = {
+        "git_sha": code_state.get("git_sha"),
+        "tracked_dirty": code_state.get("tracked_dirty"),
+    }
+
+    # 9. Gate evaluation: PASS / WARNING / BLOCK.
+    gates: dict[str, str] = {}
+    blocks: list[str] = []
+    warnings: list[str] = []
+
+    def gate(name: str, status: str, detail: str = "") -> None:
+        gates[name] = status
+        if status == "BLOCK":
+            blocks.append(f"{name}: {detail}" if detail else name)
+        elif status == "WARNING":
+            warnings.append(f"{name}: {detail}" if detail else name)
+
+    src = checks["source_cache"]
+    gate("source_cache", "PASS" if src.get("available") else "BLOCK", src.get("error", ""))
+
+    if "artifact" in checks:
+        art = checks["artifact"]
+        if art.get("error"):
+            gate("artifact", "BLOCK", art["error"])
+        elif art.get("source_lineage_ok") and art.get("derived_hashes_ok"):
+            gate("artifact", "PASS")
+        else:
+            gate("artifact", "BLOCK", "lineage or derived-hash verification failed")
+
+    lock = checks["population_lock"]
+    if not lock.get("locked"):
+        gate("population_lock", "PASS", "no lock declared for this specification")
+    elif lock.get("ok"):
+        gate("population_lock", "PASS")
+    else:
+        gate("population_lock", "BLOCK", str(lock.get("mismatches")))
+
+    required_bytes = max(1 << 30, expected["total_executions"] * 200_000)
+    checks["required_disk_bytes"] = required_bytes
+    free = checks["disk"]["free_bytes"]
+    if free < required_bytes:
+        gate("disk", "BLOCK", f"free={free} < required={required_bytes}")
+    elif free < 5 * required_bytes:
+        gate("disk", "WARNING", f"free={free} is within 5x required={required_bytes}")
+    else:
+        gate("disk", "PASS")
+
+    mem = checks["memory_bytes"]
+    if mem is None:
+        gate("memory", "WARNING", "physical memory unknown")
+    elif mem < 12 * (1 << 30):
+        gate("memory", "BLOCK", f"{mem} < 12 GiB")
+    elif mem < 16 * (1 << 30):
+        gate("memory", "WARNING", f"{mem} < 16 GiB")
+    else:
+        gate("memory", "PASS")
+
+    rt = checks["runtime"]
+    if rt.get("error"):
+        gate("runtime", "BLOCK", rt["error"])
+    else:
+        if rt.get("python") != "3.12":
+            gate("runtime", "BLOCK", f"python {rt.get('python')} != 3.12")
+        elif rt.get("mlx_lm") != "0.32.0":
+            gate("runtime", "WARNING", f"mlx-lm {rt.get('mlx_lm')} != pinned 0.32.0")
+        else:
+            gate("runtime", "PASS")
+
+    gate("expected_generations", "PASS")
+
     if duplicates:
-        problems.append(f"a run with the same spec and variant already exists: {duplicates}")
+        gate("duplicate_runs", "BLOCK", str(duplicates))
+    else:
+        gate("duplicate_runs", "PASS")
+
+    if live:
+        gate("active_runs", "BLOCK", f"live experiment(s): {live}")
+    elif stale:
+        gate("active_runs", "WARNING", f"stale partial run(s): {stale}")
+    else:
+        gate("active_runs", "PASS")
+
+    if code_state.get("tracked_dirty"):
+        gate("code_state", "WARNING", "tracked worktree is dirty (run would be exploratory)")
+    else:
+        gate("code_state", "PASS")
 
     return {
-        "ok": not problems,
-        "problems": problems,
+        "ok": not blocks,
+        "blocks": blocks,
+        "warnings": warnings,
+        "gates": gates,
+        # backward-compatible alias: problems == blocking conditions
+        "problems": blocks,
         "checks": checks,
         "spec_hash": spec.canonical_hash(),
         "spec_name": spec.name,

@@ -105,6 +105,7 @@ replication is required before any generalization.
 | phase1.3b | closure ≠ EOS; stochastic-draw units | Stage A reanalysis |
 | phase1.4 | event time = native think-end index | baseline RMST 1511.9→1368.8, median 1718→1569 |
 | phase1.5 | matched-draw paired RMST; independent EOS time; competing events; evidence gating | pilot/full comparisons regenerated |
+| phase1.6 | condition-aware draw identity; paired-draw alignment; draw-unit standalone metrics; compact analyses | primary values unchanged; committed analyses no longer embed raw traces |
 
 Historical derived artifacts (`analysis.json`, old comparison files) are
 preserved; reanalyses are written as separate `phase1_4`/`phase1_5` artifacts.
