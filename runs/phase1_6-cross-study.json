@@ -1,0 +1,44 @@
+{
+  "studies": [
+    {
+      "label": "calibration-10task",
+      "deployment_a": "dep-4f8e7958df4f",
+      "deployment_b": "dep-e1c20569173a",
+      "contrast": "weight_representation",
+      "n_matched_pairs": 30,
+      "population_complete": true,
+      "publication_grade": true,
+      "closure_rate_delta": 0.03333333333333334,
+      "closure_rate_ci": [
+        0.0,
+        0.1
+      ],
+      "rmst_reasoning_delta": -117.33578333333332,
+      "rmst_reasoning_ci": [
+        -307.86749999999984,
+        63.45583333333327
+      ]
+    },
+    {
+      "label": "replication-30task",
+      "deployment_a": "dep-4f8e7958df4f",
+      "deployment_b": "dep-e1c20569173a",
+      "contrast": "weight_representation",
+      "n_matched_pairs": 60,
+      "population_complete": true,
+      "publication_grade": true,
+      "closure_rate_delta": 0.06666666666666667,
+      "closure_rate_ci": [
+        -0.03333333333333333,
+        0.18333333333333332
+      ],
+      "rmst_reasoning_delta": -48.096249999999955,
+      "rmst_reasoning_ci": [
+        -171.87249999999946,
+        62.25041666666689
+      ]
+    }
+  ],
+  "pooled": null,
+  "pooling_note": "Calibration and replication populations are distinct; pooled estimates are not produced automatically and would require an explicit, justified method."
+}

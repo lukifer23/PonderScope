@@ -97,6 +97,29 @@ native reasoning closure or time-to-closure, while it is substantially faster an
 smaller. The study is underpowered for a small effect; a larger independent-task
 replication is required before any generalization.
 
+## Independent replication (Phase 1.6, MEASURED)
+
+Frozen held-out `tasks-v1` test split (`task_seed=1729`, 30 unseen tasks),
+60 draws per arm, under the committed population lock. Both seals verified;
+comparison complete (60/60 matched, 0 ambiguous), `weight_representation`.
+
+| primary outcome | delta (Q4 − BF16) | 95% CI | excludes zero |
+|---|---|---|---|
+| native reasoning closure rate | +0.067 | [−0.033, +0.183] | no |
+| RMST to reasoning closure (2048) | −48.1 | [−171.9, +62.3] | no |
+| success_at_budget | +0.050 | [−0.017, 0.133] | no |
+
+Secondary: throughput 37.0 vs 12.8 tok/s (≈2.9×); wall 41.9 vs 124.1 s (≈3.0×);
+reasoning tokens −48.9; repeated-4gram −0.017. Family closures BF16 27/60 vs Q4
+31/60 (logic 0/12 both).
+
+**Conclusion (INCONCLUSIVE, not equivalence).** On unseen tasks the closure
+difference remains within the ≈0.165 planning half-width; no primary interval
+excludes zero. Consistent with Phase 1.4: no distinguishable reasoning-behavior
+difference at this precision, with a large speed advantage. The held-out
+population is now measured. Cross-study summary:
+`runs/phase1_6-cross-study.json` (no pooling).
+
 ### Reanalysis / version history
 
 | version | change | effect |

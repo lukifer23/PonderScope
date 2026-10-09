@@ -173,3 +173,34 @@ Raw traces are excluded from Git. For external reanalysis, build a deterministic
 verified bundle with `ponderscope bundle` (it refuses an unverifiable run) and
 distribute it through an external artifact location. Large raw bundles are not
 uploaded publicly without explicit approval.
+
+## Replication results (MEASURED, post-outcome)
+
+Executed under the frozen population lock. Both arms: 60 stochastic draws,
+`verify` PASS, publication-grade. Paired comparison complete (60/60 matched, 0
+duplicates, 0 ambiguous, both seals verified), contrast `weight_representation`.
+
+Runs:
+- BF16 `runs/20261009T005354Z-phase1-6-replication-bf16-replication-bf16-dep-e1c20569173a`
+- Q4 `runs/20261009T025900Z-phase1-6-replication-q4-replication-q4-dep-4f8e7958df4f`
+
+| primary outcome | delta (Q4 − BF16) | 95% CI | excludes zero |
+|---|---|---|---|
+| native reasoning closure rate | +0.067 | [−0.033, +0.183] | no |
+| RMST to reasoning closure (2048) | −48.1 tokens | [−171.9, +62.3] | no |
+| success_at_budget | +0.050 | [−0.017, 0.133] | no |
+
+Secondary: reasoning tokens −48.9; throughput **37.0 vs 12.8 tok/s (≈2.9×)**;
+wall time 41.9 vs 124.1 s (≈3.0×); repeated-4gram −0.017 (CI excludes zero);
+family closures BF16 27/60 (arith 9/12, path 1/12, order 10/12, logic 0/12,
+sm 7/12) vs Q4 31/60 (arith 11/12, path 2/12, order 11/12, logic 0/12, sm 7/12).
+
+**Conclusion (INCONCLUSIVE, not equivalence).** On 30 previously unseen tasks the
+native reasoning-closure difference (+0.067) remains inside the ≈0.165 planning
+half-width and its interval includes zero; RMST and success likewise do not
+exclude zero. The independent replication is consistent with the Phase 1.4
+result: no distinguishable reasoning-behavior difference at this precision, with
+a large, unambiguous speed advantage. The held-out population is now **measured**;
+it must not be reused to claim a new primary result. Cross-study summary
+(`runs/phase1_6-cross-study.json`) presents the calibration and replication
+contrasts side by side **without pooling**.

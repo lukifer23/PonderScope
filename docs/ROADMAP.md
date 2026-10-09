@@ -16,13 +16,14 @@ changes its reasoning behavior.** It does not drift into generic benchmarking.
 
 ## Immediate next experiment
 
-A **larger independent-task replication** of the same BF16-vs-controlled-Q4
-contrast. The full 30-draw contrast is complete: the reasoning-behavior effect is
-**not distinguishable** (closure +0.033 [0.00, 0.10]; RMST −117.3
-[−307.9, +63.5]) while Q4 is ≈3.1× faster and ≈3.3× smaller. The decisive open
-question is whether the small effect is real, which requires more **independent
-tasks**, not more seeds or repeats. A targeted secondary follow-up is a
-longer-horizon sensitivity run for the censored `logic` family.
+The Phase 1.6 independent replication is **complete** (30 unseen tasks, 60 draws
+per arm, under a frozen population lock): no distinguishable reasoning-behavior
+difference (closure +0.067 [−0.033, +0.183]; RMST −48.1 [−171.9, +62.3]; success
++0.050 [−0.017, 0.133]) with a large speed advantage (≈2.9×). Because the
+closure-rate interval is still within the ≈0.165 planning half-width, the next
+step is a **larger independent-task population** (more tasks, not more seeds) if
+a small closure-rate effect is to be resolved — the held-out test/1729
+population must not be reused for a new primary claim.
 
 ## Later, only after the above is established
 
