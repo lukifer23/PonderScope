@@ -168,3 +168,196 @@ def test_expected_executions_separate_draws_from_repeats():
     e2 = expected_executions(spec2)
     assert e2["sampled_draws"] == 8 and e2["sampled_executions"] == 16
     assert e2["total_draws"] == 8 and e2["total_executions"] == 16
+
+
+# --------------------------------------------------------------------------- #
+# Canonical draw identity (condition-aware) and paired alignment
+# --------------------------------------------------------------------------- #
+from ponderscope.analysis.analyze import _config_summary  # noqa: E402
+from ponderscope.analysis.compare import (  # noqa: E402
+    _collapsed_draws,
+    _draw_key,
+    _key,
+    _paired_draw_population,
+)
+from ponderscope.evidence.run import RunStore  # noqa: E402
+
+
+def _rec(pres, task, cid, seed, repeat, tokens, correct=True, mode="sampled"):
+    return {
+        "family": "arith",
+        "deployment": {
+            "weight_variant": {"precision": "float32", "quantization": None},
+            "source": {"repo_id": "fake/model", "revision": "deadbeef"},
+            "runtime": {"runtime": "fake", "runtime_version": "0", "hardware": "h"},
+            "decoding": {"mode": mode},
+        },
+        "presentation_id": pres,
+        "task_id": task,
+        "condition_id": cid,
+        "condition": {"mode": mode, "seed": seed, "repeat": repeat},
+        "trace": {
+            "token_ids": list(tokens),
+            "wall_ms": 10.0,
+            "tokens_per_sec": 50.0,
+            "ttft_ms": 1.0,
+        },
+        "correct": correct,
+        "reasoning_tokens": len(tokens),
+        "answer_tokens": 1,
+        "total_tokens": len(tokens),
+        "answer_normalized": "1" if correct else None,
+        "natural_final_status": "correct" if correct else "censored",
+        "termination": {
+            "think_end_reached": True,
+            "terminated_by_eos": True,
+            "capped": False,
+            "missing_answer": False,
+        },
+        "metrics": {
+            "unique_token_ratio": 1.0,
+            "repeated_ngram_fraction_4": 0.0,
+            "text_repeat_ratio": 0.0,
+        },
+        "loop": {"longest_run_length": 1},
+    }
+
+
+def _store(tmp_path):
+    return RunStore(path=tmp_path, manifest={})
+
+
+def test_two_conditions_do_not_collapse(tmp_path):
+    a = _rec("pres0", "task0", "cond-A", 0, 0, [1, 2, 3])
+    b = _rec("pres0", "task0", "cond-B", 0, 0, [4, 5, 6])
+    draws = _collapsed_draws(_store(tmp_path), {_key(a), _key(b)}, traces=[a, b])
+    assert len(draws) == 2
+    assert all(not d["ambiguous"] for d in draws.values())
+
+
+def test_technical_repeats_collapse_within_condition(tmp_path):
+    a0 = _rec("pres0", "task0", "cond-A", 0, 0, [1, 2, 3])
+    a1 = _rec("pres0", "task0", "cond-A", 0, 1, [1, 2, 3])
+    draws = _collapsed_draws(_store(tmp_path), {_key(a0), _key(a1)}, traces=[a0, a1])
+    assert len(draws) == 1
+    assert draws[_draw_key(a0)]["n_executions"] == 2
+    assert draws[_draw_key(a0)]["ambiguous"] is False
+
+
+def test_ambiguous_repeats_flagged(tmp_path):
+    a0 = _rec("pres0", "task0", "cond-A", 0, 0, [1, 2, 3])
+    a1 = _rec("pres0", "task0", "cond-A", 0, 1, [9, 9, 9])
+    draws = _collapsed_draws(_store(tmp_path), {_key(a0), _key(a1)}, traces=[a0, a1])
+    assert draws[_draw_key(a0)]["ambiguous"] is True
+    assert draws[_draw_key(a0)]["record"] is None
+
+
+def _pair(tmp_path, a_traces, b_traces):
+    keys = {_key(r) for r in a_traces} | {_key(r) for r in b_traces}
+    a = _store(tmp_path / "a")
+    b = _store(tmp_path / "b")
+    return _paired_draw_population(a, b, keys, traces_a=a_traces, traces_b=b_traces)
+
+
+def test_ambiguous_in_a_excludes_from_both(tmp_path):
+    # task0 seed0: A clean, B clean; task0 seed1: A ambiguous, B clean.
+    A = [
+        _rec("pres0", "task0", "cond-x", 0, 0, [1]),
+        _rec("pres0", "task0", "cond-x", 1, 0, [2]),
+        _rec("pres0", "task0", "cond-x", 1, 1, [8]),  # divergent -> ambiguous
+    ]
+    B = [
+        _rec("pres0", "task0", "cond-x", 0, 0, [1]),
+        _rec("pres0", "task0", "cond-x", 1, 0, [2]),
+    ]
+    # match by canonical trial key (seed1 repeat1 only in A, so B must declare it too)
+    a = _store(tmp_path / "a")
+    b = _store(tmp_path / "b")
+    keys = {_key(r) for r in A} | {_key(r) for r in B}
+    a_by, b_by, pop = _paired_draw_population(a, b, keys, traces_a=A, traces_b=B)
+    assert pop["n_ambiguous_a"] == 1
+    assert pop["n_paired_draws"] == 1  # only seed0
+    assert len(a_by["task0"]) == 1 and len(b_by["task0"]) == 1
+
+
+def test_ambiguous_in_b_excludes_from_both(tmp_path):
+    A = [_rec("pres0", "task0", "cond-x", 0, 0, [1]), _rec("pres0", "task0", "cond-x", 1, 0, [2])]
+    B = [
+        _rec("pres0", "task0", "cond-x", 0, 0, [1]),
+        _rec("pres0", "task0", "cond-x", 1, 0, [2]),
+        _rec("pres0", "task0", "cond-x", 1, 1, [7]),
+    ]
+    a_by, b_by, pop = _pair(tmp_path, A, B)
+    assert pop["n_ambiguous_b"] == 1
+    assert pop["n_paired_draws"] == 1
+
+
+def test_zero_valid_paired_draws(tmp_path):
+    A = [_rec("pres0", "task0", "cond-x", 0, 0, [1])]
+    B = [_rec("pres0", "task0", "cond-x", 1, 0, [2])]  # no shared draw key (different seed)
+    a_by, b_by, pop = _pair(tmp_path, A, B)
+    assert pop["n_paired_draws"] == 0
+    assert a_by == {} and b_by == {}
+
+
+def test_fully_matched_population_pairs_everything(tmp_path):
+    A = [_rec("pres0", "task0", "cond-x", s, 0, [s]) for s in (0, 1)]
+    B = [_rec("pres0", "task0", "cond-x", s, 0, [s]) for s in (0, 1)]
+    a_by, b_by, pop = _pair(tmp_path, A, B)
+    assert pop["n_paired_draws"] == 2
+    assert len(a_by["task0"]) == len(b_by["task0"]) == 2
+
+
+# --------------------------------------------------------------------------- #
+# Draw-unit consistency (standalone vs paired)
+# --------------------------------------------------------------------------- #
+def _run(tmp_path, fake_backend, monkeypatch, name, seeds, repeats=1):
+    from ponderscope.config.schema import ExperimentSpec
+    from ponderscope.experiment import run_experiment
+
+    monkeypatch.setattr("ponderscope.experiment.get_backend", lambda _n: fake_backend)
+    spec = ExperimentSpec(
+        name=name,
+        task_pack="tasks-v1",
+        families=["arith"],
+        n_per_family=2,
+        greedy_repeats=0,
+        sampled_seeds=list(seeds),
+        sampled_repeats_per_seed=repeats,
+        max_tokens=16,
+    )
+    return run_experiment(
+        spec,
+        model_repo="fake/model",
+        model_revision="deadbeef",
+        runs_dir=tmp_path,
+        code_state={"version": "test", "git_sha": "0" * 40, "tracked_dirty": False},
+    )
+
+
+def test_standalone_and_paired_units_agree(tmp_path, fake_backend, monkeypatch):
+    from ponderscope.analysis import analyze_run, compare_configs
+
+    a = _run(tmp_path, fake_backend, monkeypatch, "a", [0, 1], repeats=3)
+    b = _run(tmp_path, fake_backend, monkeypatch, "b", [0, 1], repeats=3)
+    analysis = analyze_run(a.store)
+    c = next(iter(analysis["configs"].values()))
+    assert c["n"] == 4  # primary draws, not 12 executions
+    assert c["n_executions"] == 12
+    assert c["execution_diagnostics"]["n_executions"] == 12
+    cmp = compare_configs(a.store, b.store, mode="sampled", n_resamples=100)
+    assert cmp["analysis_population"]["n_draws_used_a"] == c["n"] == 4
+
+
+def test_ambiguous_draws_excluded_from_primary_but_visible(tmp_path):
+    records = [
+        _rec("pres0", "task0", "cond-x", 0, 0, [1]),
+        _rec("pres0", "task0", "cond-x", 0, 1, [1]),
+        _rec("pres1", "task1", "cond-x", 0, 0, [2]),
+        _rec("pres1", "task1", "cond-x", 0, 1, [9]),  # ambiguous
+    ]
+    summary = _config_summary("cond-x", records)
+    assert summary["n"] == 1  # one primary draw (task0); task1 ambiguous excluded
+    assert summary["n_ambiguous_draws"] == 1
+    assert summary["categories"]["n"] == 1
+    assert summary["execution_diagnostics"]["n_executions"] == 4

@@ -237,4 +237,4 @@ def test_analyze_verified_run_is_publication_grade(tmp_path, fake_backend, monke
     analysis = analyze_run(a.store)
     assert analysis["evidence_verified"] is True
     assert analysis["publication_grade"] is True
-    assert analysis["interpretation"] == "phase1.5"
+    assert analysis["interpretation"] == "phase1.6"

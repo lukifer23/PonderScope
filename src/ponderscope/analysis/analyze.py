@@ -199,42 +199,45 @@ def _category_counts(records: list[dict[str, Any]]) -> dict[str, int]:
 
 
 def _config_summary(condition_id: str, records: list[dict[str, Any]]) -> dict[str, Any]:
+    # Primary stochastic-draw statistics: collapse same-seed technical repeats to
+    # one draw (condition-aware) and exclude ambiguous draws. Timing/throughput
+    # remain execution-level because they are performance, not stochastic-behavior,
+    # measurements.
+    draws = collapse_to_stochastic_draws(records)
+    primary = [d["record"] for d in draws if d["record"] is not None]
+    ds = draw_summary(draws)
     families: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for r in records:
+    for r in primary:
         families[r["family"]].append(r)
-    by_task = group_values_by_task(records, "task_id", lambda r: 1.0 if r["correct"] else 0.0)
+    by_task = group_values_by_task(primary, "task_id", lambda r: 1.0 if r["correct"] else 0.0)
     acc_ci = cluster_bootstrap_ci(by_task)
-    ds = draw_summary(collapse_to_stochastic_draws(records))
     return {
         "condition_id": condition_id,
         "mode": records[0]["condition"]["mode"],
-        "n": len(records),
+        "analysis_unit": "stochastic draw (same-seed technical repeats collapsed)",
+        "n": len(primary),
         "n_executions": ds["n_executions"],
         "n_unique_draws": ds["n_unique_draws"],
+        "n_primary_draws": ds["n_primary_draws"],
         "n_ambiguous_draws": ds["n_ambiguous_draws"],
-        "n_tasks": len({r["task_id"] for r in records}),
+        "n_tasks": len({r["task_id"] for r in primary}),
         "deployment_description": _describe(records[0]["deployment"]),
         "success_at_budget": acc_ci["mean"],
         "success_at_budget_ci": (acc_ci["lo"], acc_ci["hi"])
         if acc_ci["mean"] is not None
         else None,
         "success_at_budget_ci_clusters": acc_ci,
-        "outcomes": _budget_metrics(records),
-        "reasoning_tokens": summarize([r["reasoning_tokens"] for r in records]),
-        "answer_tokens": summarize([r["answer_tokens"] for r in records]),
-        "total_tokens": summarize([r["total_tokens"] for r in records]),
-        "wall_ms": summarize([r["trace"]["wall_ms"] for r in records]),
-        "tokens_per_sec": summarize([r["trace"]["tokens_per_sec"] for r in records]),
-        "ttft_ms": summarize(
-            [r["trace"]["ttft_ms"] for r in records if r["trace"]["ttft_ms"] is not None]
-        ),
-        "unique_token_ratio": summarize([r["metrics"]["unique_token_ratio"] for r in records]),
+        "outcomes": _budget_metrics(primary),
+        "reasoning_tokens": summarize([r["reasoning_tokens"] for r in primary]),
+        "answer_tokens": summarize([r["answer_tokens"] for r in primary]),
+        "total_tokens": summarize([r["total_tokens"] for r in primary]),
+        "unique_token_ratio": summarize([r["metrics"]["unique_token_ratio"] for r in primary]),
         "repeated_ngram_fraction_4": summarize(
-            [r["metrics"]["repeated_ngram_fraction_4"] for r in records]
+            [r["metrics"]["repeated_ngram_fraction_4"] for r in primary]
         ),
-        "text_repeat_ratio": summarize([r["metrics"]["text_repeat_ratio"] for r in records]),
-        "termination": _termination_counts(records),
-        "categories": _category_counts(records),
+        "text_repeat_ratio": summarize([r["metrics"]["text_repeat_ratio"] for r in primary]),
+        "termination": _termination_counts(primary),
+        "categories": _category_counts(primary),
         "per_family": {
             fam: {
                 "n": len(rs),
@@ -245,6 +248,22 @@ def _config_summary(condition_id: str, records: list[dict[str, Any]]) -> dict[st
             }
             for fam, rs in sorted(families.items())
         },
+        # Execution-level diagnostics (timing/replay); never primary behavior.
+        "execution_diagnostics": {
+            "n_executions": ds["n_executions"],
+            "n_ambiguous_draws": ds["n_ambiguous_draws"],
+            "wall_ms": summarize([r["trace"]["wall_ms"] for r in records]),
+            "tokens_per_sec": summarize([r["trace"]["tokens_per_sec"] for r in records]),
+            "ttft_ms": summarize(
+                [r["trace"]["ttft_ms"] for r in records if r["trace"]["ttft_ms"] is not None]
+            ),
+        },
+        # Backward-compatible execution-level timing keys.
+        "wall_ms": summarize([r["trace"]["wall_ms"] for r in records]),
+        "tokens_per_sec": summarize([r["trace"]["tokens_per_sec"] for r in records]),
+        "ttft_ms": summarize(
+            [r["trace"]["ttft_ms"] for r in records if r["trace"]["ttft_ms"] is not None]
+        ),
     }
 
 
@@ -787,7 +806,7 @@ def analyze_run(store: RunStore, *, allow_unverified: bool = False) -> dict[str,
     }
 
     analysis = {
-        "interpretation": "phase1.5",
+        "interpretation": "phase1.6",
         "run_id": store.run_id,
         "artifact_id": store.artifact_id,
         "deployment_id": store.deployment_id,

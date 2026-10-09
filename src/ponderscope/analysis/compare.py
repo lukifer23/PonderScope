@@ -455,62 +455,123 @@ def _noise_scale(run: RunStore, metric: str, mode: str) -> float | None:
     return float(np.mean(stds))
 
 
+def _draw_key(r: dict[str, Any]) -> tuple:
+    """Canonical stochastic-draw key: presentation + task + condition + seed.
+
+    Technical repetition is deliberately excluded (it is an execution
+    dimension), and deployment identity is excluded (so BF16 and Q4 pair).
+    """
+    c = r["condition"]
+    return (
+        str(r.get("presentation_id") or r["task_id"]),
+        str(r["task_id"]),
+        str(r["condition_id"]),
+        c.get("seed"),
+    )
+
+
+def _collapsed_draws(
+    run: RunStore,
+    matched_keys: set[tuple],
+    *,
+    traces: list[dict[str, Any]] | None = None,
+) -> dict[tuple, dict[str, Any]]:
+    """Collapse matched executions to one entry per stochastic draw.
+
+    Grouping is by the canonical draw key (including ``condition_id``), so two
+    different decoding conditions with the same presentation and seed never
+    collapse together. Same-seed technical repeats of one condition collapse to
+    one draw iff every execution is token-identical; divergent (ambiguous) draws
+    are flagged with ``record=None``.
+    """
+    source = run.read_traces() if traces is None else traces
+    groups: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
+    for r in source:
+        if _key(r) in matched_keys:
+            groups[_draw_key(r)].append(r)
+    draws: dict[tuple, dict[str, Any]] = {}
+    for key, executions in groups.items():
+        executions = sorted(executions, key=lambda r: r["condition"].get("repeat", 0))
+        base = executions[0]["trace"]["token_ids"]
+        identical = all(e["trace"]["token_ids"] == base for e in executions[1:])
+        draws[key] = {
+            "task_id": str(key[1]),
+            "record": executions[0] if identical else None,
+            "ambiguous": not identical,
+            "n_executions": len(executions),
+        }
+    return draws
+
+
 def _matched_draw_records(
     run: RunStore,
     matched_keys: set[tuple],
     *,
     traces: list[dict[str, Any]] | None = None,
 ) -> tuple[dict[str, list[dict[str, Any]]], dict[str, int]]:
-    """Collapse matched executions to one primary record per stochastic draw.
-
-    Only executions whose canonical trial key is in ``matched_keys`` are used, so
-    unmatched seeds/repetitions (or other decoding conditions) can never enter a
-    paired estimate. Same-seed technical repeats collapse to one draw iff every
-    execution is token-identical; divergent (ambiguous) draws are excluded from
-    the primary estimate but counted. This is the single draw-level population
-    used by every paired metric, so technical repeats never masquerade as
-    independent stochastic draws.
-    """
-    source = run.read_traces() if traces is None else traces
-    groups: dict[tuple[str, str, Any], list[dict[str, Any]]] = defaultdict(list)
-    for r in source:
-        if _key(r) in matched_keys:
-            presentation = str(r.get("presentation_id") or r["task_id"])
-            groups[(presentation, str(r["task_id"]), r["condition"].get("seed"))].append(r)
+    """Draw-collapsed records grouped by task (ambiguous draws excluded)."""
+    draws = _collapsed_draws(run, matched_keys, traces=traces)
     by_task: dict[str, list[dict[str, Any]]] = defaultdict(list)
     n_ambiguous = 0
     n_executions = 0
-    for executions in groups.values():
-        n_executions += len(executions)
-        executions = sorted(executions, key=lambda r: r["condition"].get("repeat", 0))
-        base = executions[0]["trace"]["token_ids"]
-        identical = all(e["trace"]["token_ids"] == base for e in executions[1:])
-        if not identical:
+    for entry in draws.values():
+        n_executions += entry["n_executions"]
+        if entry["ambiguous"]:
             n_ambiguous += 1
             continue
-        r = executions[0]
-        by_task[str(r["task_id"])].append(r)
+        by_task[entry["task_id"]].append(entry["record"])
     return dict(by_task), {
-        "n_draws": len(groups),
+        "n_draws": len(draws),
         "n_executions": n_executions,
         "n_ambiguous_draws": n_ambiguous,
     }
 
 
-def _matched_draw_observations(
-    run: RunStore,
+def _paired_draw_population(
+    run_a: RunStore,
+    run_b: RunStore,
     matched_keys: set[tuple],
     *,
-    time_key: Any,
-    event_key: Any,
-) -> tuple[dict[str, list[tuple[float, bool]]], dict[str, int]]:
-    """Draw-collapsed survival observations for the matched population."""
-    by_task, meta = _matched_draw_records(run, matched_keys)
-    observations = {
-        task: [(float(time_key(r)), bool(event_key(r))) for r in records]
-        for task, records in by_task.items()
+    traces_a: list[dict[str, Any]] | None = None,
+    traces_b: list[dict[str, Any]] | None = None,
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, list[dict[str, Any]]], dict[str, Any]]:
+    """Finalize the paired stochastic-draw population for a comparison.
+
+    Collapses each arm independently, then restricts **both** arms to the
+    intersection of their usable (non-ambiguous) draw keys, so a draw that is
+    ambiguous in only one arm is excluded from both. Every paired metric uses
+    this same finalized population.
+    """
+    a = _collapsed_draws(run_a, matched_keys, traces=traces_a)
+    b = _collapsed_draws(run_b, matched_keys, traces=traces_b)
+    usable_a = {k for k, v in a.items() if not v["ambiguous"]}
+    usable_b = {k for k, v in b.items() if not v["ambiguous"]}
+    paired = usable_a & usable_b
+    a_by_task: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    b_by_task: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for key in paired:
+        a_by_task[a[key]["task_id"]].append(a[key]["record"])
+        b_by_task[b[key]["task_id"]].append(b[key]["record"])
+    population = {
+        "unit": "stochastic draw (presentation x task x condition x seed)",
+        "n_draws_a": len(a),
+        "n_draws_b": len(b),
+        "n_usable_draws_a": len(usable_a),
+        "n_usable_draws_b": len(usable_b),
+        "n_paired_draws": len(paired),
+        "n_ambiguous_a": sum(1 for v in a.values() if v["ambiguous"]),
+        "n_ambiguous_b": sum(1 for v in b.values() if v["ambiguous"]),
+        "n_unpaired_a": len(usable_a - paired),
+        "n_unpaired_b": len(usable_b - paired),
+        "unpaired_examples_a": [list(k) for k in sorted(usable_a - paired)[:3]],
+        "unpaired_examples_b": [list(k) for k in sorted(usable_b - paired)[:3]],
+        "note": (
+            "Every paired metric uses only the intersection of usable draws from "
+            "both arms; ambiguous or unmatched draws are excluded from both and "
+            "remain visible in the diagnostics."
+        ),
     }
-    return observations, meta
+    return dict(a_by_task), dict(b_by_task), population
 
 
 def _rmst_section(
@@ -539,18 +600,18 @@ def _rmst_section(
         ("reasoning_closure", _time_to_closure, _is_reasoning_closure),
         ("generation_termination", _time_to_termination, _is_generation_termination),
     )
+    a_by_task, b_by_task, population = _paired_draw_population(run_a, run_b, matched)
+    out["paired_population"] = population
     for label, time_key, event_key in endpoint_specs:
-        a_by_task, a_meta = _matched_draw_observations(
-            run_a, matched, time_key=time_key, event_key=event_key
-        )
-        b_by_task, b_meta = _matched_draw_observations(
-            run_b, matched, time_key=time_key, event_key=event_key
-        )
-        delta = rmst_delta_clustered(
-            a_by_task, b_by_task, tau=tau, n_resamples=n_resamples, seed=seed
-        )
-        delta["a"] = a_meta
-        delta["b"] = b_meta
+        a_obs = {
+            task: [(float(time_key(r)), bool(event_key(r))) for r in records]
+            for task, records in a_by_task.items()
+        }
+        b_obs = {
+            task: [(float(time_key(r)), bool(event_key(r))) for r in records]
+            for task, records in b_by_task.items()
+        }
+        delta = rmst_delta_clustered(a_obs, b_obs, tau=tau, n_resamples=n_resamples, seed=seed)
         out["endpoints"][label] = delta
     return out
 
@@ -844,24 +905,14 @@ def compare_configs(
         return result
     result["refused"] = False
 
-    # All paired metrics use the same stochastic-draw population: matched
-    # executions collapsed to one primary record per draw, ambiguous draws
-    # excluded. Technical repeats never count as independent draws.
-    a_by_task, a_pop = _matched_draw_records(run_a, set(keys))
-    b_by_task, b_pop = _matched_draw_records(run_b, set(keys))
+    # All paired metrics use the same finalized paired-draw population: each arm
+    # is collapsed to one primary record per stochastic draw (condition-aware),
+    # then restricted to the intersection of usable draws from both arms.
+    a_by_task, b_by_task, analysis_population = _paired_draw_population(run_a, run_b, set(keys))
     a_flat = [r for records in a_by_task.values() for r in records]
     b_flat = [r for records in b_by_task.values() for r in records]
-    analysis_population = {
-        "unit": "stochastic draw (same-seed technical repeats collapsed)",
-        "n_draws_a": a_pop["n_draws"],
-        "n_draws_b": b_pop["n_draws"],
-        "n_draws_used_a": len(a_flat),
-        "n_draws_used_b": len(b_flat),
-        "n_executions_a": a_pop["n_executions"],
-        "n_executions_b": b_pop["n_executions"],
-        "n_ambiguous_excluded_a": a_pop["n_ambiguous_draws"],
-        "n_ambiguous_excluded_b": b_pop["n_ambiguous_draws"],
-    }
+    analysis_population["n_draws_used_a"] = len(a_flat)
+    analysis_population["n_draws_used_b"] = len(b_flat)
     result["analysis_population"] = analysis_population
 
     for metric, extract in _METRICS.items():
