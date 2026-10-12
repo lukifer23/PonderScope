@@ -35,9 +35,9 @@ remain in their supported precision. No training/fine-tuning by PonderScope.
 
 Weight file `model.safetensors`: **2,367,238,661 bytes**, SHA-256
 `d58b87def677c7b3235e21cdca85289a162a5ba8949687b9573592e3c74cd477`.
-Complete remote repository: **2,387,351,669 bytes** in
+Complete remote repository: **2,387,351,732 bytes** in
 **15 files**, including Hub-created `.gitattributes`.
-Model Hub revision: `444756bfcd873ed5df40c526bbaa81217457efab`.
+Model Hub revision: `ac00ae9d7e49d9542d38229c564d0939d069ccc1`.
 
 ## Evidence coverage and dataset structure
 
@@ -113,16 +113,32 @@ cryptographic signatures or independent source attestation.
   correctly in Chrome.
 - The final export utility recreated all five Parquet files and four evidence
   archives **byte-for-byte** using the reviewed immutable analysis source.
+  A real mismatched-source negative control was refused before creating output.
+- Offline reanalysis of fresh public bundles reproduced primary estimates and
+  intervals exactly for both studies. Existing three local evidence archives
+  also verified; their immutable members match the publication source inputs.
+- Both cached upstream source weight shards and every declared source tokenizer
+  and chat-template file were freshly hashed and matched conversion provenance.
+  The converted tensor header confirms packed Q4 embeddings, retained BF16/F32
+  components, and the absence of vision/MTP weights.
 - Local project gates passed: frozen dev sync, Ruff check/format, mypy, pytest,
   and `git diff --check`. The baseline GitHub CI at `36fbf91` passed in run
   [38277867762](https://github.com/lukifer23/PonderScope/actions/runs/38277867762).
   Publication-commit CI is available in the repository's Actions history and is
   checked after pushing this change.
 
-At the last pre-commit viewer check, Hugging Face's viewer was still processing:
-“the server is busier than usual and the response is not ready yet.” This is
-separate from the successful public dataset loader and checksum verification.
-No viewer success is claimed until the rendered rows are observed.
+Final viewer verification: **full viewer PASS**. Chrome rendered both configs
+and all four split counts (draws 60/120, paired outcomes 30/60); replication
+pagination reached the final 20 rows. The viewer size endpoint reports no
+pending or failed jobs. Its aggregate 270 rows is **180 draw rows plus 90 paired
+view rows**, not 270 model executions. The initial processing delay resolved
+without changing the data. Anonymous row retrieval at offset 100 returned the
+final 20 replication records.
+
+Publication commit `f1f1a9591a836f7665dae589ad608c917f5615a6` passed GitHub CI in
+[run 38279704492](https://github.com/lukifer23/PonderScope/actions/runs/38279704492).
+This follow-up records that completed remote validation. No release blockers
+remain. The two public pages were captured and visually checked for the handoff.
 
 ## Tested standalone use
 
@@ -206,8 +222,8 @@ hash are recorded below. Large artifacts and raw traces live only on Hugging Fac
 | `.gitattributes` | 1570 | `34448b82c17d60fec9b65b1f093c115ddbaadc04beb1b0140b6bfed2e012a930` |
 | `LICENSE` | 11544 | `bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a` |
 | `NOTICE` | 544 | `9daf031eb7bf47d243e046970f6ddf44fccfff980729a3a2aafd9f3e5941efa6` |
-| `README.md` | 9046 | `d0eddfed4e1ffd099fdd2819f5215cb327d8e14afd07cfa35cd0aaa0baf675e6` |
-| `SHA256SUMS` | 1089 | `9247c9c484ff7bd787ff920fe917512cc45575d9e56c016fe9a7d36e3b1d5d6d` |
+| `README.md` | 9109 | `1faa7b457abb4c3375ee70cebc144c323475c4a85442d53ec6aeec3c66e43681` |
+| `SHA256SUMS` | 1089 | `3fad8d6dc8b636adbcc03e4567bfaeaffeb96888c9b9fc6ce2844b92f1123d9a` |
 | `chat_template.jinja` | 7756 | `a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715` |
 | `config.json` | 2878 | `8591d683d8d132234766399897415b9427967c05e77c1c169a40de3e81177e62` |
 | `model.safetensors` | 2367238661 | `d58b87def677c7b3235e21cdca85289a162a5ba8949687b9573592e3c74cd477` |
