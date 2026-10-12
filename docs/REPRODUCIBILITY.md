@@ -156,8 +156,9 @@ analysis/summaries, and the exact spec, and is byte-deterministic (sorted
 members, zeroed metadata, gzip mtime=0). A local bundle of the Phase 1.4 full
 Q4 run was produced at
 `models/bundles/q4-full-20261008T225839Z-phase1-4-4b-q4-calibration-q4-full-dep-4f8e7958df4f.tar.gz`
-(sha256 `a9327e3d119fd561…`, 985,486 bytes, 10 members). Bundles are **not**
-uploaded publicly without explicit approval.
+(sha256 `a9327e3d119fd561…`, 985,486 bytes, 10 members). The approved 2026-10-12 [Hugging Face release](HUGGINGFACE_RELEASE.md) publishes
+all four main-study bundles as explicitly labeled sanitized derivatives, with
+separate source seals, public seals and hashes. Originals remain unchanged locally.
 
 ## Interruption and resume
 
@@ -183,3 +184,14 @@ Snapshot file hashes are cached by `(path, size, mtime)` under
 file were replaced with identical size and mtime the cached hash could be stale;
 in practice HF cache blobs are content-addressed and immutable. Delete the cache
 to force a full re-hash.
+
+## Public model and evidence downloads
+
+The actual standalone [MLX Q4 weights](https://huggingface.co/Dontbeafed69/Qwen3.5-4B-MLX-4bit-PonderScope)
+and [calibration/replication dataset](https://huggingface.co/datasets/Dontbeafed69/PonderScope-Qwen3.5-4B-Quantization-Reasoning)
+are public. The model card contains tested MLX-LM load/generation commands; the
+dataset card contains viewer-compatible split loading and offline evidence
+verification instructions. [The release record](HUGGINGFACE_RELEASE.md) lists
+the exact files, source and published hash boundaries, privacy redactions, and
+`scripts/export_huggingface.py` usage with immutable-source validation. No custom
+PonderScope model loader is needed for the published model.

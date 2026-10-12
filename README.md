@@ -8,6 +8,13 @@ the exact deployment used to execute them — and it refuses to blur the two.
 It is not a benchmark, not an intelligence test, and not an early-stopping
 algorithm. It is measurement software whose first duty is trustworthy evidence.
 
+The published [MLX Q4 model](https://huggingface.co/Dontbeafed69/Qwen3.5-4B-MLX-4bit-PonderScope)
+and [BF16-versus-Q4 research dataset](https://huggingface.co/datasets/Dontbeafed69/PonderScope-Qwen3.5-4B-Quantization-Reasoning)
+contain the actual converted weights and all 180 main-study executions, with
+verified, sanitized raw evidence. See the [release record](docs/HUGGINGFACE_RELEASE.md)
+for hashes, attribution, usability checks, and limits. These are evaluation
+artifacts; the evidence does not establish BF16/Q4 equivalence.
+
 ## 1. What PonderScope is
 
 A measurement harness that runs a pinned model revision under an explicitly
@@ -204,6 +211,7 @@ references.bib       machine-readable verified bibliography
 - `docs/REPRODUCIBILITY.md` — hardware/software, caching, conversion, running.
 - `docs/QUICKSTART.md` — first commands.
 - `docs/RESULTS.md` — current-results index (with historical reports linked).
+- [Hugging Face release](docs/HUGGINGFACE_RELEASE.md) — public weights/evidence, exact files and hashes, verification and reuse.
 - `docs/LIMITATIONS.md` — scope and caveats.
 - `docs/ROADMAP.md` — research questions and next experiments.
 - `docs/RELATED_WORK.md`, `references.bib` — literature.

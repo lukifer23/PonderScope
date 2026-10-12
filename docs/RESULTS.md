@@ -1,5 +1,10 @@
 # Results index
 
+Public release: [MLX Q4 model](https://huggingface.co/Dontbeafed69/Qwen3.5-4B-MLX-4bit-PonderScope)
+and [research evidence dataset](https://huggingface.co/datasets/Dontbeafed69/PonderScope-Qwen3.5-4B-Quantization-Reasoning).
+See [the release record](HUGGINGFACE_RELEASE.md) for all files, hashes and verification.
+The release separates calibration and replication and applies Phase 1.7 outcome semantics.
+
 **Generated from saved evidence; no numbers are hand-entered.** Regenerate any
 derived number with `ponderscope analyze` / `report` from `runs/<id>/`. The
 detailed original reports are preserved and linked below; this page indexes the
