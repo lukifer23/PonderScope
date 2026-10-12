@@ -787,7 +787,7 @@ def _cmd_probe_budget_diagnostic(args: argparse.Namespace) -> int:
         model_revision=args.revision,
         artifact_path=args.artifact_path,
         arm_label=args.label,
-        task_id=args.task_id,
+        task_ids=args.task_id,
         seed=args.seed,
         checkpoint=args.checkpoint,
         budgets=args.budgets,
@@ -799,15 +799,21 @@ def _cmd_probe_budget_diagnostic(args: argparse.Namespace) -> int:
     if args.out:
         atomic_write_json(Path(args.out), payload)
     print(
-        f"probe budget diagnostic: {result.arm_label} {result.family}/{result.task_id[:8]} "
-        f"seed={result.seed} checkpoint={result.checkpoint} prefix={result.prefix_length}"
+        f"probe budget diagnostic: {result.arm_label} checkpoint={result.checkpoint} "
+        f"budgets={result.budgets}"
     )
-    for row in result.per_budget:
+    for task in result.per_task:
         print(
-            f"  budget={row['probe_max_tokens']:>4} outcome={row['outcome']:<18} "
-            f"scorable={row['answer_scorable']} eos={row['eos_observed']} "
-            f"tokens={row['generated_answer_tokens']}"
+            f"  {task['family']}/{task['task_id'][:8]} seed={task['seed']} "
+            f"src_rlen={task['source_reasoning_tokens']} "
+            f"src_closed={task['source_native_closed']} prefix={task['prefix_length']}"
         )
+        for row in task["per_budget"]:
+            print(
+                f"    budget={row['probe_max_tokens']:>4} outcome={row['outcome']:<18} "
+                f"scorable={row['answer_scorable']} eos={row['eos_observed']} "
+                f"tokens={row['generated_answer_tokens']}"
+            )
     if args.out:
         print(f"  saved {args.out}")
     return 0
@@ -1091,7 +1097,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--source-run", required=True)
     p.add_argument("--label", required=True)
-    p.add_argument("--task-id", required=True)
+    p.add_argument("--task-id", nargs="+", required=True)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--checkpoint", default="full_prefix", help="a token length or 'full_prefix'")
     p.add_argument("--budgets", nargs="+", type=int, default=[64, 128, 256])

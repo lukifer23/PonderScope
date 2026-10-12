@@ -524,14 +524,10 @@ def source_gold_answer(source_store: RunStore, task_id: str) -> str:
 class BudgetDiagnosticResult:
     source_run_id: str
     arm_label: str
-    task_id: str
-    family: str
-    seed: int | None
+    per_task: list[dict[str, Any]]
+    budgets: list[int]
     checkpoint: str
-    prefix_length: int
-    per_budget: list[dict[str, Any]]
     source_evidence_seal_sha256: str
-    source_trace_sha256: str
 
 
 def run_budget_diagnostic(
@@ -542,7 +538,7 @@ def run_budget_diagnostic(
     model_revision: str,
     artifact_path: str | None = None,
     arm_label: str,
-    task_id: str,
+    task_ids: list[str],
     seed: int,
     checkpoint: str,
     budgets: list[int],
@@ -551,8 +547,8 @@ def run_budget_diagnostic(
     """Measure EOS completion / scorable-answer / censoring at several probe budgets.
 
     This is the sentinel diagnostic used to *choose and justify* the primary probe
-    horizon. It runs on a single predeclared source trajectory per arm and never
-    retries a failed probe until it becomes correct.
+    horizon. It runs on predeclared source trajectories and never retries a failed
+    probe until it becomes correct.
     """
     source_path = Path(source_run_path)
     source_store = RunStore.load(source_path)
@@ -570,62 +566,71 @@ def run_budget_diagnostic(
     if hasattr(backend, "native_closure_ids"):
         backend.native_closure_ids()
 
-    draws = [
-        d for d in load_source_draws(source_store, backend, seeds=[seed]) if d.task_id == task_id
-    ]
-    if not draws:
-        raise ReplayError(f"task {task_id} (seed {seed}) not found in {source_path}")
-    draw = draws[0]
-    rlen = len(draw.reasoning_token_ids)
-    prefix_length = rlen if checkpoint == "full_prefix" else int(checkpoint)
-    if prefix_length > rlen:
-        raise ReplayError(
-            f"checkpoint {checkpoint} ({prefix_length}) exceeds reasoning length {rlen}"
-        )
-    gold = source_gold_answer(source_store, task_id)
+    all_draws = {d.task_id: d for d in load_source_draws(source_store, backend, seeds=[seed])}
     capture = capture or CaptureSpec.minimal()
-
-    per_budget: list[dict[str, Any]] = []
-    for budget in budgets:
-        decoding = DecodingPolicy(
-            mode="greedy",
-            max_tokens=int(budget),
-            stop_on_eos=True,
-            context={"enable_thinking": True},
-        )
-        records = run_prefix_probes_at(
-            backend,
-            family=draw.family,
-            answer=gold,
-            prompt_token_ids=draw.prompt_token_ids,
-            prefix_token_ids=draw.reasoning_token_ids,
-            lengths=[prefix_length],
-            probe_decoding=decoding,
-            capture=capture,
-            eos_token_ids=set(getattr(backend, "eos_token_ids", set()) or set()),
-        )
-        record = records[0]
-        per_budget.append(
+    per_task: list[dict[str, Any]] = []
+    for task_id in task_ids:
+        draw = all_draws.get(task_id)
+        if draw is None:
+            raise ReplayError(f"task {task_id} (seed {seed}) not found in {source_path}")
+        rlen = len(draw.reasoning_token_ids)
+        prefix_length = rlen if checkpoint == "full_prefix" else int(checkpoint)
+        if prefix_length > rlen:
+            raise ReplayError(
+                f"checkpoint {checkpoint} ({prefix_length}) exceeds reasoning length {rlen}"
+            )
+        gold = source_gold_answer(source_store, task_id)
+        rows: list[dict[str, Any]] = []
+        for budget in budgets:
+            decoding = DecodingPolicy(
+                mode="greedy",
+                max_tokens=int(budget),
+                stop_on_eos=True,
+                context={"enable_thinking": True},
+            )
+            records = run_prefix_probes_at(
+                backend,
+                family=draw.family,
+                answer=gold,
+                prompt_token_ids=draw.prompt_token_ids,
+                prefix_token_ids=draw.reasoning_token_ids,
+                lengths=[prefix_length],
+                probe_decoding=decoding,
+                capture=capture,
+                eos_token_ids=set(getattr(backend, "eos_token_ids", set()) or set()),
+            )
+            record = records[0]
+            rows.append(
+                {
+                    "probe_max_tokens": int(budget),
+                    "outcome": record["outcome"],
+                    "answer_scorable": record["answer_scorable"],
+                    "answer_observed": record["answer_observed"],
+                    "eos_observed": record["eos_observed"],
+                    "finish_reason": record["finish_reason"],
+                    "generated_answer_tokens": len(record["generated_answer_token_ids"]),
+                    "correct": record["correct"],
+                }
+            )
+        per_task.append(
             {
-                "probe_max_tokens": int(budget),
-                "outcome": record["outcome"],
-                "answer_scorable": record["answer_scorable"],
-                "answer_observed": record["answer_observed"],
-                "eos_observed": record["eos_observed"],
-                "finish_reason": record["finish_reason"],
-                "generated_answer_tokens": len(record["generated_answer_token_ids"]),
-                "correct": record["correct"],
+                "task_id": task_id,
+                "family": draw.family,
+                "seed": seed,
+                "source_reasoning_tokens": rlen,
+                "source_native_closed": draw.native_closed,
+                "source_natural_final_status": draw.natural_final_status,
+                "checkpoint": checkpoint,
+                "prefix_length": prefix_length,
+                "source_trace_sha256": draw.trace_sha256,
+                "per_budget": rows,
             }
         )
     return BudgetDiagnosticResult(
         source_run_id=source_store.run_id,
         arm_label=arm_label,
-        task_id=task_id,
-        family=draw.family,
-        seed=seed,
+        per_task=per_task,
+        budgets=list(budgets),
         checkpoint=checkpoint,
-        prefix_length=prefix_length,
-        per_budget=per_budget,
         source_evidence_seal_sha256=sha256_file(str(source_path / "evidence.json")),
-        source_trace_sha256=draw.trace_sha256,
     )

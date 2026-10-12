@@ -69,6 +69,9 @@ def test_reasoning_prefix_unclosed_strips_trailing_eos():
         ("Answer: 6", "5", False, None, "scorable_incorrect"),
         ("no digits here", "5", False, None, "unparseable"),
         ("", "5", True, None, "censored"),
+        # capped mid-generation with a stray extractable integer: still censored,
+        # never an observed wrong answer
+        ("To compute 18 * 10 ...", "5", True, None, "censored"),
         ("", "5", False, None, "unparseable"),
         ("anything", "5", False, "RuntimeError: boom", "error"),
     ],
@@ -81,8 +84,23 @@ def test_forced_outcome_matrix(forced_text, gold, capped, error, expected):
         finish_reason="length" if capped else ("error" if error else "stop"),
         capped=capped,
         error=error,
+        eos_observed=not capped and error is None,
     )
     assert result["outcome"] == expected
+
+
+def test_capped_with_extractable_answer_is_censored_not_wrong():
+    result = classify_forced_probe(
+        "arith",
+        "5",
+        "To compute the value ... 18",
+        finish_reason="length",
+        capped=True,
+        eos_observed=False,
+    )
+    assert result["outcome"] == "censored"
+    assert result["censored_with_extractable_answer"] is True
+    assert result["pre_censor_outcome"] == "scorable_incorrect"
 
 
 def test_censored_probe_is_not_a_wrong_answer():
@@ -439,14 +457,14 @@ def test_probe_budget_diagnostic_records_outcomes(tmp_path, fake_backend, monkey
         model_repo="fake/model",
         model_revision="deadbeef",
         arm_label="phase1-8-budget-bf16",
-        task_id=task_id,
+        task_ids=[task_id],
         seed=0,
         checkpoint="full_prefix",
         budgets=[4, 8],
     )
     assert result.checkpoint == "full_prefix"
-    assert [row["probe_max_tokens"] for row in result.per_budget] == [4, 8]
-    for row in result.per_budget:
+    assert [row["probe_max_tokens"] for row in result.per_task[0]["per_budget"]] == [4, 8]
+    for row in result.per_task[0]["per_budget"]:
         assert row["outcome"] in {
             "correct",
             "scorable_incorrect",

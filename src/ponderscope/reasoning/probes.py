@@ -67,6 +67,8 @@ def probe_result(
         "error": trace.error,
         # explicit outcome taxonomy (Phase 1.8)
         "outcome": classified["outcome"],
+        "pre_censor_outcome": classified["pre_censor_outcome"],
+        "censored_with_extractable_answer": classified["censored_with_extractable_answer"],
         "answer_observed": classified["answer_observed"],
         "answer_scorable": classified["answer_scorable"],
         "native_close_injected": classified["native_close_injected"],

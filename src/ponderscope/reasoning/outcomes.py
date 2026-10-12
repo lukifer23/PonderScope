@@ -82,13 +82,31 @@ def classify_forced_probe(
     if answer_normalized is None and answer_raw is not None:
         answer_normalized = normalize(family, answer_raw)
 
+    # A probe that exhausted its own finalization budget without emitting EOS did
+    # not complete: even if a stray string is mechanically extractable, it was
+    # truncated mid-generation and is NOT an observed (in)correct answer.
+    budget_exhausted = bool(capped or finish_reason == "length") and not eos_observed
+    if budget_exhausted:
+        pre_censor = _pre_censor_outcome(family, gold_answer, answer_raw, answer_normalized)
+        return _result(
+            "censored",
+            family=family,
+            gold_answer=gold_answer,
+            forced_text=forced_text,
+            answer_raw=answer_raw,
+            answer_normalized=answer_normalized,
+            finish_reason=finish_reason,
+            capped=capped,
+            error=error,
+            eos_observed=eos_observed,
+            native_close_injected=native_close_injected,
+            generated_answer_token_ids=generated_answer_token_ids,
+            pre_censor_outcome=pre_censor,
+        )
+
     if answer_normalized is not None:
         correct = score(family, answer_raw or "", gold_answer)
         outcome = "correct" if correct else "scorable_incorrect"
-    elif answer_raw is not None:
-        outcome = "unparseable"
-    elif capped or finish_reason == "length":
-        outcome = "censored"
     else:
         outcome = "unparseable"
 
@@ -108,6 +126,23 @@ def classify_forced_probe(
     )
 
 
+def _pre_censor_outcome(
+    family: str,
+    gold_answer: str,
+    answer_raw: str | None,
+    answer_normalized: str | None,
+) -> str:
+    """What the outcome *would* have been had the probe completed normally.
+
+    Recorded for transparency only; it never overrides the ``censored`` verdict.
+    """
+    if answer_normalized is not None:
+        return "correct" if score(family, answer_raw or "", gold_answer) else "scorable_incorrect"
+    if answer_raw is not None:
+        return "unparseable"
+    return "censored"
+
+
 def _result(
     outcome: str,
     *,
@@ -122,6 +157,7 @@ def _result(
     eos_observed: bool,
     native_close_injected: bool,
     generated_answer_token_ids: list[int] | None,
+    pre_censor_outcome: str | None = None,
 ) -> dict[str, Any]:
     assert outcome in FORCED_OUTCOMES, outcome
     answer_observed = answer_raw is not None
@@ -129,6 +165,8 @@ def _result(
     correct = bool(answer_scorable and score(family, answer_raw or "", gold_answer))
     return {
         "outcome": outcome,
+        "pre_censor_outcome": pre_censor_outcome,
+        "censored_with_extractable_answer": bool(outcome == "censored" and answer_observed),
         "answer_observed": answer_observed,
         "answer_scorable": answer_scorable,
         "answer_raw": answer_raw,
