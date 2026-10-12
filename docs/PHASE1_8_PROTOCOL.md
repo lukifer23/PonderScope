@@ -183,3 +183,28 @@ minutes. The exact figure is measured during the pilot and recorded.
 - Do not mix greedy forced-probe results with natural sampled accuracy.
 - Do not reuse test/1729 as a fresh confirmatory population.
 - Do not increase the population because the first results look interesting.
+
+## Horizon decision (MEASURED, pre-declared amendment)
+
+Sentinel diagnostic at checkpoint 256 (the predeclared arith / order / logic
+tasks, both arms), budgets 64 / 128 / 256 / 512:
+
+| arm | task | 64 | 128 | 256 | 512 |
+|---|---|---|---|---|---|
+| BF16 | arith `051fe252` | censored | censored | censored | **correct** (372 tokens) |
+| BF16 | order `42328719` | correct | correct | correct | correct |
+| BF16 | logic `0860ee8c` | censored | censored | censored | **correct** (317 tokens) |
+| Q4 | arith `051fe252` | censored | censored | censored | **correct** (290 tokens) |
+| Q4 | order `42328719` | censored | censored | correct | correct |
+| Q4 | logic `0860ee8c` | censored | censored | censored | censored |
+
+**Decision: primary probe horizon = 512 tokens.** 256 censors the arithmetic and
+logic sentinels in BF16 and all three sentinels in Q4; 512 resolves the
+arithmetic and ordering cases and reduces censoring materially. Q4 `logic
+0860ee8c` remains censored at 512 and is reported as `censored`, never as a wrong
+answer. The horizon is frozen; failed probes are never retried until correct.
+Diagnostics: `runs/phase1_8-budget-diagnostic-bf16.json`,
+`runs/phase1_8-budget-diagnostic-bf16-512.json`,
+`runs/phase1_8-budget-diagnostic-q4.json`. A residual censoring rate is expected
+and is a reported outcome, not a defect to be optimized away.
+

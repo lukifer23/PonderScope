@@ -438,6 +438,14 @@ def test_paired_recoverability_is_idempotent(tmp_path, fake_backend, monkeypatch
     assert "EXPLORATORY" in md and "<html" in html
 
 
+def test_checkpoint_keys_orders_numerically(tmp_path, fake_backend, monkeypatch):
+    source = _make_source_run(tmp_path, fake_backend, monkeypatch, "source-keys")
+    store = _probe(
+        tmp_path, source, fake_backend, "phase1-8-probe-keys", checkpoints=(10, 5, 15)
+    ).store
+    assert checkpoint_keys(store) == ["0", "5", "10", "15", "full_prefix"]
+
+
 def test_recoverability_refuses_unverified_probe_run(tmp_path, fake_backend, monkeypatch):
     source = _make_source_run(tmp_path, fake_backend, monkeypatch, "source-corrupt")
     bf16 = _probe(tmp_path, source, fake_backend, "phase1-8-probe-bf16").store

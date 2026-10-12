@@ -16,14 +16,15 @@ changes its reasoning behavior.** It does not drift into generic benchmarking.
 
 ## Immediate next experiment
 
-**Bounded prefix-probe diagnostic (Option C).** Determine whether censoring
-conceals recoverable correct answers and whether Q4 changes answer availability
-or stability along a reasoning trajectory, using the already-measured test/1729
-tasks and fixed checkpoints (256/512/1024/1536). Exploratory, oracle-style
-intervention, ≈2 h compute; see `docs/PHASE1_7_ANALYSIS.md`. Requires explicit
-authorization before model inference. A **larger independent-task replication**
-(Option A) remains the eventual confirmatory step; test/1729 must not be reused
-as a fresh confirmatory population.
+**Bounded prefix-recoverability diagnostic (Phase 1.8).** Forced finalization on
+the **existing** saved sampled trajectories of the already-measured `test/1729`
+population (30 structural tasks × seed 0 × BF16/Q4) at identical reasoning-prefix
+checkpoints (0/256/512/1024/1536 + full prefix), horizon 512. It asks whether a
+correct answer is recoverable from a prefix even when natural generation did not
+terminate, and whether BF16/Q4 differ. Exploratory, post-outcome, oracle-style
+intervention; the source population must not be reused as a fresh confirmatory
+sample. See `docs/PHASE1_8_PROTOCOL.md` and `docs/PHASE1_8_REPORT.md`. A **larger
+independent-task replication** (Option A) remains the eventual confirmatory step.
 
 ## Later, only after the above is established
 

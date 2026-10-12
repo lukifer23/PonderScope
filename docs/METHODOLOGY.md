@@ -198,6 +198,33 @@ prior literature; PonderScope uses it as a measurement primitive, not as its
 claimed novelty.** An oracle prefix is never presented as a deployable stopping
 method.
 
+### Saved-prefix forced-finalization replay (Phase 1.8)
+
+`probe-existing` replays forced finalization on the **saved** reasoning prefixes
+of a sealed historical generation run:
+
+1. verify the source seal and require the raw traces to be present (fail closed);
+2. recover each saved task presentation and assert the prompt re-tokenizes to the
+   exact saved token count;
+3. extract the reasoning-only token prefix (never a final-answer or EOS token),
+   and identify the validated native close;
+4. probe at **exact eligible checkpoints** (0/256/512/1024/1536 and, separately,
+   the full available prefix); a shorter prefix is never substituted for a
+   requested checkpoint;
+5. write new probes to their **own** sealed evidence run, preserving the source
+   run / condition / stochastic-draw / seed / trial identity, the original trace
+   hash, and the source seal hash.
+
+The replayed prefix was previously generated output, so it is declared as
+generated history to the logits processors (the true prompt length is passed).
+The continuation is a fresh deterministic **greedy** completion — an intervention
+on a frozen trace, not a continuation under the original sampled policy. Each
+probe records an explicit outcome (`correct`, `scorable_incorrect`,
+`unparseable`, `censored`, `error`); a probe that exhausts its budget without EOS
+is `censored`, and an ineligible/missing checkpoint is never a wrong answer.
+Paired BF16/Q4 recoverability uses task-clustered paired bootstraps where the
+sample is non-degenerate.
+
 ## The within-configuration noise floor
 
 A defining feature. Before comparing deployments, three **distinct** quantities

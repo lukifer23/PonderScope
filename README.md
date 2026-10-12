@@ -79,32 +79,43 @@ assumed.
 - **Comparison:** explicit contrast classification, task-clustered bootstrap CIs,
   and censor-aware RMST deltas.
 
-## 7. Latest confirmed experimental findings
+## 7. Current status (authoritative)
 
-All are properties of *this* machine/runtime/deployment, not of a model alone.
+This section is the single authoritative current-status summary. It keeps three
+categories strictly separate: **measured historical results**, **exploratory
+Phase 1.8 evidence**, and **unresolved/planned** work.
+
+**Measured historical results (this machine/runtime only):**
 
 - `Qwen/Qwen3.5-4B` BF16 @ `851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a` is the
-  **PRIMARY BF16 baseline**: load audit ok, MLX peak ~8.5 GB of 19.3 GB, 20/30
-  native reasoning closures (66.7%). Under the corrected phase1.4 endpoint,
-  RMST(2048) = 1368.8 tokens and median tokens-to-closure = 1569 (the historical
-  Phase 1.3B total-token values were RMST 1511.9 / median 1718; see
-  `docs/PHASE1_4_REPORT.md`).
-- The `logic` family remains censored 6/6 at 2048 even at 4B.
-- `Qwen/Qwen3.5-0.8B` is a **termination-stress** deployment under every tested
-  policy; retained as a stress model, not a baseline.
-- **Controlled Q4 derived from the same revision** (affine 4-bit/group-64,
-  4.503 bits/weight) loads and produces valid native reasoning traces. The full
-  30-draw BF16-vs-Q4 contrast is **MEASURED**: native reasoning closure +0.033
-  (95% CI [0.00, 0.10]), RMST to closure −117.3 tokens ([−307.9, +63.5]),
-  success-at-budget 0.633 in both arms — **not distinguishable** at this size —
-  while Q4 is ≈3.1× faster (41.7 vs 13.4 tok/s) and ≈3.3× smaller (2.56 vs
-  8.5 GB peak). See `docs/PHASE1_4_REPORT.md` and `docs/RESULTS.md`.
-- The central deployment-drift comparison is now **MEASURED but inconclusive**
-  on reasoning behavior; a larger independent-task replication is the next
-  experiment.
-- **Phase 1.7** corrected the outcome classification (a raw-but-unscorable answer
-  is `unparseable`, never a wrong answer) and added offline paired-transition
-  analysis. See `docs/PHASE1_7_ANALYSIS.md`.
+  **primary BF16 baseline** (load audit ok; `logic` censored 6/6 at 2048).
+- **Phase 1.4** (10 calibration tasks, 30 draws): the controlled Q4 variant
+  (affine 4-bit/group-64, 4.503 bits/weight) is **≈3× faster** and ≈3.3× smaller;
+  native reasoning closure +0.033 [0.00, 0.10], RMST(2048) −117.3 [−307.9, +63.5],
+  success-at-budget 0.000 — **no primary interval excludes zero**.
+- **Phase 1.6** (independent replication, 30 previously unseen `test/1729` tasks,
+  60 draws/arm, frozen population lock): closure +0.067 [−0.033, +0.183], RMST
+  −48.1 [−171.9, +62.3], success-at-budget +0.050 [−0.017, 0.133]; throughput
+  37.0 vs 12.8 tok/s (≈2.9×). **INCONCLUSIVE, not equivalence** — the design is
+  underpowered for a ~0.10 closure-rate effect (planning half-width ≈0.165).
+- **Phase 1.7** corrected outcome classification (a raw-but-unscorable answer is
+  `unparseable`, never wrong) and added offline paired-transition analysis. A
+  null result is **not** evidence of equivalence.
+
+**Exploratory Phase 1.8 evidence (post-outcome, NOT confirmatory):** paired
+reasoning-prefix recoverability — forced finalization on the *existing* saved
+sampled trajectories of the Phase 1.6 population (30 tasks × seed 0 × BF16/Q4) at
+identical checkpoints (0/256/512/1024/1536 + full prefix), horizon 512. This asks
+whether a correct answer is recoverable from a prefix where natural generation
+did not terminate, and whether BF16/Q4 differ. It is an oracle-style intervention
+on frozen traces, not a stopping policy. Full protocol:
+`docs/PHASE1_8_PROTOCOL.md`; results: `docs/PHASE1_8_REPORT.md`.
+
+**Unresolved / planned:** whether the small closure-rate difference is real at
+higher power; whether forced-prefix recoverability motivates a fresh-population
+replication, a longer natural horizon, or a first policy-transfer study.
+Adaptive-stopping policy transfer remains **NOT YET TESTED**.
+
 
 ## 8. Model / runtime support
 
@@ -207,9 +218,10 @@ Full list in `docs/LIMITATIONS.md`.
 
 ## 17. Current roadmap
 
-See `docs/ROADMAP.md`. The immediate next experiment is the full 30-draw
-BF16-vs-controlled-Q4 comparison on the frozen protocol. Adaptive-stopping
-policy transfer remains **NOT YET TESTED**.
+See `docs/ROADMAP.md`. The deployment-drift contrast is **measured but
+inconclusive** (Phase 1.4 + Phase 1.6). The current exploratory step is the
+bounded **prefix-recoverability** analysis over the existing saved trajectories
+(Phase 1.8). Adaptive-stopping policy transfer remains **NOT YET TESTED**.
 
 ## 18. Citation and license
 

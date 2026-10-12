@@ -28,6 +28,30 @@ PonderScope is intentionally conservative about what its evidence supports.
 - Prefix probes force finalization with the model's think-end token. This is an
   **oracle-style intervention**, not a deployable stopping policy, and it biases
   the model toward answering at the probe point.
+- **Forced-prefix replay (Phase 1.8).** Probing the *saved* reasoning prefixes of
+  a historical run is an intervention on a frozen trace, not naturally observed
+  early termination. The continuation is a **fresh deterministic greedy
+  completion**, not a continuation under the original sampled decoding policy
+  (whose mid-trace sampler state is unrecoverable). A correct forced answer does
+  **not** establish natural closure, natural accuracy, or a deployable stopping
+  policy, and greedy forced-probe recoverability is never pooled with naturally
+  sampled final-answer accuracy. The replayed prefix is declared as generated
+  history to the logits processors (the true prompt length is passed).
+- **Forced-probe censoring.** A probe that reaches its own finalization budget
+  without EOS is `censored`, never an observed wrong answer; a mechanically
+  extractable stray string is recorded as `pre_censor_outcome` but does not
+  override the verdict. The primary probe horizon (512) was chosen by a
+  predeclared sentinel diagnostic and frozen; residual censoring is a reported
+  outcome.
+- **Checkpoint eligibility.** A checkpoint is used only when the saved reasoning
+  length reaches it; a shorter checkpoint is never substituted for a requested
+  one. Higher checkpoints are jointly eligible only for longer trajectories, so
+  the jointly-eligible set changes with checkpoint length and is enriched for
+  censored/long-reasoning tasks. A missing (ineligible) checkpoint is never
+  treated as a wrong answer.
+- **Exploratory population reuse.** The Phase 1.8 population (`test/1729`) has
+  already been measured and inspected; it is not a fresh confirmatory sample, and
+  the analysis is labelled exploratory.
 - Where the thinking channel was never closed, trajectories are **censored**, not
   natural stops. Censoring is reported, never treated as termination.
 - Semantic trace similarity is **NOT YET TESTED**; only exact/token-level and
