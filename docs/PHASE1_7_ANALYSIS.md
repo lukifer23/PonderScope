@@ -173,3 +173,17 @@ authorization before model inference.
 - Do not describe the repeated-4gram difference as a validated loop reduction.
 - Do not treat forced-probe recoverability as natural closure or a policy.
 - Do not build `tasks-v2` or a learned controller yet.
+
+---
+
+## Addendum (2026-10-12): Option C executed as Phase 1.8
+
+The "Option C" prefix-probe diagnostic recommended above was authorized and
+executed as **Phase 1.8**, with two changes recorded up front: it replays the
+**existing saved** sampled trajectories of the Phase 1.6 population (not fresh
+greedy trajectories), and its probe horizon is 512 tokens (chosen by a
+predeclared sentinel). See `docs/PHASE1_8_PROTOCOL.md`. Status at the time of
+writing: the **BF16 arm is complete; the Q4 arm has not been run**, so the paired
+question in §10 remains open — see `docs/PHASE1_8_REPORT.md` and
+`runs/phase1_8-status.json`. This addendum does not alter the original proposal
+text above.

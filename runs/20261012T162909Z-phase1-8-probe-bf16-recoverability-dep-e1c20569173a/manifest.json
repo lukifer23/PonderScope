@@ -1,0 +1,2508 @@
+{
+  "run_id": "20261012T162909Z-phase1-8-probe-bf16-recoverability-dep-e1c20569173a",
+  "created_utc": "20261012T162909Z",
+  "name": "phase1-8-probe-bf16",
+  "spec": {
+    "name": "phase1-8-probe-bf16",
+    "task_pack": "tasks-v1",
+    "prompt_policy": "pp-v1",
+    "model_policy": "qwen35-4b-thinking-api-v1",
+    "families": [
+      "arith",
+      "path",
+      "order",
+      "logic",
+      "sm"
+    ],
+    "n_per_family": 6,
+    "task_seed": 1729,
+    "split": "test",
+    "greedy_repeats": 1,
+    "sampled_seeds": [],
+    "sampled_repeats_per_seed": 1,
+    "max_tokens": 512,
+    "sampled_temperature": 0.6,
+    "sampled_top_p": 0.95,
+    "sampled_top_k": 20,
+    "sampled_min_p": 0.0,
+    "sampled_presence_penalty": 0.0,
+    "sampled_presence_context_size": 20,
+    "sampled_presence_scope": "mlx_window",
+    "sampled_repetition_penalty": 1.0,
+    "sampled_repetition_context_size": 20,
+    "sampled_frequency_penalty": 0.0,
+    "sampled_frequency_context_size": 20,
+    "probe": true,
+    "n_probes": 4,
+    "probe_max_tokens": 512,
+    "probe_checkpoints": [
+      0,
+      256,
+      512,
+      1024,
+      1536
+    ],
+    "capture_entropy": true,
+    "capture_top_k": 5,
+    "capture_logprob_digest": false,
+    "capture_level": "minimal",
+    "notes": "Phase 1.8 EXPLORATORY forced-finalization replay over saved source trajectories. Not a fresh population; not a continuation under the source sampled policy."
+  },
+  "spec_hash": "0dd12403dc707042ee3e1b870a886bf407fb8cd53397108db0bf73c8a3abc8a0",
+  "source_artifact": {
+    "repo_id": "Qwen/Qwen3.5-4B",
+    "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "weight_files": {
+      "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+      "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+    },
+    "tokenizer_files": {
+      "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "tokenizer_config.json": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+      "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003",
+      "merges.txt": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d",
+      "chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+    },
+    "chat_template_sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+  },
+  "source_artifact_id": "src-6209ef70e318",
+  "weight_variant": {
+    "source": {
+      "repo_id": "Qwen/Qwen3.5-4B",
+      "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "weight_files": {
+        "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+        "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+      },
+      "tokenizer_files": {
+        "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+        "tokenizer_config.json": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+        "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003",
+        "merges.txt": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d",
+        "chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+      },
+      "chat_template_sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+    },
+    "representation": "original",
+    "variant_weight_files": {
+      "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+      "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+    },
+    "precision": "bfloat16",
+    "quantization": null,
+    "quantization_bits": null,
+    "quantization_group_size": null,
+    "quantization_params": {
+      "detected": {
+        "quantized": false
+      },
+      "dtype_counts": {
+        "bfloat16": 378,
+        "float32": 48
+      }
+    },
+    "conversion": {},
+    "local_path": "/Users/admin/.cache/huggingface/hub/models--Qwen--Qwen3.5-4B/snapshots/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "load_audit": {
+      "ok": true,
+      "allowlist": [
+        "model.visual.",
+        "model.visual",
+        "vision_tower",
+        "mtp."
+      ],
+      "n_source_keys": 738,
+      "n_text_source_keys": 426,
+      "n_non_text_source_keys": 312,
+      "n_sanitized_keys": 426,
+      "n_loaded_params": 426,
+      "n_dropped_by_sanitize": 738,
+      "n_dropped_allowed_non_text": 312,
+      "n_renamed_or_dropped_text": 426,
+      "n_dropped_unexpected": 0,
+      "n_text_source_lost": 0,
+      "dropped_key_categories": {
+        "model": 723,
+        "mtp": 15
+      },
+      "missing_from_sanitized_params": [],
+      "unused_sanitized_params": [],
+      "dropped_unexpected_keys": [],
+      "text_source_keys_lost": [],
+      "renames_or_drops_accounted_by_count": true,
+      "text_key_count_consistent": true,
+      "load_strict": false
+    }
+  },
+  "weight_variant_id": "wvar-9b6f9b40b789",
+  "derived_from_source_artifact_id": null,
+  "artifact": {
+    "source": {
+      "repo_id": "Qwen/Qwen3.5-4B",
+      "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "weight_files": {
+        "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+        "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+      },
+      "tokenizer_files": {
+        "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+        "tokenizer_config.json": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8",
+        "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003",
+        "merges.txt": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d",
+        "chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+      },
+      "chat_template_sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+    },
+    "representation": "original",
+    "variant_weight_files": {
+      "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+      "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+    },
+    "precision": "bfloat16",
+    "quantization": null,
+    "quantization_bits": null,
+    "quantization_group_size": null,
+    "quantization_params": {
+      "detected": {
+        "quantized": false
+      },
+      "dtype_counts": {
+        "bfloat16": 378,
+        "float32": 48
+      }
+    },
+    "conversion": {},
+    "local_path": "/Users/admin/.cache/huggingface/hub/models--Qwen--Qwen3.5-4B/snapshots/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "load_audit": {
+      "ok": true,
+      "allowlist": [
+        "model.visual.",
+        "model.visual",
+        "vision_tower",
+        "mtp."
+      ],
+      "n_source_keys": 738,
+      "n_text_source_keys": 426,
+      "n_non_text_source_keys": 312,
+      "n_sanitized_keys": 426,
+      "n_loaded_params": 426,
+      "n_dropped_by_sanitize": 738,
+      "n_dropped_allowed_non_text": 312,
+      "n_renamed_or_dropped_text": 426,
+      "n_dropped_unexpected": 0,
+      "n_text_source_lost": 0,
+      "dropped_key_categories": {
+        "model": 723,
+        "mtp": 15
+      },
+      "missing_from_sanitized_params": [],
+      "unused_sanitized_params": [],
+      "dropped_unexpected_keys": [],
+      "text_source_keys_lost": [],
+      "renames_or_drops_accounted_by_count": true,
+      "text_key_count_consistent": true,
+      "load_strict": false
+    }
+  },
+  "artifact_id": "wvar-9b6f9b40b789",
+  "runtime": {
+    "runtime": "mlx-lm",
+    "runtime_version": "0.32.0",
+    "backend": "mlx-metal",
+    "hardware": "Apple M3 Pro",
+    "os": "Darwin 27.2.0",
+    "python_version": "3.12.12",
+    "device": "Device(gpu, 0)",
+    "extra": {}
+  },
+  "deployment_id": "dep-e1c20569173a",
+  "deployment_description": "Qwen/Qwen3.5-4B@851bf6e806ef (original, bfloat16) under mlx-lm 0.32.0 [mlx-metal, Apple M3 Pro] src=src-6209ef70e318 wvar=wvar-9b6f9b40b789 dep=dep-e1c20569173a",
+  "conditions": [
+    {
+      "condition_id": "cond-8bff165772b8",
+      "decoding": {
+        "mode": "greedy",
+        "max_tokens": 512,
+        "temperature": null,
+        "top_p": null,
+        "top_k": null,
+        "min_p": null,
+        "stop_on_eos": true,
+        "context": {
+          "enable_thinking": true
+        }
+      },
+      "description": "greedy(scope=mlx_window) cond=cond-8bff165772b8"
+    }
+  ],
+  "code": {
+    "version": "0.1.0",
+    "git_sha": "71f653466f44026d4262aefce865dc9255343dfe",
+    "git_dirty": true,
+    "untracked_evidence_count": 4,
+    "tracked_dirty": false,
+    "tracked_changes": [],
+    "exploratory": false,
+    "publication_grade": true
+  },
+  "prompt_policy": "pp-v1",
+  "timestamps": {
+    "started_utc": "20261012T162909Z",
+    "completed_utc": "20261012T173713Z"
+  },
+  "status": {
+    "run": "EVIDENCE_COMPLETE",
+    "observations": [
+      "prefix-probe replay run over source 20261009T005354Z-phase1-6-replication-bf16-replication-bf16-dep-e1c20569173a; intervention=greedy forced finalization; this run never mutates its source"
+    ],
+    "error": null
+  },
+  "run_kind": "prefix_probe_replay",
+  "prefix_probe_source": {
+    "kind": "prefix_probe_replay",
+    "source_run_id": "20261009T005354Z-phase1-6-replication-bf16-replication-bf16-dep-e1c20569173a",
+    "source_path": "runs/20261009T005354Z-phase1-6-replication-bf16-replication-bf16-dep-e1c20569173a",
+    "source_evidence_seal_sha256": "0c65e5edfe0f70796ed6a3ee24034bb96c8441f6603754fefa561f186d576a51",
+    "source_manifest_sha256": "c469f0e3c718286e340fec9e5b220c73cd35fe75c0eed3b2a23fd31eaef92a86",
+    "source_source_artifact_id": "src-6209ef70e318",
+    "source_weight_variant_id": "wvar-9b6f9b40b789",
+    "source_deployment_id": "dep-e1c20569173a",
+    "source_conditions": [
+      {
+        "condition_id": "cond-f5e762d3078f",
+        "decoding": {
+          "mode": "sampled",
+          "max_tokens": 2048,
+          "temperature": 1.0,
+          "top_p": 0.95,
+          "top_k": 20,
+          "min_p": 0.0,
+          "presence_penalty": 1.5,
+          "stop_on_eos": true,
+          "context": {
+            "enable_thinking": true
+          },
+          "presence_scope": "generated_history"
+        },
+        "description": "sampled(scope=generated_history) cond=cond-f5e762d3078f"
+      }
+    ],
+    "source_population_lock": {
+      "ok": true,
+      "mismatches": [],
+      "locked": true,
+      "path": "specs/phase1_6-population-lock.json"
+    },
+    "source_seeds_requested": [
+      0
+    ],
+    "source_families_requested": null,
+    "seal_verified": true
+  },
+  "probe_design": {
+    "intervention": "greedy_forced_finalization",
+    "continuation_policy": "fresh deterministic greedy completion from the saved prefix; NOT a continuation under the original sampled decoding policy",
+    "source_reasoning_prefix_is_generated_history": true,
+    "checkpoints": [
+      0,
+      256,
+      512,
+      1024,
+      1536
+    ],
+    "include_zero": true,
+    "include_full_prefix": true,
+    "probe_max_tokens": 512,
+    "decoding": {
+      "mode": "greedy",
+      "max_tokens": 512,
+      "temperature": null,
+      "top_p": null,
+      "top_k": null,
+      "min_p": null,
+      "presence_penalty": null,
+      "presence_context_size": null,
+      "repetition_penalty": null,
+      "repetition_context_size": null,
+      "frequency_penalty": null,
+      "frequency_context_size": null,
+      "seed": null,
+      "stop_on_eos": true,
+      "context": {
+        "enable_thinking": true
+      },
+      "presence_scope": "mlx_window"
+    },
+    "capture": {
+      "entropy": false,
+      "top_k": 0,
+      "logprob_digest": false,
+      "per_token_timing": false,
+      "chosen_logprob": false
+    },
+    "native_close_sequence": [
+      198,
+      248069,
+      271
+    ],
+    "n_source_draws": 30,
+    "n_planned_probes": 152,
+    "draws": [
+      {
+        "task_id": "051fe252328d539c",
+        "presentation_id": "pres-afb2797e998a",
+        "family": "arith",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-4bb9946c24a6",
+        "trial_id": "trial-773943307acc",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "a7d82659b89ff887",
+        "presentation_id": "pres-f5e445f86581",
+        "family": "arith",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-be59eb1480bb",
+        "trial_id": "trial-9ad983ec5401",
+        "source_reasoning_tokens": 652,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 652,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 3,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "b9864e062c7d7b9d",
+        "presentation_id": "pres-1033341c7308",
+        "family": "arith",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-6509207da541",
+        "trial_id": "trial-5d680728a3d6",
+        "source_reasoning_tokens": 476,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": false,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "512",
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 476,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 2,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "c38ba4753851dc00",
+        "presentation_id": "pres-f025279e70c3",
+        "family": "arith",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-e5ea0e2a79ba",
+        "trial_id": "trial-33c82861e30a",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "f0df0dd03afae23a",
+        "presentation_id": "pres-a5de6eaf88cd",
+        "family": "arith",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-cf077697e9e5",
+        "trial_id": "trial-41bc22a5f285",
+        "source_reasoning_tokens": 866,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 866,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 3,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "fa3c5c38891d1eb5",
+        "presentation_id": "pres-c7eaa22d17e3",
+        "family": "arith",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-e2457535cc48",
+        "trial_id": "trial-fdd049dab1b8",
+        "source_reasoning_tokens": 378,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": false,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "512",
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 378,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 2,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "0860ee8c753bad15",
+        "presentation_id": "pres-b823bcfec41b",
+        "family": "logic",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-3f65281f5040",
+        "trial_id": "trial-d38c286168dc",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "1a35d0bf50cb60d8",
+        "presentation_id": "pres-4e139115238d",
+        "family": "logic",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-fb9d475f16ea",
+        "trial_id": "trial-86ab253bfb6d",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "716b73bf28a2ab13",
+        "presentation_id": "pres-a5227b0cb24e",
+        "family": "logic",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-461ff8ada1d4",
+        "trial_id": "trial-20630e4bef96",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "7d27b7a327b4adcb",
+        "presentation_id": "pres-196933b03251",
+        "family": "logic",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-79bf82e1eba1",
+        "trial_id": "trial-736f8e29cd9e",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "d4476e057081138e",
+        "presentation_id": "pres-64461ea0c162",
+        "family": "logic",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-77502be8d59b",
+        "trial_id": "trial-7aa73c62dda8",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "f4763fad3f6b669b",
+        "presentation_id": "pres-1fa4f20834bc",
+        "family": "logic",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-b813c4e99269",
+        "trial_id": "trial-cf035f4a09a8",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "42328719aee13018",
+        "presentation_id": "pres-cd9f24a05b48",
+        "family": "order",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-2b463482e42d",
+        "trial_id": "trial-8a610643a050",
+        "source_reasoning_tokens": 1115,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1115,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 4,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "674096c0d4660f01",
+        "presentation_id": "pres-e4a1f45d8b04",
+        "family": "order",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-e7dc6b9e88fc",
+        "trial_id": "trial-a513435f4749",
+        "source_reasoning_tokens": 638,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 638,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 3,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "67d090aa0cfd504a",
+        "presentation_id": "pres-855c7b1d1496",
+        "family": "order",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-fd2760fe4cd4",
+        "trial_id": "trial-eeb2eb9ea02b",
+        "source_reasoning_tokens": 683,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 683,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 3,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "8f076d9e47eb4342",
+        "presentation_id": "pres-86b30aaa0c86",
+        "family": "order",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-d68ac83c8206",
+        "trial_id": "trial-183030cb494b",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "93f4dd00fc3b07f5",
+        "presentation_id": "pres-4798065f6e56",
+        "family": "order",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-70c5ecb2ab12",
+        "trial_id": "trial-cbb5bdd3121d",
+        "source_reasoning_tokens": 993,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 993,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 3,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "a49ea403d609a0eb",
+        "presentation_id": "pres-01e09e4ac6af",
+        "family": "order",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-abeacfb8a0cb",
+        "trial_id": "trial-1ec7eddbda69",
+        "source_reasoning_tokens": 292,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": false,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "512",
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 292,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 2,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "148e3892fd01d0b0",
+        "presentation_id": "pres-0c19ba4dccf5",
+        "family": "path",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-a114b4bae023",
+        "trial_id": "trial-5fd5b280fd54",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "1d379c9275247163",
+        "presentation_id": "pres-f6c3da2f0b0d",
+        "family": "path",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-4cb0a638b7a1",
+        "trial_id": "trial-5280d579e334",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "7ad1e6350d457cb9",
+        "presentation_id": "pres-ca15ea625ae5",
+        "family": "path",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-dfb041a441b3",
+        "trial_id": "trial-f407792046f7",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "a1ba3b73c7d63c38",
+        "presentation_id": "pres-ba1f7c9c0f0b",
+        "family": "path",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-ba54bbb614d1",
+        "trial_id": "trial-ccd4f8cddf60",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "c2031f0347f5b79a",
+        "presentation_id": "pres-dc52f59e9aca",
+        "family": "path",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-e99dbc21c82c",
+        "trial_id": "trial-75cc4dcba2f0",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "e0248acdd2c606b0",
+        "presentation_id": "pres-f1f1023d29a0",
+        "family": "path",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-0f6b3da6e209",
+        "trial_id": "trial-392d78810acb",
+        "source_reasoning_tokens": 953,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 953,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 3,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "2c89a40287e1f674",
+        "presentation_id": "pres-967ce226b3b0",
+        "family": "sm",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-ff8a370631c5",
+        "trial_id": "trial-d68d60824472",
+        "source_reasoning_tokens": 1018,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1018,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 3,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "6589e1ac47aabea8",
+        "presentation_id": "pres-9a8cb6958b68",
+        "family": "sm",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-77db425fc12b",
+        "trial_id": "trial-12891aee6439",
+        "source_reasoning_tokens": 744,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 744,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 3,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "7f08d256de9a6ddd",
+        "presentation_id": "pres-5ce78598d490",
+        "family": "sm",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-cac631435222",
+        "trial_id": "trial-82338fbe92b7",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "8bd797a31d02e188",
+        "presentation_id": "pres-54bd455d05e9",
+        "family": "sm",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-8e926b4bc635",
+        "trial_id": "trial-12078bdef7cc",
+        "source_reasoning_tokens": 1005,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": false,
+          "1536": false,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [
+          "1024",
+          "1536"
+        ],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1005,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 3,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "9832342bb6c878c5",
+        "presentation_id": "pres-9ac708b63f9d",
+        "family": "sm",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-c171d745fce4",
+        "trial_id": "trial-68479ca10274",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      },
+      {
+        "task_id": "e39f5e7965bc9d2e",
+        "presentation_id": "pres-a7844e60aa7a",
+        "family": "sm",
+        "seed": 0,
+        "mode": "sampled",
+        "condition_id": "cond-f5e762d3078f",
+        "deployment_id": "dep-e1c20569173a",
+        "stochastic_draw_id": "draw-519d0e178b3a",
+        "trial_id": "trial-4120f0fce881",
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "requested_numeric_checkpoints": [
+          0,
+          256,
+          512,
+          1024,
+          1536
+        ],
+        "requested_labels": [
+          "0",
+          "256",
+          "512",
+          "1024",
+          "1536",
+          "full_prefix"
+        ],
+        "checkpoint_eligible": {
+          "0": true,
+          "256": true,
+          "512": true,
+          "1024": true,
+          "1536": true,
+          "full_prefix": true
+        },
+        "ineligible_checkpoints": [],
+        "planned": [
+          {
+            "checkpoint": 0,
+            "checkpoint_label": "0",
+            "checkpoint_index": 0,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 256,
+            "checkpoint_label": "256",
+            "checkpoint_index": 1,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 512,
+            "checkpoint_label": "512",
+            "checkpoint_index": 2,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1024,
+            "checkpoint_label": "1024",
+            "checkpoint_index": 3,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 1536,
+            "checkpoint_label": "1536",
+            "checkpoint_index": 4,
+            "is_full_prefix": false
+          },
+          {
+            "checkpoint": 2048,
+            "checkpoint_label": "full_prefix",
+            "checkpoint_index": 5,
+            "is_full_prefix": true
+          }
+        ]
+      }
+    ],
+    "n_completed_probes": 152
+  },
+  "seal_schema": "ponderscope-seal/2"
+}

@@ -81,6 +81,24 @@ are those strictly before the native think-end id; final tokens are after it.
 A censored trajectory contributes no correctness transition and can never be
 evidence of harmful overthinking.
 
+## Saved-prefix forced-finalization replay (Phase 1.8)
+
+`reasoning/replay.py` implements `probe-existing`: it reads a sealed generation
+run, verifies the seal and the presence of raw traces, re-tokenizes each saved
+prompt and asserts it matches the saved token count, extracts the reasoning-only
+token prefix (never a final-answer or EOS token), and runs forced finalization at
+exact eligible checkpoints. The replayed prefix is declared as generated history
+to the logits processors (`backends/mlx_backend.py` passes the true prompt length
+via `processor_prompt_len`). New probes are written to their **own** sealed run
+(`evidence/probe_run.py`, `run_kind="prefix_probe_replay"`); the source run is
+never mutated. `reasoning/outcomes.py` assigns an explicit forced-probe outcome
+(`correct` / `scorable_incorrect` / `unparseable` / `censored` / `error`), and
+`reasoning/transitions.py::classify_forced_outcomes` derives correctness state
+from observed scorable outcomes only. `analysis/recoverability.py` produces the
+offline paired BF16/Q4 analysis and Markdown/HTML report from two sealed probe
+runs. `verify_run` verifies any raw file the seal covers and does not demand a
+file the seal never covered (so a probe-only run verifies without `traces.jsonl`).
+
 ## Analysis and statistics
 
 `analysis/draws.py` collapses same-seed technical repeats to one stochastic draw

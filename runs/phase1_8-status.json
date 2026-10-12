@@ -1,0 +1,79 @@
+{
+  "schema": "ponderscope-phase-status/1",
+  "phase": "1.8",
+  "title": "Paired reasoning-prefix recoverability (exploratory, post-outcome)",
+  "status": "BF16_ARM_COMPLETE__Q4_ARM_NOT_RUN",
+  "exploratory": true,
+  "population": {
+    "task_pack": "tasks-v1",
+    "split": "test",
+    "task_seed": 1729,
+    "n_tasks": 30,
+    "seed": 0,
+    "note": "already-measured Phase 1.6 population; NOT a fresh confirmatory sample"
+  },
+  "design": {
+    "intervention": "greedy_forced_finalization",
+    "checkpoints": [0, 256, 512, 1024, 1536],
+    "include_full_prefix": true,
+    "probe_max_tokens": 512,
+    "horizon_basis": "predeclared sentinel diagnostic (runs/phase1_8-budget-diagnostic-*.json)"
+  },
+  "arms": {
+    "bf16": {
+      "status": "COMPLETE",
+      "probe_run_id": "20261012T162909Z-phase1-8-probe-bf16-recoverability-dep-e1c20569173a",
+      "source_run_id": "20261009T005354Z-phase1-6-replication-bf16-replication-bf16-dep-e1c20569173a",
+      "source_evidence_seal_sha256": "0c65e5edfe0f70796ed6a3ee24034bb96c8441f6603754fefa561f186d576a51",
+      "source_manifest_sha256": "c469f0e3c718286e340fec9e5b220c73cd35fe75c0eed3b2a23fd31eaef92a86",
+      "source_artifact_id": "src-6209ef70e318",
+      "weight_variant_id": "wvar-9b6f9b40b789",
+      "deployment_id": "dep-e1c20569173a",
+      "condition_id": "cond-8bff165772b8",
+      "n_source_draws": 30,
+      "n_completed_probes": 152,
+      "verify": "PASS",
+      "publication_grade": true,
+      "code_git_sha": "71f653466f44026d4262aefce865dc9255343dfe",
+      "started_utc": "20261012T162909Z",
+      "completed_utc": "20261012T173713Z",
+      "wall_seconds_approx": 4084,
+      "evidence_seal_manifest_sha256": "48f680648cf08d68b47795e1a2c901ce4d0648b196e72240de1928186f9e8fc9",
+      "bundle": "models/bundles/phase1_8-probe-bf16.tar.gz",
+      "bundle_sha256": "2829a27584186dedcd411642ad1b5bdbe68e5b3fc106e60091aeaa4733ed6085",
+      "raw_evidence": "runs/<run_id>/probes.jsonl (gitignored; preserved locally and in the bundle)"
+    },
+    "q4": {
+      "status": "NOT_RUN",
+      "reason": "GPU deliberately paused for a competing local project; do NOT draw any BF16/Q4 conclusion until this arm exists",
+      "source_run_id": "20261009T025900Z-phase1-6-replication-q4-replication-q4-dep-4f8e7958df4f",
+      "source_artifact_id": "src-6209ef70e318",
+      "weight_variant_id": "wvar-b7a30758909a",
+      "deployment_id": "dep-4f8e7958df4f",
+      "artifact_path": "models/qwen3.5-4b-mlx-q4-affine-g64",
+      "required_command": "uv run ponderscope probe-existing --source-run runs/20261009T025900Z-phase1-6-replication-q4-replication-q4-dep-4f8e7958df4f --label phase1-8-probe-q4 --checkpoints 0 256 512 1024 1536 --probe-max-tokens 512 --seeds 0 --model-repo Qwen/Qwen3.5-4B --revision 851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a --artifact-path models/qwen3.5-4b-mlx-q4-affine-g64 --runs-dir runs --suffix recoverability",
+      "estimated_seconds": "1200-1800"
+    }
+  },
+  "next_required_step": [
+    "1. Run the Q4 arm (exact command in arms.q4.required_command).",
+    "2. Verify the Q4 probe run: ponderscope verify --run runs/<q4-probe-run>.",
+    "3. Run the paired analysis: ponderscope recoverability --bf16-probe runs/<bf16> --q4-probe runs/<q4> --out runs/phase1_8-recoverability.json --md docs/PHASE1_8_RECOVERABILITY.md --html docs/PHASE1_8_RECOVERABILITY.html",
+    "4. Only then interpret paired BF16/Q4 recoverability and answer the Phase 1.8 research questions."
+  ],
+  "conclusions_blocked_until": "both arms are sealed + verified and the paired recoverability analysis has been produced",
+  "seed_1_extension": {
+    "status": "NOT_RUN",
+    "note": "optional, separately labelled; never used to rescue an interesting seed-0 result"
+  },
+  "integrity_notes": {
+    "src_unchanged_since_bf16_run": true,
+    "note": "git diff --stat 71f6534 HEAD -- src is empty, so a later Q4 arm runs byte-identical intervention code"
+  },
+  "do_not": [
+    "Do not interpret BF16-only recoverability as a BF16/Q4 difference.",
+    "Do not mix greedy forced-probe results with natural sampled accuracy.",
+    "Do not describe a replayed prefix as naturally observed early termination.",
+    "Do not reuse test/1729 as a fresh confirmatory population."
+  ]
+}

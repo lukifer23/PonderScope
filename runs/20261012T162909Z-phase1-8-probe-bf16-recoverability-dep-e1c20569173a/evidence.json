@@ -1,0 +1,23 @@
+{
+  "run_id": "20261012T162909Z-phase1-8-probe-bf16-recoverability-dep-e1c20569173a",
+  "artifact_id": "wvar-9b6f9b40b789",
+  "deployment_id": "dep-e1c20569173a",
+  "spec_hash": "0dd12403dc707042ee3e1b870a886bf407fb8cd53397108db0bf73c8a3abc8a0",
+  "code": {
+    "version": "0.1.0",
+    "git_sha": "71f653466f44026d4262aefce865dc9255343dfe",
+    "git_dirty": true,
+    "untracked_evidence_count": 4,
+    "tracked_dirty": false,
+    "tracked_changes": [],
+    "exploratory": false,
+    "publication_grade": true
+  },
+  "files": {
+    "environment.json": "873303c076c9d388650debd515334e7018d4dcdd784e86d3a8876d6d90701c53",
+    "probes.jsonl": "8fbf71876e14dcdb62acb7cf9542a91082b08fe87cff069b8681ec77c7421a0f"
+  },
+  "manifest_sha256": "48f680648cf08d68b47795e1a2c901ce4d0648b196e72240de1928186f9e8fc9",
+  "sealed_utc": "20261012T173713Z",
+  "seal_schema": "ponderscope-seal/2"
+}

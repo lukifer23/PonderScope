@@ -208,3 +208,17 @@ Diagnostics: `runs/phase1_8-budget-diagnostic-bf16.json`,
 `runs/phase1_8-budget-diagnostic-q4.json`. A residual censoring rate is expected
 and is a reported outcome, not a defect to be optimized away.
 
+## Execution log (MEASURED)
+
+| step | status | reference |
+|---|---|---|
+| Gate A/B — integrity + replay correctness | PASS | `uv run pytest`, `verify` of source runs |
+| Gate C — operational pilot (BF16, arith) | PASS | `runs/20261012T161958Z-phase1-8-pilot-bf16-pilot-dep-e1c20569173a` |
+| Gate D — horizon sentinel | PASS (horizon = 512) | `runs/phase1_8-budget-diagnostic-*.json` |
+| Gate E — BF16 arm | **COMPLETE**, verify PASS | `runs/20261012T162909Z-phase1-8-probe-bf16-recoverability-dep-e1c20569173a` |
+| Gate E — Q4 arm | **NOT RUN** | required command in `runs/phase1_8-status.json` |
+| Paired analysis | **BLOCKED on the Q4 arm** | `ponderscope recoverability` |
+
+No BF16/Q4 conclusion is possible until the Q4 arm is run, verified, and joined
+with the BF16 arm. Seed 1 remains an optional, separately labelled extension and
+has not been run.

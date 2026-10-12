@@ -125,6 +125,30 @@ difference at this precision, with a large speed advantage. The held-out
 population is now measured. Cross-study summary:
 `runs/phase1_6-cross-study.json` (no pooling).
 
+## Prefix recoverability (Phase 1.8, EXPLORATORY — INCOMPLETE)
+
+Forced finalization (greedy, horizon 512) on the **existing** saved trajectories
+of the Phase 1.6 `test/1729` population (30 tasks × seed 0), at checkpoints
+0/256/512/1024/1536 + full prefix. Oracle-style intervention on frozen traces;
+not a stopping policy; not a fresh population. Protocol:
+`docs/PHASE1_8_PROTOCOL.md`.
+
+| arm | probe run | probes | verify | status |
+|---|---|---|---|---|
+| BF16 | `20261012T162909Z-phase1-8-probe-bf16-recoverability-dep-e1c20569173a` | 152 | PASS | **COMPLETE** |
+| Q4 | — | — | — | **NOT RUN** |
+
+BF16 single-arm recoverable-correct by checkpoint (n eligible in parentheses):
+0 → 23/30, 256 → 25/30, 512 → 23/27, 1024 → 13/18, 1536 → 9/17, full prefix →
+24/30. Every probe is `correct` or `censored` (0 scorable-incorrect, 0
+unparseable). **27/30 draws are recoverable-correct at some checkpoint while
+17/30 source trajectories were naturally censored.**
+
+> **BLOCKED.** The Q4 arm has not been run, so this is **not** a BF16/Q4
+> contrast and no conclusion about deployment differences may be drawn. The next
+> pass must run the Q4 arm and the paired `recoverability` analysis
+> (`runs/phase1_8-status.json`). Interim report: `docs/PHASE1_8_REPORT.md`.
+
 ### Reanalysis / version history
 
 | version | change | effect |
@@ -135,6 +159,7 @@ population is now measured. Cross-study summary:
 | phase1.5 | matched-draw paired RMST; independent EOS time; competing events; evidence gating | pilot/full comparisons regenerated |
 | phase1.6 | condition-aware draw identity; paired-draw alignment; draw-unit standalone metrics; compact analyses | primary values unchanged; committed analyses no longer embed raw traces |
 | phase1.7 | raw-but-unscorable answer classified `unparseable` (not incorrect); capped-after-close distinguished; paired-transition analysis | replication `unparseable_rate` 0→0.017; primary metrics unchanged; prior analyses preserved as `analysis.phase1_6.json` |
+| phase1.8 | saved-prefix forced-finalization replay; explicit forced-probe outcomes (censored ≠ wrong); `success_at_budget` transition naming | BF16 arm complete (152 probes); Q4 arm pending; no paired result yet |
 
 Historical derived artifacts (`analysis.json`, old comparison files) are
 preserved; reanalyses are written as separate `phase1_4`/`phase1_5` artifacts.

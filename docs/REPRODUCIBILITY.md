@@ -104,6 +104,31 @@ uv run ponderscope compare --a runs/<id> --b runs/<id> --mode sampled
 uv run ponderscope compare --a runs/<id> --b runs/<id> --mode sampled --require-complete
 ```
 
+### Saved-prefix forced-finalization replay (Phase 1.8)
+
+```bash
+# Forced probes over the saved reasoning prefixes of a sealed generation run.
+# Add --artifact-path for the controlled Q4 arm; omit it for BF16.
+uv run ponderscope probe-existing \
+  --source-run runs/<source-run> --label phase1-8-probe-bf16 \
+  --checkpoints 0 256 512 1024 1536 --probe-max-tokens 512 --seeds 0 \
+  --model-repo Qwen/Qwen3.5-4B \
+  --revision 851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a
+
+# Offline paired analysis over the two sealed probe runs (no inference).
+uv run ponderscope recoverability \
+  --bf16-probe runs/<bf16-probe> --q4-probe runs/<q4-probe> \
+  --out runs/phase1_8-recoverability.json \
+  --md docs/PHASE1_8_RECOVERABILITY.md --html docs/PHASE1_8_RECOVERABILITY.html
+```
+
+A probe run is create-once, sealed and verifiable like any other run; it has no
+`traces.jsonl` (it produces no natural generations), and `verify` accepts that.
+Raw `probes.jsonl` is gitignored exactly like `traces.jsonl`, so full raw probe
+evidence is preserved locally and in deterministic bundles rather than committed.
+Status of the current Phase 1.8 pass (BF16 arm complete, Q4 arm pending) is in
+`runs/phase1_8-status.json`.
+
 `compare` writes `runs/<a>/comparisons/<timestamp>-…json` and prints the contrast
 classification and trial population; a confounded, unverified, or incomplete
 contrast is refused with reasons. `analyze` and `compare` verify the evidence seal
@@ -176,6 +201,12 @@ sealed run:
 - Re-running a failed experiment creates a **new** run directory; completed trials
   are never counted twice. Robust mid-run resumption is not implemented and is
   documented here rather than faked.
+- **Probe arms are independent sealed runs.** An interrupted `probe-existing` arm
+  is never resumed; it must be rerun in full. A *completed* probe arm is sealed
+  and banked, so for the Phase 1.8 BF16/Q4 comparison only the remaining arm need
+  be run. The current pass has the BF16 arm complete and the Q4 arm not run
+  (`runs/phase1_8-status.json`); the two arms are then joined offline by
+  `ponderscope recoverability`.
 
 ## Weight-hash cache caveat
 

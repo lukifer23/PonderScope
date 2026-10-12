@@ -1,0 +1,176 @@
+{
+  "schema": "ponderscope-probe-budget-diagnostic/1",
+  "result": {
+    "source_run_id": "20261009T025900Z-phase1-6-replication-q4-replication-q4-dep-4f8e7958df4f",
+    "arm_label": "phase1-8-budget-q4",
+    "per_task": [
+      {
+        "task_id": "051fe252328d539c",
+        "family": "arith",
+        "seed": 0,
+        "source_reasoning_tokens": 712,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "checkpoint": "256",
+        "prefix_length": 256,
+        "source_trace_sha256": "c3da147ac59fc22ae820d2c2a094c9a38fa94432ed7831159f89b183d834fe96",
+        "per_budget": [
+          {
+            "probe_max_tokens": 64,
+            "outcome": "censored",
+            "answer_scorable": true,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 64,
+            "correct": false
+          },
+          {
+            "probe_max_tokens": 128,
+            "outcome": "censored",
+            "answer_scorable": false,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 128,
+            "correct": false
+          },
+          {
+            "probe_max_tokens": 256,
+            "outcome": "censored",
+            "answer_scorable": true,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 256,
+            "correct": false
+          },
+          {
+            "probe_max_tokens": 512,
+            "outcome": "correct",
+            "answer_scorable": true,
+            "answer_observed": true,
+            "eos_observed": true,
+            "finish_reason": "stop",
+            "generated_answer_tokens": 290,
+            "correct": true
+          }
+        ]
+      },
+      {
+        "task_id": "42328719aee13018",
+        "family": "order",
+        "seed": 0,
+        "source_reasoning_tokens": 1033,
+        "source_native_closed": true,
+        "source_natural_final_status": "correct",
+        "checkpoint": "256",
+        "prefix_length": 256,
+        "source_trace_sha256": "073895c18210ec9ab89a698ee66edbc9f282824c3ba71acad3d2391ab7451dc2",
+        "per_budget": [
+          {
+            "probe_max_tokens": 64,
+            "outcome": "censored",
+            "answer_scorable": true,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 64,
+            "correct": false
+          },
+          {
+            "probe_max_tokens": 128,
+            "outcome": "censored",
+            "answer_scorable": true,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 128,
+            "correct": false
+          },
+          {
+            "probe_max_tokens": 256,
+            "outcome": "correct",
+            "answer_scorable": true,
+            "answer_observed": true,
+            "eos_observed": true,
+            "finish_reason": "stop",
+            "generated_answer_tokens": 224,
+            "correct": true
+          },
+          {
+            "probe_max_tokens": 512,
+            "outcome": "correct",
+            "answer_scorable": true,
+            "answer_observed": true,
+            "eos_observed": true,
+            "finish_reason": "stop",
+            "generated_answer_tokens": 224,
+            "correct": true
+          }
+        ]
+      },
+      {
+        "task_id": "0860ee8c753bad15",
+        "family": "logic",
+        "seed": 0,
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "checkpoint": "256",
+        "prefix_length": 256,
+        "source_trace_sha256": "32be33bc9bfa5b038f2c108991295e245b4f6f1759c7588a2e61f5d10359d627",
+        "per_budget": [
+          {
+            "probe_max_tokens": 64,
+            "outcome": "censored",
+            "answer_scorable": false,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 64,
+            "correct": false
+          },
+          {
+            "probe_max_tokens": 128,
+            "outcome": "censored",
+            "answer_scorable": false,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 128,
+            "correct": false
+          },
+          {
+            "probe_max_tokens": 256,
+            "outcome": "censored",
+            "answer_scorable": false,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 256,
+            "correct": false
+          },
+          {
+            "probe_max_tokens": 512,
+            "outcome": "censored",
+            "answer_scorable": false,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 512,
+            "correct": false
+          }
+        ]
+      }
+    ],
+    "budgets": [
+      64,
+      128,
+      256,
+      512
+    ],
+    "checkpoint": "256",
+    "source_evidence_seal_sha256": "2b6b87e9db55dc8f978d70881e19148993aa3f3763f5523f710e9660e8f873e2"
+  }
+}

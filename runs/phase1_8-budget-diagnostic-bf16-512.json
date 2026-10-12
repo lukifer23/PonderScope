@@ -1,0 +1,81 @@
+{
+  "schema": "ponderscope-probe-budget-diagnostic/1",
+  "result": {
+    "source_run_id": "20261009T005354Z-phase1-6-replication-bf16-replication-bf16-dep-e1c20569173a",
+    "arm_label": "phase1-8-budget-bf16",
+    "per_task": [
+      {
+        "task_id": "051fe252328d539c",
+        "family": "arith",
+        "seed": 0,
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "checkpoint": "256",
+        "prefix_length": 256,
+        "source_trace_sha256": "580ad274ae3a2d81b41df5022bfcbc95d10ee3e03e17c6f412bae0e1d1fa2ed8",
+        "per_budget": [
+          {
+            "probe_max_tokens": 256,
+            "outcome": "censored",
+            "answer_scorable": true,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 256,
+            "correct": false
+          },
+          {
+            "probe_max_tokens": 512,
+            "outcome": "correct",
+            "answer_scorable": true,
+            "answer_observed": true,
+            "eos_observed": true,
+            "finish_reason": "stop",
+            "generated_answer_tokens": 372,
+            "correct": true
+          }
+        ]
+      },
+      {
+        "task_id": "0860ee8c753bad15",
+        "family": "logic",
+        "seed": 0,
+        "source_reasoning_tokens": 2048,
+        "source_native_closed": false,
+        "source_natural_final_status": "censored",
+        "checkpoint": "256",
+        "prefix_length": 256,
+        "source_trace_sha256": "765d859d9480c852c1793e6ffeba6391e18ef31f4e1dea0ed8f9bd2251a9d670",
+        "per_budget": [
+          {
+            "probe_max_tokens": 256,
+            "outcome": "censored",
+            "answer_scorable": false,
+            "answer_observed": true,
+            "eos_observed": false,
+            "finish_reason": "length",
+            "generated_answer_tokens": 256,
+            "correct": false
+          },
+          {
+            "probe_max_tokens": 512,
+            "outcome": "correct",
+            "answer_scorable": true,
+            "answer_observed": true,
+            "eos_observed": true,
+            "finish_reason": "stop",
+            "generated_answer_tokens": 317,
+            "correct": true
+          }
+        ]
+      }
+    ],
+    "budgets": [
+      256,
+      512
+    ],
+    "checkpoint": "256",
+    "source_evidence_seal_sha256": "0c65e5edfe0f70796ed6a3ee24034bb96c8441f6603754fefa561f186d576a51"
+  }
+}

@@ -84,6 +84,18 @@ estimable and uncertainty is the task-clustered bootstrap only. Paired RMST uses
 matched stochastic draws only; the EOS termination endpoint is timed independently
 of reasoning closure.
 
+**Phase 1.8 implementation (EXPLORATORY, incomplete).** The next contrast does
+not generate new trajectories: `ponderscope probe-existing` replays forced
+finalization (greedy, horizon 512) on the **saved** reasoning prefixes of the
+Phase 1.6 `test/1729` population at identical checkpoints (0/256/512/1024/1536 +
+full prefix), one arm per deployment, and `ponderscope recoverability` joins the
+two sealed probe runs offline. This measures **answer recoverability under
+censoring**, which the natural-termination metrics cannot. It is an oracle-style
+intervention on frozen traces, is exploratory and post-outcome, and must not be
+pooled with naturally sampled accuracy. Status: **BF16 arm complete, Q4 arm not
+run** (`runs/phase1_8-status.json`, `docs/PHASE1_8_REPORT.md`). A larger
+independent-task replication remains the confirmatory step.
+
 ## Capture settings
 
 - Capture has three explicit levels: **minimal** (token ids + termination only),

@@ -26,6 +26,15 @@ intervention; the source population must not be reused as a fresh confirmatory
 sample. See `docs/PHASE1_8_PROTOCOL.md` and `docs/PHASE1_8_REPORT.md`. A **larger
 independent-task replication** (Option A) remains the eventual confirmatory step.
 
+> **STATUS — NEXT PASS IS BLOCKING.** The **BF16 arm is complete** (152 probes,
+> `verify` PASS, 27/30 draws recoverable-correct at some checkpoint vs 17/30
+> naturally censored). The **Q4 arm has NOT been run**, so **no BF16/Q4
+> conclusion is possible yet.** The next pass must (1) run the Q4 arm at the
+> identical design/horizon, (2) `verify` it, and (3) run the paired
+> `recoverability` analysis — then and only then interpret. Exact commands are in
+> `runs/phase1_8-status.json`.
+
+
 ## Later, only after the above is established
 
 - A larger independent-task replication if the primary contrast lacks precision.

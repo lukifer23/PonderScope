@@ -109,14 +109,18 @@ Phase 1.8 evidence**, and **unresolved/planned** work.
   `unparseable`, never wrong) and added offline paired-transition analysis. A
   null result is **not** evidence of equivalence.
 
-**Exploratory Phase 1.8 evidence (post-outcome, NOT confirmatory):** paired
-reasoning-prefix recoverability — forced finalization on the *existing* saved
-sampled trajectories of the Phase 1.6 population (30 tasks × seed 0 × BF16/Q4) at
-identical checkpoints (0/256/512/1024/1536 + full prefix), horizon 512. This asks
-whether a correct answer is recoverable from a prefix where natural generation
-did not terminate, and whether BF16/Q4 differ. It is an oracle-style intervention
-on frozen traces, not a stopping policy. Full protocol:
-`docs/PHASE1_8_PROTOCOL.md`; results: `docs/PHASE1_8_REPORT.md`.
+**Exploratory Phase 1.8 evidence (post-outcome, NOT confirmatory; INCOMPLETE).**
+Paired reasoning-prefix recoverability — forced finalization on the *existing*
+saved sampled trajectories of the Phase 1.6 population (30 tasks × seed 0 ×
+BF16/Q4) at identical checkpoints (0/256/512/1024/1536 + full prefix), horizon
+512. **The BF16 arm is complete (152 probes, `verify` PASS, 27/30 draws
+recoverable-correct at some checkpoint vs 17/30 naturally censored). The Q4 arm
+has NOT been run, so no BF16/Q4 difference may be inferred yet.** Next pass must
+run the Q4 arm and the paired `recoverability` analysis before any conclusion
+(exact commands in `runs/phase1_8-status.json`). It is an oracle-style
+intervention on frozen traces, not a stopping policy. Protocol:
+`docs/PHASE1_8_PROTOCOL.md`; interim report: `docs/PHASE1_8_REPORT.md`.
+
 
 **Unresolved / planned:** whether the small closure-rate difference is real at
 higher power; whether forced-prefix recoverability motivates a fresh-population
@@ -153,6 +157,13 @@ ponderscope variant-audit --path models/<artifact> --revision <sha>
 ponderscope preflight --spec specs/<spec>.json   # preconditions, no inference
 ponderscope design-precision            # reproducible planning precision (no model data)
 ponderscope paired-outcomes --a runs/<id> --b runs/<id>  # offline paired transition analysis
+ponderscope probe-existing --source-run runs/<id> --label <arm> \
+  --checkpoints 0 256 512 1024 1536 --probe-max-tokens 512 --seeds 0 \
+  --revision <sha> [--artifact-path models/<artifact>]   # forced probes on saved prefixes
+ponderscope probe-budget-diagnostic --source-run runs/<id> --label <arm> \
+  --task-id <id> [<id> ...] --checkpoint 256 --budgets 64 128 256 512  # horizon sentinel
+ponderscope recoverability --bf16-probe runs/<id> --q4-probe runs/<id> \
+  --out runs/phase1_8-recoverability.json --md <report.md> --html <report.html>  # offline paired
 ponderscope run --spec specs/<spec>.json # run a declared deployment/task experiment
 ponderscope run --spec specs/<spec>.json --artifact-path models/<artifact>
 ponderscope analyze --run runs/<id>      # analyze immutable saved evidence
@@ -215,6 +226,8 @@ references.bib       machine-readable verified bibliography
 - `docs/LIMITATIONS.md` — scope and caveats.
 - `docs/ROADMAP.md` — research questions and next experiments.
 - `docs/RELATED_WORK.md`, `references.bib` — literature.
+- Phase protocols/reports: `PHASE1_6_PROTOCOL.md`, `PHASE1_7_ANALYSIS.md`,
+  `PHASE1_8_PROTOCOL.md`, `PHASE1_8_REPORT.md` (interim; Q4 arm pending).
 - Phase reports: `PHASE1_2_REPORT.md`, `PHASE1_2_CORRECTION.md`,
   `PHASE1_3_REPORT.md`, `PHASE1_3B_REPORT.md`, `PHASE1_4_REPORT.md`.
 

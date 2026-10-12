@@ -1,0 +1,24 @@
+{
+  "python_version": "3.12.12",
+  "python_executable": "/Users/admin/Downloads/CodeProjects/PonderScope/.venv/bin/python3",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "machine": "arm64",
+  "processor": "arm",
+  "os": "Darwin 27.2.0",
+  "cpu_brand": "Apple M3 Pro",
+  "physical_memory_bytes": 19327352832,
+  "packages": {
+    "mlx": "0.32.3",
+    "mlx-lm": "0.32.0",
+    "mlx-metal": "0.32.3",
+    "numpy": "2.5.3",
+    "transformers": "5.18.0",
+    "tokenizers": "0.23.2",
+    "huggingface-hub": "1.33.0",
+    "safetensors": "0.8.0",
+    "ponderscope": "0.1.0"
+  },
+  "mlx_default_device": "Device(gpu, 0)",
+  "mlx_version": "0.32.3",
+  "cwd": "/Users/admin/Downloads/CodeProjects/PonderScope"
+}
