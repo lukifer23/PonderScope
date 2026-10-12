@@ -307,11 +307,6 @@ def run_probe_existing(
     source_manifest = source_store.manifest
     source_spec = source_manifest.get("spec", {})
 
-    # Validate the native close *before* creating an evidence directory.
-    native_close: list[int] | None = None
-    if hasattr(backend, "native_closure_ids"):
-        native_close = list(backend.native_closure_ids())
-
     loaded = backend.load(
         SourceArtifactIdentity(repo_id=model_repo, revision=model_revision),
         artifact_path=artifact_path,
@@ -328,6 +323,11 @@ def run_probe_existing(
             f"({loaded.weight_variant_id} != {source_manifest.get('weight_variant_id')}); "
             "refusing to probe a different deployment"
         )
+    # Validate the native close *before* creating an evidence directory (the
+    # backend is loaded by now, so the think-end token is known).
+    native_close: list[int] | None = None
+    if hasattr(backend, "native_closure_ids"):
+        native_close = list(backend.native_closure_ids())
     runtime = backend.runtime_identity()
 
     draws = load_source_draws(source_store, backend, seeds=seeds, families=families)
@@ -559,8 +559,6 @@ def run_budget_diagnostic(
     verify_source_run(source_path)
     source_manifest = source_store.manifest
 
-    if hasattr(backend, "native_closure_ids"):
-        backend.native_closure_ids()
     loaded = backend.load(
         SourceArtifactIdentity(repo_id=model_repo, revision=model_revision),
         artifact_path=artifact_path,
@@ -569,6 +567,8 @@ def run_budget_diagnostic(
         raise ReplayError("loaded source artifact does not match the source run")
     if loaded.weight_variant_id != source_manifest.get("weight_variant_id"):
         raise ReplayError("loaded weight variant does not match the source run")
+    if hasattr(backend, "native_closure_ids"):
+        backend.native_closure_ids()
 
     draws = [
         d for d in load_source_draws(source_store, backend, seeds=[seed]) if d.task_id == task_id
