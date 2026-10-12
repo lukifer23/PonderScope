@@ -72,6 +72,7 @@ def paired_outcomes(
     closure: Counter[str] = Counter()
     correctness: Counter[str] = Counter()
     scorable: Counter[str] = Counter()
+    natural_pairs: Counter[str] = Counter()
     rows: list[dict[str, Any]] = []
     per_family: dict[str, Counter] = defaultdict(Counter)
     per_difficulty: dict[str, Counter] = defaultdict(Counter)
@@ -84,6 +85,9 @@ def paired_outcomes(
         closure[cl] += 1
         correctness[co] += 1
         scorable[sc] += 1
+        sa = oa.get("natural_final_status") if oa.get("available") else None
+        sb = ob.get("natural_final_status") if ob.get("available") else None
+        natural_pairs[f"{sa or 'unavailable'} -> {sb or 'unavailable'}"] += 1
         fam = (oa.get("family") if oa["available"] else ob.get("family")) or "?"
         diff = (oa.get("difficulty") if oa["available"] else ob.get("difficulty")) or "?"
         per_family[fam][cl] += 1
@@ -95,26 +99,42 @@ def paired_outcomes(
                 "family": fam,
                 "difficulty": diff,
                 "closure_transition": cl,
-                "correctness_transition": co,
+                "success_at_budget_transition": co,
                 "scorable_transition": sc,
+                "natural_final_status_bf16": sa,
+                "natural_final_status_q4": sb,
                 "a": oa,
                 "b": ob,
             }
         )
     return {
+        "analysis_version": "phase1.8",
         "mode": mode,
         "unit": "stochastic draw (presentation x task x condition x seed)",
         "n_matched_draws": len(shared),
         "closure_transitions": dict(closure),
+        # ``success_at_budget_transitions`` is the clarified name for the former
+        # ``correctness_transitions`` Boolean table. Its ``neither`` bucket means
+        # "neither draw produced a correct answer inside budget" and includes
+        # censored/unparseable draws; it does NOT mean "both models answered
+        # incorrectly". The legacy key is retained as a labelled alias.
+        "success_at_budget_transitions": dict(correctness),
         "correctness_transitions": dict(correctness),
+        "correctness_transitions_label": (
+            "legacy alias of success_at_budget_transitions (Boolean correct only; "
+            "false also covers censored/unparseable draws)"
+        ),
         "scorable_transitions": dict(scorable),
+        "natural_final_status_transition_counts": dict(natural_pairs),
         "per_family": {f: dict(c) for f, c in sorted(per_family.items())},
         "per_difficulty": {d: dict(c) for d, c in sorted(per_difficulty.items())},
         "draws": rows,
         "note": (
             "Closure and correctness transitions are separate. A correct answer "
             "requires a scorable normalized answer; an unscorable string is never a "
-            "wrong answer. Ambiguous draws are labelled, not dropped."
+            "wrong answer. Ambiguous draws are labelled, not dropped. 'neither' in a "
+            "success-at-budget transition never implies both models answered "
+            "incorrectly."
         ),
     }
 

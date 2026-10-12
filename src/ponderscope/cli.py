@@ -673,9 +673,141 @@ def _cmd_paired_outcomes(args: argparse.Namespace) -> int:
         return 0
     print(f"paired outcomes [{args.mode}] matched draws={po['n_matched_draws']}")
     print(f"  closure transitions:     {po['closure_transitions']}")
-    print(f"  correctness transitions: {po['correctness_transitions']}")
+    print(f"  success-at-budget:       {po['success_at_budget_transitions']}")
     print(f"  scorable transitions:    {po['scorable_transitions']}")
     print(f"  repeated-4gram mean delta: {rep['overall_mean_delta']}")
+    if args.out:
+        print(f"  saved {args.out}")
+    return 0
+
+
+def _cmd_probe_existing(args: argparse.Namespace) -> int:
+    from .backends import get_backend
+    from .reasoning.replay import run_probe_existing
+
+    backend = get_backend(args.backend)
+    result = run_probe_existing(
+        args.source_run,
+        backend=backend,
+        model_repo=args.model_repo,
+        model_revision=args.revision,
+        artifact_path=args.artifact_path,
+        run_label=args.label,
+        checkpoints=args.checkpoints,
+        include_zero=not args.no_zero,
+        include_full=not args.no_full,
+        probe_max_tokens=args.probe_max_tokens,
+        seeds=args.seeds,
+        families=args.families or None,
+        runs_dir=args.runs_dir,
+        run_suffix=args.suffix,
+        allow_dirty=args.allow_dirty,
+        progress=lambda message: print(message, file=sys.stderr, flush=True),
+    )
+    print(f"probe run {result.store.run_id}")
+    print(f"  path: {result.store.path}")
+    print(f"  source draws: {result.n_source_draws}  probes: {result.n_probes}")
+    print(f"  seal: {result.seal.get('manifest_sha256') if result.seal else None}")
+    return 0
+
+
+def _cmd_recoverability(args: argparse.Namespace) -> int:
+    from .analysis.recoverability import (
+        paired_recoverability,
+        render_html,
+        render_markdown,
+    )
+    from .evidence.run import RunStore
+    from .evidence.store import atomic_write_json, atomic_write_text
+
+    bf16 = RunStore.load(args.bf16_probe)
+    q4 = RunStore.load(args.q4_probe)
+    analysis = paired_recoverability(
+        bf16,
+        q4,
+        verify=not args.allow_unverified,
+        n_resamples=args.resamples,
+        seed=args.seed,
+    )
+    if args.out:
+        atomic_write_json(Path(args.out), analysis)
+    md = render_markdown(analysis)
+    if args.md:
+        atomic_write_text(Path(args.md), md)
+    if args.html:
+        atomic_write_text(Path(args.html), render_html(analysis))
+    if args.json:
+        print(json.dumps(analysis, indent=2, default=str))
+        return 0
+    print(f"paired prefix recoverability (EXPLORATORY) [{analysis['analysis_version']}]")
+    print(f"  BF16 probe {analysis['probe_run_bf16']['probe_run_id']}")
+    print(f"  Q4   probe {analysis['probe_run_q4']['probe_run_id']}")
+    for key in analysis["checkpoints"]:
+        cp = analysis["per_checkpoint"][key]
+        delta = cp["delta_recoverable_correct_q4_minus_bf16"]
+        ci = (
+            "degenerate"
+            if delta.get("degenerate")
+            else f"[{_fmt_float(delta.get('lo'))}, {_fmt_float(delta.get('hi'))}]"
+        )
+        print(
+            f"  {key:>11}: n={cp['n_jointly_eligible']:>3} "
+            f"BF16={cp['bf16']['outcomes']['correct']} Q4={cp['q4']['outcomes']['correct']} "
+            f"delta={_fmt_float(delta.get('mean'))} {ci}"
+        )
+    if args.out:
+        print(f"  saved {args.out}")
+    if args.md:
+        print(f"  markdown {args.md}")
+    if args.html:
+        print(f"  html {args.html}")
+    return 0
+
+
+def _fmt_float(value: object) -> str:
+    if value is None:
+        return "—"
+    if isinstance(value, float):
+        return f"{value:.4g}"
+    return str(value)
+
+
+def _cmd_probe_budget_diagnostic(args: argparse.Namespace) -> int:
+    import dataclasses
+
+    from .backends import get_backend
+    from .evidence.store import atomic_write_json
+    from .reasoning.replay import run_budget_diagnostic
+
+    backend = get_backend(args.backend)
+    result = run_budget_diagnostic(
+        args.source_run,
+        backend=backend,
+        model_repo=args.model_repo,
+        model_revision=args.revision,
+        artifact_path=args.artifact_path,
+        arm_label=args.label,
+        task_id=args.task_id,
+        seed=args.seed,
+        checkpoint=args.checkpoint,
+        budgets=args.budgets,
+    )
+    payload = {
+        "schema": "ponderscope-probe-budget-diagnostic/1",
+        "result": dataclasses.asdict(result),
+    }
+    if args.out:
+        atomic_write_json(Path(args.out), payload)
+    print(
+        f"probe budget diagnostic: {result.arm_label} {result.family}/{result.task_id[:8]} "
+        f"seed={result.seed} checkpoint={result.checkpoint} prefix={result.prefix_length}"
+    )
+    for row in result.per_budget:
+        print(
+            f"  budget={row['probe_max_tokens']:>4} outcome={row['outcome']:<18} "
+            f"scorable={row['answer_scorable']} eos={row['eos_observed']} "
+            f"tokens={row['generated_answer_tokens']}"
+        )
     if args.out:
         print(f"  saved {args.out}")
     return 0
@@ -914,6 +1046,61 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out", default=None)
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_paired_outcomes)
+
+    p = sub.add_parser(
+        "probe-existing",
+        help="forced-finalization probes over a sealed run's saved reasoning prefixes",
+    )
+    p.add_argument("--source-run", required=True, help="sealed source generation run")
+    p.add_argument("--label", required=True, help="arm label, e.g. phase1-8-probe-bf16")
+    p.add_argument("--checkpoints", nargs="+", type=int, default=[0, 256, 512, 1024, 1536])
+    p.add_argument("--no-zero", action="store_true", help="omit the empty-prefix checkpoint")
+    p.add_argument(
+        "--no-full", action="store_true", help="omit the full available reasoning prefix"
+    )
+    p.add_argument("--probe-max-tokens", type=int, default=256)
+    p.add_argument("--seeds", nargs="*", type=int, default=None)
+    p.add_argument("--families", nargs="*", default=None)
+    p.add_argument("--backend", default="mlx")
+    p.add_argument("--model-repo", default="Qwen/Qwen3.5-4B")
+    p.add_argument("--revision", required=True)
+    p.add_argument("--artifact-path", default=None)
+    p.add_argument("--runs-dir", default="runs")
+    p.add_argument("--suffix", default=None)
+    p.add_argument("--allow-dirty", action="store_true")
+    p.set_defaults(func=_cmd_probe_existing)
+
+    p = sub.add_parser(
+        "recoverability",
+        help="offline paired BF16/Q4 prefix-recoverability analysis (no inference)",
+    )
+    p.add_argument("--bf16-probe", required=True, help="sealed BF16 probe run")
+    p.add_argument("--q4-probe", required=True, help="sealed Q4 probe run")
+    p.add_argument("--out", default=None, help="write analysis JSON here")
+    p.add_argument("--md", default=None, help="write Markdown report here")
+    p.add_argument("--html", default=None, help="write standalone HTML report here")
+    p.add_argument("--resamples", type=int, default=2000)
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--allow-unverified", action="store_true")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_recoverability)
+
+    p = sub.add_parser(
+        "probe-budget-diagnostic",
+        help="sentinel: EOS/scorable/censored rate of probe continuations at several budgets",
+    )
+    p.add_argument("--source-run", required=True)
+    p.add_argument("--label", required=True)
+    p.add_argument("--task-id", required=True)
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--checkpoint", default="full_prefix", help="a token length or 'full_prefix'")
+    p.add_argument("--budgets", nargs="+", type=int, default=[64, 128, 256])
+    p.add_argument("--backend", default="mlx")
+    p.add_argument("--model-repo", default="Qwen/Qwen3.5-4B")
+    p.add_argument("--revision", required=True)
+    p.add_argument("--artifact-path", default=None)
+    p.add_argument("--out", default=None)
+    p.set_defaults(func=_cmd_probe_budget_diagnostic)
 
     return parser
 

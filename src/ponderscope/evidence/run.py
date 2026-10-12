@@ -427,6 +427,12 @@ def verify_run(path: str | Path) -> dict[str, Any]:
     for name in RAW_FILES:
         p = path / name
         expected = seal.get("files", {}).get(name)
+        if expected is None and not p.exists():
+            # This run never declared this raw file (e.g. a prefix-probe replay
+            # run has no natural generations, so no traces.jsonl). Requiring a
+            # file the seal never covered would fail a perfectly valid run. A
+            # file that *was* sealed and is now missing still fails below.
+            continue
         actual = sha256_file(str(p)) if p.exists() else None
         ok = expected is not None and actual == expected
         checks.append({"file": name, "expected": expected, "actual": actual, "ok": ok})

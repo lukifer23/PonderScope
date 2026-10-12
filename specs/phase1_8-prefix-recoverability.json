@@ -1,0 +1,20 @@
+{
+  "name": "phase1-8-prefix-recoverability",
+  "task_pack": "tasks-v1",
+  "prompt_policy": "pp-v1",
+  "model_policy": "qwen35-4b-thinking-api-v1",
+  "families": ["arith", "path", "order", "logic", "sm"],
+  "n_per_family": 6,
+  "task_seed": 1729,
+  "split": "test",
+  "greedy_repeats": 0,
+  "sampled_seeds": [0],
+  "sampled_repeats_per_seed": 1,
+  "max_tokens": 2048,
+  "capture_level": "minimal",
+  "probe": true,
+  "n_probes": 4,
+  "probe_max_tokens": 256,
+  "probe_checkpoints": [0, 256, 512, 1024, 1536],
+  "notes": "Phase 1.8 EXPLORATORY paired reasoning-prefix recoverability (post-outcome). Replays forced finalization on the EXACT saved sampled trajectories of the frozen Phase 1.6 test/1729 population (30 structural tasks, seed 0, BF16 and controlled Q4), at identical reasoning-prefix checkpoints. This is NOT a fresh confirmatory population and NOT a greedy trajectory study. Forced finalization is an oracle-style intervention; continuation is a fresh deterministic greedy completion, not a continuation under the source sampled policy. No source run is modified. Requires explicit authorization before model inference."
+}

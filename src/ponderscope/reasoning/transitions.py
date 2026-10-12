@@ -22,6 +22,12 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from .outcomes import FORCED_OUTCOMES, OBSERVED_SCORABLE_OUTCOMES
+
+# Forced-probe outcomes that are *indeterminate*: they carry no correctness
+# information and must never be reinterpreted as an observed wrong answer.
+INDETERMINATE_PROBE_OUTCOMES = ("censored", "unparseable", "error")
+
 # Natural final outcome categories. ``censored`` means the final answer channel
 # was never observed because the observation horizon was reached; correctness is
 # unknown, NOT false. ``terminated_no_closure`` means generation stopped (EOS)
@@ -226,6 +232,82 @@ def classify_transitions(
         harmful_overthinking_observed=harmful,
         flags=flags,
     )
+
+
+def classify_forced_outcomes(
+    outcomes_by_checkpoint: dict[str, str | None],
+    *,
+    checkpoint_order: list[str],
+) -> dict[str, Any]:
+    """Classify a trajectory from *explicit* forced-probe outcomes.
+
+    ``outcomes_by_checkpoint`` maps a checkpoint label to a member of
+    :data:`~ponderscope.reasoning.outcomes.FORCED_OUTCOMES`, or ``None`` when the
+    checkpoint was **not eligible** (the source reasoning prefix was shorter than
+    the requested checkpoint) or was otherwise not run. ``checkpoint_order`` fixes
+    the ordering used for "first correct" and stability.
+
+    Correctness state is derived **only** from observed, scorable outcomes
+    (``correct`` / ``scorable_incorrect``). ``censored`` / ``unparseable`` /
+    ``error`` outcomes are recorded as indeterminate and contribute no flip and
+    no "wrong" verdict. A missing checkpoint is never treated as wrong.
+    """
+    for label in checkpoint_order:
+        value = outcomes_by_checkpoint.get(label)
+        if value is not None and value not in FORCED_OUTCOMES:
+            raise ValueError(f"unknown forced outcome {value!r} at checkpoint {label!r}")
+
+    observed: list[tuple[str, bool]] = []
+    indeterminate: dict[str, str] = {}
+    missing: list[str] = []
+    counts = dict.fromkeys(FORCED_OUTCOMES, 0)
+    for label in checkpoint_order:
+        value = outcomes_by_checkpoint.get(label)
+        if value is None:
+            missing.append(label)
+            continue
+        counts[value] += 1
+        if value in OBSERVED_SCORABLE_OUTCOMES:
+            observed.append((label, value == "correct"))
+        else:
+            indeterminate[label] = value
+
+    observed_correct = [c for _, c in observed]
+    state = _prefix_state(observed_correct)
+    flips = _prefix_flips(observed_correct)
+    first_correct = next((label for label, c in observed if c), None)
+    if first_correct is not None:
+        first_idx = next(i for i, (_, c) in enumerate(observed) if c)
+        last_correct = observed[first_idx][0] if all(c for _, c in observed[first_idx:]) else None
+        stability: bool | None = last_correct is not None
+    else:
+        last_correct = None
+        stability = None
+
+    flags = dict.fromkeys(PREFIX_STATES, False)
+    flags[state] = True
+    flags["any_correct"] = any(observed_correct)
+    flags["stable_correct_observed"] = all(observed_correct) and bool(observed_correct)
+
+    return {
+        "checkpoint_order": list(checkpoint_order),
+        "outcomes": {label: outcomes_by_checkpoint.get(label) for label in checkpoint_order},
+        "observed_scorable": {
+            label: ("correct" if c else "scorable_incorrect") for label, c in observed
+        },
+        "indeterminate": indeterminate,
+        "missing": missing,
+        "outcome_counts": counts,
+        "n_observed_scorable": len(observed),
+        "n_indeterminate": len(indeterminate),
+        "n_missing": len(missing),
+        "state": state,
+        "flips": flips,
+        "first_correct_checkpoint": first_correct,
+        "stable_from_checkpoint": last_correct,
+        "stable_through_end": stability,
+        "flags": flags,
+    }
 
 
 def prefix_lengths(

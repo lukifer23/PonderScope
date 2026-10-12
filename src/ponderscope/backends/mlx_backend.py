@@ -572,6 +572,7 @@ class MlxBackend:
         decoding: DecodingPolicy,
         capture: CaptureSpec,
         extra_tokens: list[int] | None = None,
+        processor_prompt_len: int | None = None,
     ) -> Trace:
         from mlx_lm.generate import generate_step
 
@@ -583,7 +584,21 @@ class MlxBackend:
             base = base + list(extra_tokens)
 
         sampler, seed = self._prepare_sampler(decoding)
-        processors, processor_meta = self._prepare_logits_processors(decoding, prompt_len=len(base))
+        # ``processor_prompt_len`` is the number of leading accumulated positions
+        # a generated-history presence processor must treat as *prompt* (and hence
+        # never penalise). For an ordinary generation that is the whole prompt. For
+        # a forced-finalization probe the replayed reasoning prefix was already
+        # generated output, so it must count as generated history, not prompt; the
+        # caller passes the true prompt length. Defaulting to ``len(base)`` would
+        # silently erase the replayed prefix's generated-history status.
+        effective_prompt_len = len(base) if processor_prompt_len is None else processor_prompt_len
+        if not (0 <= effective_prompt_len <= len(base)):
+            raise ValueError(
+                f"processor_prompt_len {effective_prompt_len} out of range for {len(base)} tokens"
+            )
+        processors, processor_meta = self._prepare_logits_processors(
+            decoding, prompt_len=effective_prompt_len
+        )
         if seed is not None:
             mx.random.seed(seed)
 
@@ -660,6 +675,9 @@ class MlxBackend:
                 "think_end_token_id": self._think_end_id,
                 "base_prompt_tokens": len(prompt_ids),
                 "extra_tokens": len(extra_tokens) if extra_tokens else 0,
+                "processor_prompt_len": effective_prompt_len,
+                "extra_tokens_are_generated_history": bool(extra_tokens)
+                and effective_prompt_len == len(prompt_ids),
                 "capture": capture.to_dict(),
                 "seed": seed,
                 "logits_processors": processor_meta,
@@ -736,10 +754,23 @@ class MlxBackend:
         *generated* continuation is therefore the forced final-answer channel
         itself. No hand-written answer cue is ever injected. If the native
         closure cannot be validated this raises ``PrefixProbeUnsupported``.
+
+        The original reasoning prefix was previously *generated* output, so it is
+        declared generated history to the logits processors (``processor_prompt_len``
+        is the true prompt length, not ``prompt + prefix + closure``). The
+        continuation itself is a fresh deterministic completion under
+        ``decoding``; it is never claimed to be a continuation of the original
+        sampled policy.
         """
         closure = self.native_closure_ids()
         extra = list(prefix_token_ids) + closure
-        trace = self._run(prompt_token_ids, decoding, capture, extra_tokens=extra)
+        trace = self._run(
+            prompt_token_ids,
+            decoding,
+            capture,
+            extra_tokens=extra,
+            processor_prompt_len=len(prompt_token_ids),
+        )
         trace.extra.update(
             {
                 "probe": True,
