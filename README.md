@@ -150,27 +150,27 @@ uv run ponderscope doctor
 ## 10. Quick-start commands
 
 ```bash
-ponderscope doctor                       # environment / runtime / model capability
-ponderscope generate --pack tasks-v1     # generate and validate a task pack
-ponderscope convert --revision <sha> --out models/<artifact> --bits 4
-ponderscope variant-audit --path models/<artifact> --revision <sha>
-ponderscope preflight --spec specs/<spec>.json   # preconditions, no inference
-ponderscope design-precision            # reproducible planning precision (no model data)
-ponderscope paired-outcomes --a runs/<id> --b runs/<id>  # offline paired transition analysis
-ponderscope probe-existing --source-run runs/<id> --label <arm> \
+uv run ponderscope doctor                       # environment / runtime / model capability
+uv run ponderscope generate --pack tasks-v1     # generate and validate a task pack
+uv run ponderscope convert --revision <sha> --out models/<artifact> --bits 4
+uv run ponderscope variant-audit --path models/<artifact> --revision <sha>
+uv run ponderscope preflight --spec specs/<spec>.json   # preconditions, no inference
+uv run ponderscope design-precision            # reproducible planning precision (no model data)
+uv run ponderscope paired-outcomes --a runs/<id> --b runs/<id>  # offline paired transition analysis
+uv run ponderscope probe-existing --source-run runs/<id> --label <arm> \
   --checkpoints 0 256 512 1024 1536 --probe-max-tokens 512 --seeds 0 \
   --revision <sha> [--artifact-path models/<artifact>]   # forced probes on saved prefixes
-ponderscope probe-budget-diagnostic --source-run runs/<id> --label <arm> \
+uv run ponderscope probe-budget-diagnostic --source-run runs/<id> --label <arm> \
   --task-id <id> [<id> ...] --checkpoint 256 --budgets 64 128 256 512  # horizon sentinel
-ponderscope recoverability --bf16-probe runs/<id> --q4-probe runs/<id> \
+uv run ponderscope recoverability --bf16-probe runs/<id> --q4-probe runs/<id> \
   --out runs/phase1_8-recoverability.json --md <report.md> --html <report.html>  # offline paired
-ponderscope run --spec specs/<spec>.json # run a declared deployment/task experiment
-ponderscope run --spec specs/<spec>.json --artifact-path models/<artifact>
-ponderscope analyze --run runs/<id>      # analyze immutable saved evidence
-ponderscope verify --run runs/<id>       # verify raw evidence + final manifest seal
-ponderscope bundle --run runs/<id> --output <archive.tar.gz>
-ponderscope compare --a runs/<id> --b runs/<id>
-ponderscope report --run runs/<id>       # regenerate Markdown/HTML from saved evidence
+uv run ponderscope run --spec specs/<spec>.json # run a declared deployment/task experiment
+uv run ponderscope run --spec specs/<spec>.json --artifact-path models/<artifact>
+uv run ponderscope analyze --run runs/<id>      # analyze immutable saved evidence
+uv run ponderscope verify --run runs/<id>       # verify raw evidence + final manifest seal
+uv run ponderscope bundle --run runs/<id> --output <archive.tar.gz>
+uv run ponderscope compare --a runs/<id> --b runs/<id>
+uv run ponderscope report --run runs/<id>       # regenerate Markdown/HTML from saved evidence
 ```
 
 ## 11. Experiment workflow
