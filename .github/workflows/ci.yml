@@ -10,7 +10,7 @@ jobs:
   core:
     # Apple Silicon runner: MLX-LM is installable, but these checks do NOT load a
     # real model. Live MLX capability validation remains a manual local gate.
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
